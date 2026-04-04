@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { auth, db } from '../firebase';
-import { collection, query, orderBy, limit, onSnapshot, addDoc, serverTimestamp, doc, updateDoc, where, increment } from 'firebase/firestore';
+import { collection, query, orderBy, limit, onSnapshot, addDoc, serverTimestamp, doc, updateDoc, where, increment, getDocs, deleteDoc, writeBatch } from 'firebase/firestore';
 import { UserProfile, Message, Theme, CardStyle } from '../types';
 import { THEMES, CARD_STYLES } from '../constants';
 import { Send, LogOut, Users, Infinity, Circle, Shield, Crown, Wallet, Gem, Coins, AlertCircle, Dice1, Dice2, Dice3, Dice4, Dice5, Dice6, Palette, X, Check } from 'lucide-react';
@@ -121,10 +121,10 @@ export default function Chat({ user }: ChatProps) {
   }, [user.gold, user.rubies, user.hasReceivedReset, user.uid]);
 
   useEffect(() => {
-    const q = query(collection(db, 'messages'), orderBy('timestamp', 'asc'), limit(50));
+    const q = query(collection(db, 'messages'), orderBy('timestamp', 'desc'), limit(50));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Message));
-      setMessages(msgs);
+      setMessages(msgs.reverse());
       setTimeout(() => scrollRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
     });
 
@@ -196,12 +196,40 @@ export default function Chat({ user }: ChatProps) {
     }
   };
 
+  const pruneMessages = async () => {
+    try {
+      // Only prune occasionally to save on reads/writes
+      if (Math.random() > 0.1) return; 
+
+      const q = query(collection(db, 'messages'), orderBy('timestamp', 'desc'), limit(100));
+      const snapshot = await getDocs(q);
+      
+      if (snapshot.size < 100) return;
+
+      // Get all messages and delete those older than the last 50
+      const allMsgsQ = query(collection(db, 'messages'), orderBy('timestamp', 'desc'));
+      const allSnapshot = await getDocs(allMsgsQ);
+      
+      if (allSnapshot.size > 100) {
+        const batch = writeBatch(db);
+        const toDelete = allSnapshot.docs.slice(100);
+        toDelete.forEach(doc => batch.delete(doc.ref));
+        await batch.commit();
+      }
+    } catch (err) {
+      console.error('Pruning error:', err);
+    }
+  };
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
 
     const text = newMessage.trim();
     setNewMessage('');
+
+    // Prune old messages to stay within free tier quotas
+    pruneMessages();
 
     // Command Parsing
     if (text.startsWith('/')) {
@@ -299,6 +327,21 @@ export default function Chat({ user }: ChatProps) {
           },
           timestamp: serverTimestamp(),
         });
+        return;
+      }
+
+      if (command === '/clearchat' && user.email === 'haydensixseven@gmail.com') {
+        try {
+          const q = query(collection(db, 'messages'));
+          const snapshot = await getDocs(q);
+          const batch = writeBatch(db);
+          snapshot.docs.forEach(doc => batch.delete(doc.ref));
+          await batch.commit();
+          showToast('Chat cleared!');
+        } catch (err) {
+          console.error(err);
+          showToast('Failed to clear chat');
+        }
         return;
       }
 

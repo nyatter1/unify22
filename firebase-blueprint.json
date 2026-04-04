@@ -1,0 +1,60 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "User profile information and status",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "username": { "type": "string" },
+        "email": { "type": "string" },
+        "age": { "type": "number" },
+        "gender": { "type": "string" },
+        "pfp": { "type": "string" },
+        "banner": { "type": "string" },
+        "bio": { "type": "string" },
+        "likes": { "type": "array", "items": { "type": "string" } },
+        "rank": { "type": "string" },
+        "isBanned": { "type": "boolean" },
+        "banReason": { "type": "string" },
+        "isKicked": { "type": "boolean" },
+        "kickReason": { "type": "string" },
+        "kickUntil": { "type": "string", "format": "date-time" },
+        "isMuted": { "type": "boolean" },
+        "muteReason": { "type": "string" },
+        "muteUntil": { "type": "string", "format": "date-time" },
+        "isOnline": { "type": "boolean" },
+        "lastSeen": { "type": "string", "format": "date-time" },
+        "gold": { "type": "number" },
+        "rubies": { "type": "number" },
+        "theme": { "type": "string" },
+        "cardStyle": { "type": "string" }
+      },
+      "required": ["uid", "username", "email", "rank"]
+    },
+    "Message": {
+      "title": "Chat Message",
+      "description": "A message sent in the chat",
+      "type": "object",
+      "properties": {
+        "senderId": { "type": "string" },
+        "senderUsername": { "type": "string" },
+        "senderPfp": { "type": "string" },
+        "text": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "type": { "type": "string" }
+      },
+      "required": ["senderId", "text", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile documents"
+    },
+    "/messages/{messageId}": {
+      "schema": "Message",
+      "description": "Chat message documents"
+    }
+  }
+}

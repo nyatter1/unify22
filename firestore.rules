@@ -1,0 +1,136 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: userId (UID)
+    // Fields:
+    //   - uid: string (required)
+    //   - username: string (required, 1-30 chars)
+    //   - email: string (required, email format)
+    //   - age: number (required, 7-1000)
+    //   - gender: string (required, enum: male, female, other)
+    //   - pfp: string (optional, URL or base64)
+    //   - banner: string (optional, URL or base64)
+    //   - bio: string (optional, max 500 chars)
+    //   - likes: list (optional, list of UIDs)
+    //   - rank: string (required, enum: VIP, Super VIP, etc.)
+    //   - isBanned: bool (optional)
+    //   - banReason: string (optional)
+    //   - isKicked: bool (optional)
+    //   - kickReason: string (optional)
+    //   - kickUntil: timestamp (optional)
+    //   - isMuted: bool (optional)
+    //   - muteReason: string (optional)
+    //   - muteUntil: timestamp (optional)
+    //   - isOnline: bool (optional)
+    //   - lastSeen: timestamp (optional)
+    //   - gold: number (optional)
+    //   - rubies: number (optional)
+    //   - theme: string (optional)
+    //   - cardStyle: string (optional)
+    //
+    // Collection: messages
+    // Document ID: auto-generated
+    // Fields:
+    //   - senderId: string (required)
+    //   - senderUsername: string (required)
+    //   - senderPfp: string (required)
+    //   - text: string (required, 1-1000 chars)
+    //   - timestamp: timestamp (required)
+    //   - type: string (optional)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.rank in ['DEVELOPER', 'FOUNDER', 'STAR', 'ADMINISTRATION', 'MODERATOR'] ||
+         (request.auth.token.email == "haydensixseven@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isDev() {
+      return isAuthenticated() && 
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.rank in ['DEVELOPER', 'FOUNDER'] ||
+         (request.auth.token.email == "haydensixseven@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'username', 'email', 'age', 'gender', 'rank']) &&
+             data.uid is string &&
+             data.username is string && data.username.size() >= 1 && data.username.size() <= 30 &&
+             data.email is string &&
+             data.age is number && data.age >= 7 && data.age <= 1000 &&
+             data.gender in ['male', 'female', 'other'] &&
+             data.rank is string;
+    }
+
+    function isValidMessage(data) {
+      return data.keys().hasAll(['senderId', 'senderUsername', 'senderPfp', 'text', 'timestamp']) &&
+             data.senderId == request.auth.uid &&
+             data.text is string && data.text.size() >= 1 && data.text.size() <= 1000 &&
+             data.timestamp == request.time;
+    }
+
+    function isNotBanned() {
+      return !get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isBanned;
+    }
+
+    function isNotKicked() {
+      let userData = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+      return !userData.isKicked || (userData.kickUntil != null && request.time > userData.kickUntil);
+    }
+
+    function isNotMuted() {
+      let userData = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+      return !userData.isMuted || (userData.muteUntil != null && request.time > userData.muteUntil);
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      
+      allow create: if isAuthenticated() && isOwner(userId) && isValidUser(request.resource.data) &&
+                      request.resource.data.rank == 'VIP' || (request.auth.token.email in ['test@gmail.com', 'dev@gmail.com', 'haydensixseven@gmail.com']);
+      
+      allow update: if isAuthenticated() && (
+        // Self update
+        (isOwner(userId) && 
+         isValidUser(request.resource.data) &&
+         request.resource.data.rank == resource.data.rank &&
+         request.resource.data.isBanned == resource.data.isBanned &&
+         request.resource.data.isKicked == resource.data.isKicked &&
+         request.resource.data.isMuted == resource.data.isMuted) ||
+        // Admin update (moderation)
+        (isAdmin() && 
+         request.resource.data.diff(resource.data).affectedKeys().hasAny(['isBanned', 'banReason', 'isKicked', 'kickReason', 'kickUntil', 'isMuted', 'muteReason', 'muteUntil'])) ||
+        // Dev update (rank)
+        (isDev() && 
+         request.resource.data.diff(resource.data).affectedKeys().hasAny(['rank']))
+      );
+    }
+
+    match /messages/{messageId} {
+      allow read: if isAuthenticated() && isNotBanned() && isNotKicked();
+      allow create: if isAuthenticated() && isNotBanned() && isNotKicked() && isNotMuted() && isValidMessage(request.resource.data);
+      allow delete: if isAdmin();
+    }
+  }
+}

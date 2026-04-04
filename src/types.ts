@@ -35,6 +35,22 @@ export interface CardStyle {
   };
 }
 
+export type UserRank = 
+  | 'DEVELOPER' 
+  | 'FOUNDER' 
+  | 'MOTHER_OF_PURITY' 
+  | 'STAR' 
+  | 'ADMINISTRATION' 
+  | 'MODERATOR' 
+  | 'TIGER' 
+  | 'DRAGON' 
+  | 'MANTIS' 
+  | 'SNAKE' 
+  | 'MILLIONAIRE' 
+  | 'ELITE' 
+  | 'SUPER_VIP' 
+  | 'VIP';
+
 export interface UserProfile {
   uid: string;
   username: string;
@@ -55,6 +71,17 @@ export interface UserProfile {
   likes?: string[]; // Array of UIDs who liked this profile
   customThemes?: Theme[];
   customCardStyles?: CardStyle[];
+  rank: UserRank;
+  isBanned?: boolean;
+  banReason?: string;
+  isKicked?: boolean;
+  kickReason?: string;
+  kickUntil?: any;
+  isMuted?: boolean;
+  muteReason?: string;
+  muteUntil?: any;
+  invites?: number;
+  createdAt?: any;
 }
 
 export interface Message {

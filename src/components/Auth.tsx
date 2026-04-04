@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { auth, db } from '../firebase';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { UserProfile, UserRank } from '../types';
 import { Infinity, Mail, Lock, User, Calendar, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
@@ -29,13 +30,30 @@ export default function Auth({ onAuthSuccess }: AuthProps) {
 
     try {
       if (isLogin) {
-        await signInWithEmailAndPassword(auth, email, password);
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          if (userData.isBanned) {
+            await auth.signOut();
+            throw new Error(`You have been banned. Reason: ${userData.banReason || 'No reason provided'}`);
+          }
+        }
       } else {
         if (!username || !age || !gender) throw new Error('Please fill all fields');
         if (Number(age) < 7) throw new Error('You must be at least 7 years old to join');
         
+        // Check if email is banned (this is tricky without a separate ban list, 
+        // but we can check if a user with this email was previously banned if we had a list.
+        // For now, we'll just handle the login ban check).
+
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
+
+        let rank: UserRank = 'VIP';
+        if (email === 'test@gmail.com' || email === 'dev@gmail.com') {
+          rank = 'DEVELOPER';
+        }
 
         await setDoc(doc(db, 'users', user.uid), {
           uid: user.uid,
@@ -53,6 +71,9 @@ export default function Auth({ onAuthSuccess }: AuthProps) {
           hasReceivedReset: false,
           theme: 'luxury-black',
           cardStyle: 'default',
+          rank,
+          invites: 0,
+          createdAt: new Date(),
         });
       }
       onAuthSuccess();

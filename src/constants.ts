@@ -1,4 +1,28 @@
-import { Theme, CardStyle } from './types';
+import { Theme, CardStyle, UserRank } from './types';
+
+export interface RankInfo {
+  id: UserRank;
+  name: string;
+  icon: string;
+  priority: number; // Higher is more important
+}
+
+export const RANKS: RankInfo[] = [
+  { id: 'DEVELOPER', name: 'DEVELOPER', icon: '/ranks/verified.gif', priority: 100 },
+  { id: 'FOUNDER', name: 'FOUNDER', icon: '/ranks/founder.gif', priority: 90 },
+  { id: 'MOTHER_OF_PURITY', name: 'Mother Of Purity', icon: '/ranks/MoP.gif', priority: 85 },
+  { id: 'STAR', name: 'STAR', icon: '/ranks/superadmin.png', priority: 80 },
+  { id: 'ADMINISTRATION', name: 'ADMINISTRATION', icon: '/ranks/admin.png', priority: 70 },
+  { id: 'MODERATOR', name: 'MODERATOR', icon: '/ranks/mod.png', priority: 60 },
+  { id: 'TIGER', name: 'T.I.G.E.R', icon: '/ranks/tiger.png', priority: 50 },
+  { id: 'DRAGON', name: 'Dragon', icon: '/ranks/dragon.png', priority: 45 },
+  { id: 'MANTIS', name: 'Mantis', icon: '/ranks/mantis.png', priority: 40 },
+  { id: 'SNAKE', name: 'Snake', icon: '/ranks/snake.png', priority: 35 },
+  { id: 'MILLIONAIRE', name: 'Millionaire', icon: '/ranks/gold.png', priority: 30 },
+  { id: 'ELITE', name: 'The ELITE', icon: '/ranks/elite.png', priority: 25 },
+  { id: 'SUPER_VIP', name: 'Super VIP', icon: '/ranks/super-vip.gif', priority: 20 },
+  { id: 'VIP', name: 'VIP', icon: '/ranks/vip.gif', priority: 10 },
+];
 
 export const AVATARS = [
   'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix',

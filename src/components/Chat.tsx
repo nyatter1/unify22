@@ -1,9 +1,43 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { auth, db } from '../firebase';
 import { collection, query, orderBy, limit, onSnapshot, addDoc, serverTimestamp, doc, updateDoc, where, increment, getDocs, deleteDoc, writeBatch } from 'firebase/firestore';
-import { UserProfile, Message, Theme, CardStyle } from '../types';
-import { THEMES, CARD_STYLES, AVATARS, BANNERS } from '../constants';
-import { Send, LogOut, Users, Infinity, Circle, Shield, Crown, Wallet, Gem, Coins, AlertCircle, Dice1, Dice2, Dice3, Dice4, Dice5, Dice6, Palette, X, Check, Edit3, Heart, User, Image, Camera, ChevronRight } from 'lucide-react';
+import { UserProfile, Message, Theme, CardStyle, UserRank } from '../types';
+import { THEMES, CARD_STYLES, AVATARS, BANNERS, RANKS, RankInfo } from '../constants';
+import { 
+  Send, 
+  LogOut, 
+  Users, 
+  Infinity, 
+  Circle, 
+  Shield, 
+  Crown, 
+  Wallet, 
+  Gem, 
+  Coins, 
+  AlertCircle, 
+  Dice1, 
+  Dice2, 
+  Dice3, 
+  Dice4, 
+  Dice5, 
+  Dice6, 
+  Palette, 
+  X, 
+  Check, 
+  Edit3, 
+  Heart, 
+  User, 
+  UserPlus,
+  Image, 
+  Camera, 
+  ChevronRight,
+  Hammer,
+  Ban,
+  VolumeX,
+  Clock,
+  Search,
+  ArrowUp
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 
@@ -27,6 +61,10 @@ export default function Chat({ user }: ChatProps) {
   const [editTab, setEditTab] = useState<'username' | 'info' | 'bio' | 'pfp' | 'banner' | 'main'>('main');
   const [customizerTab, setCustomizerTab] = useState<'themes' | 'cards'>('themes');
   const [toast, setToast] = useState<string | null>(null);
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [adminSearchTerm, setAdminSearchTerm] = useState('');
+  const [adminSelectedUser, setAdminSelectedUser] = useState<UserProfile | null>(null);
+  const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const pfpInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
@@ -146,6 +184,44 @@ export default function Chat({ user }: ChatProps) {
   }, [user.gold, user.rubies, user.hasReceivedReset, user.uid]);
 
   useEffect(() => {
+    const checkRanks = async () => {
+      // Only auto-update if user is currently a lower rank or a standard rank
+      const standardRanks: UserRank[] = ['VIP', 'SUPER_VIP', 'ELITE', 'MILLIONAIRE', 'MANTIS', 'TIGER'];
+      if (!standardRanks.includes(user.rank)) return;
+
+      let newRank: UserRank = 'VIP';
+      
+      // Check for Millionaire (Top 3 Gold)
+      const sortedByGold = [...allUsers].sort((a, b) => (b.gold || 0) - (a.gold || 0));
+      const top3Gold = sortedByGold.slice(0, 3).map(u => u.uid);
+      
+      if (top3Gold.includes(user.uid)) {
+        newRank = 'MILLIONAIRE';
+      } else if ((user.invites || 0) >= 20) {
+        newRank = 'TIGER';
+      } else if ((user.invites || 0) >= 5) {
+        newRank = 'MANTIS';
+      } else {
+        // Check for Super VIP (1 month)
+        const oneMonthAgo = new Date();
+        oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+        const createdAt = user.createdAt?.toDate ? user.createdAt.toDate() : new Date(user.createdAt);
+        if (createdAt < oneMonthAgo) {
+          newRank = 'SUPER_VIP';
+        }
+      }
+
+      if (newRank !== user.rank && RANKS.find(r => r.id === newRank)!.priority > RANKS.find(r => r.id === user.rank)!.priority) {
+        await updateDoc(doc(db, 'users', user.uid), { rank: newRank });
+      }
+    };
+
+    if (allUsers.length > 0) {
+      checkRanks();
+    }
+  }, [user.uid, user.invites, user.gold, user.createdAt, user.rank, allUsers]);
+
+  useEffect(() => {
     const q = query(collection(db, 'messages'), orderBy('timestamp', 'desc'), limit(50));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Message));
@@ -156,7 +232,19 @@ export default function Chat({ user }: ChatProps) {
     const usersQ = query(collection(db, 'users'), where('isOnline', '==', true));
     const usersUnsubscribe = onSnapshot(usersQ, (snapshot) => {
       const users = snapshot.docs.map(doc => doc.data() as UserProfile);
-      setOnlineUsers(users);
+      // Sort by rank priority
+      const sortedUsers = [...users].sort((a, b) => {
+        const rankA = RANKS.find(r => r.id === a.rank)?.priority || 0;
+        const rankB = RANKS.find(r => r.id === b.rank)?.priority || 0;
+        return rankB - rankA;
+      });
+      setOnlineUsers(sortedUsers);
+    });
+
+    // Fetch all users for admin panel
+    const allUsersUnsubscribe = onSnapshot(collection(db, 'users'), (snapshot) => {
+      const users = snapshot.docs.map(doc => doc.data() as UserProfile);
+      setAllUsers(users);
     });
 
     // Update online status
@@ -185,6 +273,7 @@ export default function Chat({ user }: ChatProps) {
     return () => {
       unsubscribe();
       usersUnsubscribe();
+      allUsersUnsubscribe();
       setOffline();
       window.removeEventListener('beforeunload', handleBeforeUnload);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
@@ -296,6 +385,126 @@ export default function Chat({ user }: ChatProps) {
     }
   };
 
+  const moderateUser = async (targetUid: string, action: 'mute' | 'kick' | 'ban' | 'unmute' | 'unkick' | 'unban', reason?: string, durationMinutes?: number) => {
+    try {
+      const userRef = doc(db, 'users', targetUid);
+      const updates: any = {};
+      
+      if (action === 'ban') {
+        updates.isBanned = true;
+        updates.banReason = reason || 'No reason provided';
+      } else if (action === 'unban') {
+        updates.isBanned = false;
+        updates.banReason = null;
+      } else if (action === 'kick') {
+        updates.isKicked = true;
+        updates.kickReason = reason || 'No reason provided';
+        updates.kickUntil = new Date(Date.now() + (durationMinutes || 10) * 60000);
+      } else if (action === 'unkick') {
+        updates.isKicked = false;
+        updates.kickUntil = null;
+        updates.kickReason = null;
+      } else if (action === 'mute') {
+        updates.isMuted = true;
+        updates.muteReason = reason || 'No reason provided';
+        updates.muteUntil = new Date(Date.now() + (durationMinutes || 10) * 60000);
+      } else if (action === 'unmute') {
+        updates.isMuted = false;
+        updates.muteUntil = null;
+        updates.muteReason = null;
+      }
+
+      await updateDoc(userRef, updates);
+      showToast(`User ${action}ed successfully`);
+      if (adminSelectedUser?.uid === targetUid) {
+        setAdminSelectedUser(prev => prev ? { ...prev, ...updates } : null);
+      }
+    } catch (err) {
+      console.error(err);
+      showToast(`Failed to ${action} user`);
+    }
+  };
+
+  const updateRank = async (targetUid: string, newRank: UserRank) => {
+    const canRank = user.rank === 'DEVELOPER' || user.rank === 'FOUNDER';
+    if (!canRank) return showToast('Only Developers and Founders can change ranks');
+
+    try {
+      await updateDoc(doc(db, 'users', targetUid), { rank: newRank });
+      showToast(`Rank updated to ${newRank}`);
+      if (adminSelectedUser?.uid === targetUid) {
+        setAdminSelectedUser(prev => prev ? { ...prev, rank: newRank } : null);
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to update rank');
+    }
+  };
+
+  if (user.isBanned) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center p-6 font-sans">
+        <div className="max-w-md w-full bg-zinc-900 border border-red-500/20 rounded-[2.5rem] p-10 text-center space-y-6 shadow-[0_0_50px_rgba(239,68,68,0.1)]">
+          <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto">
+            <Ban className="w-10 h-10 text-red-500" />
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-3xl font-serif italic text-white">Access Denied</h1>
+            <p className="text-red-500 font-bold uppercase tracking-widest text-xs">You have been banned</p>
+          </div>
+          <div className="p-6 bg-black/40 rounded-2xl border border-white/5">
+            <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">Reason</p>
+            <p className="text-white/80 italic">"{user.banReason || 'No reason provided'}"</p>
+          </div>
+          <button 
+            onClick={() => auth.signOut()}
+            className="w-full py-4 rounded-2xl bg-white text-black font-bold uppercase tracking-widest text-sm hover:scale-105 transition-all"
+          >
+            Logout
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (user.isKicked) {
+    const now = new Date();
+    const kickUntil = user.kickUntil?.toDate();
+    if (kickUntil && now < kickUntil) {
+      const remainingMinutes = Math.ceil((kickUntil.getTime() - now.getTime()) / 60000);
+      return (
+        <div className="min-h-screen bg-black flex items-center justify-center p-6 font-sans">
+          <div className="max-w-md w-full bg-zinc-900 border border-amber-500/20 rounded-[2.5rem] p-10 text-center space-y-6 shadow-[0_0_50px_rgba(245,158,11,0.1)]">
+            <div className="w-20 h-20 bg-amber-500/10 rounded-full flex items-center justify-center mx-auto">
+              <Hammer className="w-10 h-10 text-amber-500" />
+            </div>
+            <div className="space-y-2">
+              <h1 className="text-3xl font-serif italic text-white">Temporarily Kicked</h1>
+              <p className="text-amber-500 font-bold uppercase tracking-widest text-xs">Access restricted</p>
+            </div>
+            <div className="p-6 bg-black/40 rounded-2xl border border-white/5">
+              <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">Reason</p>
+              <p className="text-white/80 italic">"{user.kickReason || 'No reason provided'}"</p>
+              <div className="mt-4 flex items-center justify-center gap-2 text-amber-500">
+                <Clock className="w-4 h-4" />
+                <span className="font-bold text-sm">{remainingMinutes} minutes remaining</span>
+              </div>
+            </div>
+            <button 
+              onClick={() => auth.signOut()}
+              className="w-full py-4 rounded-2xl bg-white text-black font-bold uppercase tracking-widest text-sm hover:scale-105 transition-all"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      );
+    } else {
+      // Kick expired
+      updateDoc(doc(db, 'users', user.uid), { isKicked: false, kickUntil: null, kickReason: null });
+    }
+  }
+
   const pruneMessages = async () => {
     try {
       // Only prune occasionally to save on reads/writes
@@ -324,6 +533,18 @@ export default function Chat({ user }: ChatProps) {
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
+
+    if (user.isMuted) {
+      const now = new Date();
+      const muteUntil = user.muteUntil?.toDate();
+      if (muteUntil && now < muteUntil) {
+        showToast(`You are muted until ${muteUntil.toLocaleString()}. Reason: ${user.muteReason}`);
+        return;
+      } else {
+        // Mute expired
+        await updateDoc(doc(db, 'users', user.uid), { isMuted: false, muteUntil: null, muteReason: null });
+      }
+    }
 
     const text = newMessage.trim();
     setNewMessage('');
@@ -654,6 +875,13 @@ export default function Chat({ user }: ChatProps) {
                   <div className={cn("space-y-1.5", isMe ? "items-end" : "items-start")}>
                     <div className={cn("flex items-center gap-2 px-1", isMe && "flex-row-reverse")}>
                       <p className="text-[10px] font-bold text-white/60 uppercase tracking-widest">{msg.senderUsername}</p>
+                      {allUsers.find(u => u.uid === msg.senderId)?.rank && (
+                        <img 
+                          src={RANKS.find(r => r.id === allUsers.find(u => u.uid === msg.senderId)?.rank)?.icon} 
+                          className="w-3 h-3 object-contain"
+                          alt="rank"
+                        />
+                      )}
                     </div>
                     <div 
                       className={cn(
@@ -732,6 +960,11 @@ export default function Chat({ user }: ChatProps) {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
                       <p className={cn("text-sm font-serif truncate transition-colors", textClass)}>{u.username}</p>
+                      <img 
+                        src={RANKS.find(r => r.id === u.rank)?.icon} 
+                        className="w-3 h-3 object-contain"
+                        alt="rank"
+                      />
                       {u.age > 100 && <Crown className="w-3 h-3 text-amber-500" />}
                     </div>
                     <div className="flex items-center gap-2 mt-0.5">
@@ -752,7 +985,14 @@ export default function Chat({ user }: ChatProps) {
               <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent" />
               <div className="absolute bottom-2 left-3 flex items-center gap-2">
                 <img src={user.pfp} className="w-8 h-8 rounded-full border border-white/20" />
-                <p className="text-xs font-serif text-white">{user.username}</p>
+                <div className="flex items-center gap-1.5">
+                  <p className="text-xs font-serif text-white">{user.username}</p>
+                  <img 
+                    src={RANKS.find(r => r.id === user.rank)?.icon} 
+                    className="w-3 h-3 object-contain"
+                    alt="rank"
+                  />
+                </div>
               </div>
             </div>
             {/* Quick Wallet Stats */}
@@ -766,6 +1006,15 @@ export default function Chat({ user }: ChatProps) {
                 <span className="text-[10px] font-bold text-white">{(user.rubies ?? 0).toLocaleString()}</span>
               </div>
             </div>
+            {(user.rank === 'DEVELOPER' || user.rank === 'FOUNDER' || user.rank === 'STAR' || user.rank === 'ADMINISTRATION' || user.rank === 'MODERATOR') && (
+              <button 
+                onClick={() => setShowAdminPanel(true)}
+                className="w-full mt-3 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] font-bold uppercase tracking-widest hover:bg-red-500/20 transition-all flex items-center justify-center gap-2"
+              >
+                <Shield className="w-3 h-3" />
+                Admin Panel
+              </button>
+            )}
           </div>
         </aside>
       </main>
@@ -1399,16 +1648,51 @@ export default function Chat({ user }: ChatProps) {
                   <div>
                     <h2 className="text-3xl font-serif italic text-white flex items-center gap-3">
                       {selectedProfile.username}
+                      <img 
+                        src={RANKS.find(r => r.id === selectedProfile.rank)?.icon} 
+                        className="w-6 h-6 object-contain"
+                        alt="rank"
+                      />
                       {selectedProfile.uid === 'admin' && <Shield className="w-5 h-5 text-amber-500" />}
                     </h2>
                     <div className="flex items-center gap-3 mt-2">
-                      <span className="px-3 py-1 rounded-full bg-amber-500/10 text-amber-500 text-[10px] font-black uppercase tracking-widest">
+                      <span className="px-3 py-1 rounded-full bg-amber-500/10 text-amber-500 text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                        <img 
+                          src={RANKS.find(r => r.id === selectedProfile.rank)?.icon} 
+                          className="w-3 h-3 object-contain"
+                          alt=""
+                        />
+                        {RANKS.find(r => r.id === selectedProfile.rank)?.name}
+                      </span>
+                      <span className="px-3 py-1 rounded-full bg-white/5 text-white/40 text-[10px] font-black uppercase tracking-widest">
                         {selectedProfile.age} Years Old
                       </span>
                       <span className="px-3 py-1 rounded-full bg-white/5 text-white/40 text-[10px] font-black uppercase tracking-widest">
                         {selectedProfile.gender}
                       </span>
                     </div>
+                    {(selectedProfile.isBanned || selectedProfile.isKicked || selectedProfile.isMuted) && (
+                      <div className="flex flex-wrap gap-2 mt-4">
+                        {selectedProfile.isBanned && (
+                          <div className="px-3 py-1.5 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center gap-2">
+                            <Ban className="w-3 h-3 text-red-500" />
+                            <span className="text-[9px] font-bold text-red-500 uppercase tracking-widest">Banned</span>
+                          </div>
+                        )}
+                        {selectedProfile.isKicked && (
+                          <div className="px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center gap-2">
+                            <Hammer className="w-3 h-3 text-amber-500" />
+                            <span className="text-[9px] font-bold text-amber-500 uppercase tracking-widest">Kicked</span>
+                          </div>
+                        )}
+                        {selectedProfile.isMuted && (
+                          <div className="px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center gap-2">
+                            <VolumeX className="w-3 h-3 text-amber-500" />
+                            <span className="text-[9px] font-bold text-amber-500 uppercase tracking-widest">Muted</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   <div className="p-6 rounded-3xl bg-white/5 border border-white/5">
@@ -1587,6 +1871,29 @@ export default function Chat({ user }: ChatProps) {
                         Wallet
                       </button>
                     </div>
+
+                    <div className="pt-4 border-t border-white/10">
+                      <div className="p-6 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                            <UserPlus className="w-5 h-5 text-amber-500" />
+                          </div>
+                          <div>
+                            <p className="text-white font-bold text-sm">Invites</p>
+                            <p className="text-white/40 text-[10px] uppercase tracking-widest font-bold">{user.invites || 0} Total Invites</p>
+                          </div>
+                        </div>
+                        <button 
+                          onClick={async () => {
+                            await updateDoc(doc(db, 'users', user.uid), { invites: (user.invites || 0) + 1 });
+                            showToast('Invite simulated!');
+                          }}
+                          className="px-4 py-2 rounded-xl bg-amber-500 text-black text-[10px] font-bold uppercase tracking-widest hover:scale-105 transition-all"
+                        >
+                          Simulate Invite
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 ) : editTab === 'username' ? (
                   <div className="space-y-6">
@@ -1698,6 +2005,249 @@ export default function Chat({ user }: ChatProps) {
                     </button>
                   </div>
                 )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Admin Panel Modal */}
+      <AnimatePresence>
+        {showAdminPanel && (
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowAdminPanel(false)}
+              className="absolute inset-0 bg-black/95 backdrop-blur-3xl"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-4xl h-[80vh] bg-zinc-900 border border-red-500/20 rounded-[3rem] overflow-hidden shadow-2xl flex flex-col"
+            >
+              <div className="p-8 border-b border-white/10 flex items-center justify-between bg-red-500/5">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-red-500/10 rounded-2xl flex items-center justify-center border border-red-500/20">
+                    <Shield className="w-6 h-6 text-red-500" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-serif italic text-white">Admin Command Center</h2>
+                    <p className="text-[10px] font-bold text-red-500 uppercase tracking-[0.3em]">Authorized Personnel Only</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setShowAdminPanel(false)}
+                  className="p-3 rounded-2xl bg-white/5 border border-white/10 text-white/40 hover:text-white transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="flex-1 flex overflow-hidden">
+                {/* User List Sidebar */}
+                <div className="w-80 border-r border-white/10 flex flex-col bg-black/20">
+                  <div className="p-4 border-b border-white/10">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
+                      <input 
+                        type="text"
+                        placeholder="Search users..."
+                        value={adminSearchTerm}
+                        onChange={(e) => setAdminSearchTerm(e.target.value)}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-xs text-white focus:outline-none focus:border-red-500/50"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex-1 overflow-y-auto p-2 space-y-1">
+                    {allUsers
+                      .filter(u => u.username.toLowerCase().includes(adminSearchTerm.toLowerCase()))
+                      .map(u => (
+                        <button
+                          key={u.uid}
+                          onClick={() => setAdminSelectedUser(u)}
+                          className={cn(
+                            "w-full p-3 rounded-2xl flex items-center gap-3 transition-all",
+                            adminSelectedUser?.uid === u.uid 
+                              ? "bg-red-500/10 border border-red-500/20" 
+                              : "hover:bg-white/5 border border-transparent"
+                          )}
+                        >
+                          <img src={u.pfp} className="w-8 h-8 rounded-full border border-white/10" />
+                          <div className="text-left min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <p className="text-xs font-bold text-white truncate">{u.username}</p>
+                              <img src={RANKS.find(r => r.id === u.rank)?.icon} className="w-3 h-3 object-contain" alt="" />
+                            </div>
+                            <p className="text-[9px] text-white/40 uppercase tracking-widest font-bold">{u.rank}</p>
+                          </div>
+                        </button>
+                      ))}
+                  </div>
+                </div>
+
+                {/* User Details & Actions */}
+                <div className="flex-1 overflow-y-auto p-8 bg-black/40">
+                  {adminSelectedUser ? (
+                    <div className="space-y-8">
+                      <div className="flex items-center gap-6">
+                        <img src={adminSelectedUser.pfp} className="w-24 h-24 rounded-[2rem] border-2 border-red-500/20 shadow-2xl" />
+                        <div>
+                          <h3 className="text-3xl font-serif italic text-white flex items-center gap-3">
+                            {adminSelectedUser.username}
+                            <img src={RANKS.find(r => r.id === adminSelectedUser.rank)?.icon} className="w-6 h-6 object-contain" alt="" />
+                          </h3>
+                          <div className="flex items-center gap-3 mt-2">
+                            <span className="px-3 py-1 rounded-full bg-red-500/10 text-red-500 text-[10px] font-black uppercase tracking-widest">
+                              {adminSelectedUser.rank}
+                            </span>
+                            <span className="px-3 py-1 rounded-full bg-white/5 text-white/40 text-[10px] font-black uppercase tracking-widest">
+                              UID: {adminSelectedUser.uid.slice(0, 8)}...
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-6">
+                        {/* Status Card */}
+                        <div className="p-6 bg-white/5 border border-white/10 rounded-3xl space-y-4">
+                          <h4 className="text-[10px] font-bold text-white/40 uppercase tracking-widest flex items-center gap-2">
+                            <Shield className="w-3 h-3" />
+                            Current Status
+                          </h4>
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between p-3 rounded-2xl bg-black/40 border border-white/5">
+                              <span className="text-xs text-white/60">Banned</span>
+                              <span className={cn("text-[10px] font-bold uppercase tracking-widest", adminSelectedUser.isBanned ? "text-red-500" : "text-green-500")}>
+                                {adminSelectedUser.isBanned ? "Yes" : "No"}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between p-3 rounded-2xl bg-black/40 border border-white/5">
+                              <span className="text-xs text-white/60">Kicked</span>
+                              <span className={cn("text-[10px] font-bold uppercase tracking-widest", adminSelectedUser.isKicked ? "text-amber-500" : "text-green-500")}>
+                                {adminSelectedUser.isKicked ? "Yes" : "No"}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between p-3 rounded-2xl bg-black/40 border border-white/5">
+                              <span className="text-xs text-white/60">Muted</span>
+                              <span className={cn("text-[10px] font-bold uppercase tracking-widest", adminSelectedUser.isMuted ? "text-amber-500" : "text-green-500")}>
+                                {adminSelectedUser.isMuted ? "Yes" : "No"}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Rank Control Card */}
+                        {(user.rank === 'DEVELOPER' || user.rank === 'FOUNDER') && (
+                          <div className="p-6 bg-white/5 border border-white/10 rounded-3xl space-y-4">
+                            <h4 className="text-[10px] font-bold text-white/40 uppercase tracking-widest flex items-center gap-2">
+                              <ArrowUp className="w-3 h-3" />
+                              Rank Management
+                            </h4>
+                            <div className="grid grid-cols-2 gap-2">
+                              {RANKS.filter(r => r.id !== 'DEVELOPER').map(r => (
+                                <button
+                                  key={r.id}
+                                  onClick={() => updateRank(adminSelectedUser.uid, r.id as UserRank)}
+                                  className={cn(
+                                    "p-2 rounded-xl border text-[9px] font-bold uppercase tracking-widest transition-all flex items-center gap-2",
+                                    adminSelectedUser.rank === r.id
+                                      ? "bg-red-500 border-red-500 text-white"
+                                      : "bg-white/5 border-white/10 text-white/40 hover:border-red-500/50 hover:text-white"
+                                  )}
+                                >
+                                  <img src={r.icon} className="w-3 h-3 object-contain" alt="" />
+                                  {r.name}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Moderation Actions */}
+                      <div className="p-8 bg-red-500/5 border border-red-500/10 rounded-[2.5rem] space-y-6">
+                        <h4 className="text-[10px] font-bold text-red-500 uppercase tracking-[0.2em] text-center">Moderation Actions</h4>
+                        <div className="grid grid-cols-3 gap-4">
+                          {adminSelectedUser.isBanned ? (
+                            <button 
+                              onClick={() => moderateUser(adminSelectedUser.uid, 'unban')}
+                              className="p-4 rounded-2xl bg-green-500/10 border border-green-500/20 text-green-500 text-xs font-bold uppercase tracking-widest hover:bg-green-500/20 transition-all flex flex-col items-center gap-2"
+                            >
+                              <Ban className="w-5 h-5" />
+                              Unban User
+                            </button>
+                          ) : (
+                            <button 
+                              onClick={() => {
+                                const reason = prompt('Enter ban reason:');
+                                if (reason) moderateUser(adminSelectedUser.uid, 'ban', reason);
+                              }}
+                              className="p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-bold uppercase tracking-widest hover:bg-red-500/20 transition-all flex flex-col items-center gap-2"
+                            >
+                              <Ban className="w-5 h-5" />
+                              Ban User
+                            </button>
+                          )}
+
+                          {adminSelectedUser.isKicked ? (
+                            <button 
+                              onClick={() => moderateUser(adminSelectedUser.uid, 'unkick')}
+                              className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-bold uppercase tracking-widest hover:bg-amber-500/20 transition-all flex flex-col items-center gap-2"
+                            >
+                              <Hammer className="w-5 h-5" />
+                              Unkick User
+                            </button>
+                          ) : (
+                            <button 
+                              onClick={() => {
+                                const reason = prompt('Enter kick reason:');
+                                const duration = prompt('Enter duration in minutes:', '10');
+                                if (reason && duration) moderateUser(adminSelectedUser.uid, 'kick', reason, parseInt(duration));
+                              }}
+                              className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-bold uppercase tracking-widest hover:bg-amber-500/20 transition-all flex flex-col items-center gap-2"
+                            >
+                              <Hammer className="w-5 h-5" />
+                              Kick User
+                            </button>
+                          )}
+
+                          {adminSelectedUser.isMuted ? (
+                            <button 
+                              onClick={() => moderateUser(adminSelectedUser.uid, 'unmute')}
+                              className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-bold uppercase tracking-widest hover:bg-amber-500/20 transition-all flex flex-col items-center gap-2"
+                            >
+                              <VolumeX className="w-5 h-5" />
+                              Unmute User
+                            </button>
+                          ) : (
+                            <button 
+                              onClick={() => {
+                                const reason = prompt('Enter mute reason:');
+                                const duration = prompt('Enter duration in minutes:', '10');
+                                if (reason && duration) moderateUser(adminSelectedUser.uid, 'mute', reason, parseInt(duration));
+                              }}
+                              className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-bold uppercase tracking-widest hover:bg-amber-500/20 transition-all flex flex-col items-center gap-2"
+                            >
+                              <VolumeX className="w-5 h-5" />
+                              Mute User
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-20">
+                      <Shield className="w-20 h-20 text-white" />
+                      <div>
+                        <p className="text-xl font-serif italic text-white">No User Selected</p>
+                        <p className="text-xs font-bold uppercase tracking-widest">Select a user from the sidebar to manage</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </motion.div>
           </div>

@@ -47,13 +47,20 @@ import {
   Award,
   Smile,
   Terminal,
-  Trash2
+  Trash2,
+  BarChart2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { GoogleGenAI } from '@google/genai';
 import confetti from 'canvas-confetti';
 import Markdown from 'react-markdown';
+import { UserOptions } from './UserOptions';
+import { RatingModal } from './RatingModal';
+import { ForceSpeakModal } from './ForceSpeakModal';
+import { AdminModal } from './AdminModal';
+import { PollModal } from './PollModal';
+import { RatingsList } from './RatingsList';
 
 // Initialize Gemini API
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
@@ -73,6 +80,19 @@ export default function Chat({ user }: ChatProps) {
   const [showThemeEditor, setShowThemeEditor] = useState(false);
   const [showCardEditor, setShowCardEditor] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [showForceSpeakModal, setShowForceSpeakModal] = useState(false);
+  const [showAdminModal, setShowAdminModal] = useState(false);
+  const [showPollModal, setShowPollModal] = useState(false);
+  const [showStatusEditor, setShowStatusEditor] = useState(false);
+  const [newStatus, setNewStatus] = useState(user.status || '');
+  const [showRatingsList, setShowRatingsList] = useState(false);
+  const [selectedUserForOptions, setSelectedUserForOptions] = useState<User | null>(null);
+  const [selectedUserForRating, setSelectedUserForRating] = useState<User | null>(null);
+  const [selectedUserForForceSpeak, setSelectedUserForForceSpeak] = useState<User | null>(null);
+  const [selectedUserForAdmin, setSelectedUserForAdmin] = useState<User | null>(null);
+  const [selectedUserForRatingsList, setSelectedUserForRatingsList] = useState<User | null>(null);
+  const [adminAction, setAdminAction] = useState<'mute' | 'kick' | 'ban'>('mute');
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const [showNews, setShowNews] = useState(false);
@@ -415,6 +435,35 @@ export default function Chat({ user }: ChatProps) {
     } catch (err) {
       console.error(err);
       showToast('Failed to load profile');
+    }
+  };
+
+  const handleProfileClick = (uid: string) => {
+    const targetUser = allUsers.find(u => u.uid === uid);
+    if (targetUser) {
+      setSelectedUserForOptions(targetUser as unknown as User);
+    }
+  };
+
+  const handleVote = async (messageId: string, optionIndex: number) => {
+    const msg = messages.find(m => m.id === messageId);
+    if (!msg || !msg.pollData) return;
+    
+    const hasVoted = msg.pollData.options.some(o => o.voters?.includes(user.uid));
+    if (hasVoted) return;
+
+    const newOptions = [...msg.pollData.options];
+    const option = { ...newOptions[optionIndex] };
+    option.votes += 1;
+    option.voters = [...(option.voters || []), user.uid];
+    newOptions[optionIndex] = option;
+
+    try {
+      await updateDoc(doc(db, 'messages', messageId), {
+        'pollData.options': newOptions
+      });
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -1104,6 +1153,53 @@ export default function Chat({ user }: ChatProps) {
             {messages.map((msg, i) => {
               const isMe = msg.senderId === user.uid;
               
+              if (msg.type === 'poll' && msg.pollData) {
+                const totalVotes = msg.pollData.options.reduce((acc, o) => acc + o.votes, 0);
+                const hasVoted = msg.pollData.options.some(o => o.voters?.includes(user.uid));
+
+                return (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    key={msg.id || i}
+                    className="flex flex-col items-center justify-center py-8 px-6 bg-zinc-900/80 backdrop-blur-md rounded-3xl border border-white/10 max-w-md mx-auto w-full text-center space-y-6 shadow-2xl"
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                      <BarChart2 className="w-8 h-8 text-amber-500" />
+                      <h3 className="text-xl font-bold text-white">{msg.pollData.question}</h3>
+                      <p className="text-[10px] text-white/40 uppercase tracking-widest">Created by {msg.senderUsername}</p>
+                    </div>
+
+                    <div className="w-full space-y-3">
+                      {msg.pollData.options.map((opt, idx) => {
+                        const percentage = totalVotes > 0 ? Math.round((opt.votes / totalVotes) * 100) : 0;
+                        return (
+                          <button
+                            key={idx}
+                            disabled={hasVoted}
+                            onClick={() => handleVote(msg.id, idx)}
+                            className={cn(
+                              "w-full relative h-12 rounded-xl overflow-hidden border transition-all",
+                              hasVoted ? "border-white/5 bg-white/5 cursor-default" : "border-white/10 bg-black/40 hover:border-amber-500/50"
+                            )}
+                          >
+                            <div 
+                              className="absolute inset-y-0 left-0 bg-amber-500/20 transition-all duration-500" 
+                              style={{ width: `${percentage}%` }}
+                            />
+                            <div className="relative h-full flex items-center justify-between px-4 text-sm font-bold">
+                              <span className="text-white/80">{opt.text}</span>
+                              <span className="text-amber-500">{percentage}%</span>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="text-[10px] text-white/20 uppercase tracking-widest font-bold">{totalVotes} Total Votes</p>
+                  </motion.div>
+                );
+              }
+
               if (msg.type === 'gamble_allin' || msg.type === 'gamble_dice') {
                 const data = msg.gambleData!;
                 const DiceIcon = data.diceRoll ? DiceIcons[data.diceRoll - 1] : null;
@@ -1118,7 +1214,7 @@ export default function Chat({ user }: ChatProps) {
                     <p className="text-xs font-bold text-amber-500 uppercase tracking-[0.3em]">{msg.senderUsername} did {msg.type === 'gamble_allin' ? '/allin' : '/dice'}</p>
                     <img 
                       src={msg.senderPfp} 
-                      onClick={() => viewProfile(msg.senderId)}
+                      onClick={() => handleProfileClick(msg.senderId)}
                       className="w-20 h-20 rounded-full border-2 border-white/20 shadow-2xl cursor-pointer hover:scale-105 transition-transform" 
                     />
                     
@@ -1168,7 +1264,7 @@ export default function Chat({ user }: ChatProps) {
                   <div className="relative flex-shrink-0">
                     <img 
                       src={msg.senderPfp} 
-                      onClick={() => viewProfile(msg.senderId)}
+                      onClick={() => handleProfileClick(msg.senderId)}
                       className="w-10 h-10 rounded-full border border-white/20 object-cover shadow-lg cursor-pointer hover:scale-105 transition-transform" 
                     />
                     {msg.senderId === 'admin' && <Shield className="w-3 h-3 text-amber-400 absolute -top-1 -right-1" />}
@@ -1217,6 +1313,13 @@ export default function Chat({ user }: ChatProps) {
                 placeholder="Share your thoughts or try /allin gold..."
                 className="flex-1 bg-transparent px-6 py-3 focus:outline-none text-white placeholder:text-white/20 text-sm"
               />
+              <button
+                type="button"
+                onClick={() => setShowPollModal(true)}
+                className="px-4 text-white/40 hover:text-white transition-colors"
+              >
+                <BarChart2 className="w-5 h-5" />
+              </button>
               <button
                 type="submit"
                 className="group relative px-6 rounded-xl overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-lg"
@@ -1280,7 +1383,7 @@ export default function Chat({ user }: ChatProps) {
                   <div className="relative">
                     <img 
                       src={u.pfp} 
-                      onClick={() => viewProfile(u.uid)}
+                      onClick={() => handleProfileClick(u.uid)}
                       className="relative w-12 h-12 rounded-full border border-white/20 object-cover transition-transform group-hover:scale-105 cursor-pointer" 
                     />
                     <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 border-[3px] border-black rounded-full shadow-lg" />
@@ -1311,17 +1414,25 @@ export default function Chat({ user }: ChatProps) {
             <div className="relative h-24 rounded-xl overflow-hidden border border-white/10 mb-3">
               <img src={user.banner} className="w-full h-full object-cover opacity-40" />
               <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent" />
-              <div className="absolute bottom-2 left-3 flex items-center gap-2">
-                <img src={user.pfp} className="w-8 h-8 rounded-full border border-white/20" />
-                  <div className="flex items-center gap-1.5">
-                    <p className="text-xs font-serif text-white">{user.username}</p>
-                    <img 
-                      src={user.customRank?.icon || RANKS.find(r => r.id === (user.rank || 'VIP'))?.icon} 
-                      className="w-3.5 h-3.5 object-contain"
-                      alt="rank"
-                    />
+                <div className="absolute bottom-2 left-3 flex items-center gap-2">
+                  <img src={user.pfp} className="w-8 h-8 rounded-full border border-white/20" />
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-xs font-serif text-white">{user.username}</p>
+                      <img 
+                        src={user.customRank?.icon || RANKS.find(r => r.id === (user.rank || 'VIP'))?.icon} 
+                        className="w-3.5 h-3.5 object-contain"
+                        alt="rank"
+                      />
+                    </div>
+                    <button 
+                      onClick={() => setShowStatusEditor(true)}
+                      className="text-[10px] text-white/40 hover:text-white/60 text-left truncate max-w-[120px]"
+                    >
+                      {user.status || 'Set status...'}
+                    </button>
                   </div>
-              </div>
+                </div>
             </div>
             {/* Quick Wallet Stats */}
           </div>
@@ -2074,6 +2185,27 @@ export default function Chat({ user }: ChatProps) {
                     <p className="text-white/80 text-sm leading-relaxed italic">
                       {selectedProfile.bio || "This user is too cool for a bio..."}
                     </p>
+                  </div>
+
+                  {/* Recent Visitors */}
+                  <div className="p-6 rounded-3xl bg-white/5 border border-white/5">
+                    <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-3">Recent Visitors</p>
+                    <div className="flex -space-x-2 overflow-hidden">
+                      {notifications
+                        .filter(n => n.type === 'profile_view' && n.userId === selectedProfile.uid)
+                        .slice(0, 5)
+                        .map((n, i) => (
+                          <img 
+                            key={i}
+                            src={n.senderPfp} 
+                            title={n.senderUsername}
+                            className="inline-block h-8 w-8 rounded-full ring-2 ring-zinc-900 object-cover" 
+                          />
+                        ))}
+                      {notifications.filter(n => n.type === 'profile_view' && n.userId === selectedProfile.uid).length === 0 && (
+                        <p className="text-[10px] text-white/20 italic">No recent visitors</p>
+                      )}
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -3014,6 +3146,135 @@ export default function Chat({ user }: ChatProps) {
           </div>
         )}
       </AnimatePresence>
+
+      {selectedUserForOptions && (
+        <UserOptions 
+          targetUser={selectedUserForOptions}
+          currentUser={user}
+          onClose={() => setSelectedUserForOptions(null)}
+          onViewProfile={viewProfile}
+          onRateProfile={(uid) => {
+            const targetUser = allUsers.find(u => u.uid === uid);
+            if (targetUser) {
+              setSelectedUserForRating(targetUser as unknown as User);
+              setShowRatingModal(true);
+            }
+            setSelectedUserForOptions(null);
+          }}
+          onForceSpeak={(uid) => {
+            const targetUser = allUsers.find(u => u.uid === uid);
+            if (targetUser) {
+              setSelectedUserForForceSpeak(targetUser as unknown as User);
+              setShowForceSpeakModal(true);
+            }
+            setSelectedUserForOptions(null);
+          }}
+          onMute={(uid) => {
+            const targetUser = allUsers.find(u => u.uid === uid);
+            if (targetUser) {
+              setSelectedUserForAdmin(targetUser as unknown as User);
+              setAdminAction('mute');
+              setShowAdminModal(true);
+            }
+            setSelectedUserForOptions(null);
+          }}
+          onKick={(uid) => {
+            const targetUser = allUsers.find(u => u.uid === uid);
+            if (targetUser) {
+              setSelectedUserForAdmin(targetUser as unknown as User);
+              setAdminAction('kick');
+              setShowAdminModal(true);
+            }
+            setSelectedUserForOptions(null);
+          }}
+          onBan={(uid) => {
+            const targetUser = allUsers.find(u => u.uid === uid);
+            if (targetUser) {
+              setSelectedUserForAdmin(targetUser as unknown as User);
+              setAdminAction('ban');
+              setShowAdminModal(true);
+            }
+            setSelectedUserForOptions(null);
+          }}
+          onViewRatings={(uid) => {
+            const targetUser = allUsers.find(u => u.uid === uid);
+            if (targetUser) {
+              setSelectedUserForRatingsList(targetUser as unknown as User);
+              setShowRatingsList(true);
+            }
+            setSelectedUserForOptions(null);
+          }}
+        />
+      )}
+
+      {showRatingModal && selectedUserForRating && (
+        <RatingModal
+          targetUid={selectedUserForRating.uid}
+          targetUsername={selectedUserForRating.username}
+          currentUser={user}
+          onClose={() => setShowRatingModal(false)}
+        />
+      )}
+
+      {showForceSpeakModal && selectedUserForForceSpeak && (
+        <ForceSpeakModal
+          targetUid={selectedUserForForceSpeak.uid}
+          targetUsername={selectedUserForForceSpeak.username}
+          targetPfp={selectedUserForForceSpeak.pfp}
+          onClose={() => setShowForceSpeakModal(false)}
+        />
+      )}
+      {showAdminModal && selectedUserForAdmin && (
+        <AdminModal
+          targetUid={selectedUserForAdmin.uid}
+          targetUsername={selectedUserForAdmin.username}
+          action={adminAction}
+          onClose={() => setShowAdminModal(false)}
+        />
+      )}
+
+      {showPollModal && (
+        <PollModal
+          currentUser={user}
+          onClose={() => setShowPollModal(false)}
+        />
+      )}
+
+      {showRatingsList && selectedUserForRatingsList && (
+        <RatingsList
+          targetUid={selectedUserForRatingsList.uid}
+          currentUserUid={user.uid}
+          onClose={() => setShowRatingsList(false)}
+        />
+      )}
+
+      {showStatusEditor && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-lg font-bold text-white">Set Status</h2>
+              <button onClick={() => setShowStatusEditor(false)} className="text-white/60 hover:text-white"><X className="w-5 h-5" /></button>
+            </div>
+            <input 
+              value={newStatus}
+              onChange={(e) => setNewStatus(e.target.value)}
+              placeholder="What's on your mind?"
+              maxLength={50}
+              className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white mb-4"
+            />
+            <button 
+              onClick={async () => {
+                await updateDoc(doc(db, 'users', user.uid), { status: newStatus });
+                setShowStatusEditor(false);
+                showToast('Status updated!');
+              }}
+              className="w-full py-3 rounded-xl bg-amber-500 text-black font-bold uppercase tracking-widest hover:bg-amber-400 transition-colors"
+            >
+              Update Status
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

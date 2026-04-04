@@ -99,6 +99,8 @@ export interface UserProfile {
   xp?: number;
   level?: number;
   lastDailyReward?: any;
+  badges?: string[];
+  status?: string;
 }
 
 export interface Message {
@@ -117,6 +119,10 @@ export interface Message {
     multiplier: number;
     winAmount: number;
     diceRoll?: number;
+  };
+  pollData?: {
+    question: string;
+    options: { text: string; votes: number; voters?: string[] }[];
   };
 }
 
@@ -159,5 +165,16 @@ export interface AppUpdate {
   version: string;
   title: string;
   content: string;
+  timestamp: any;
+}
+
+export interface ProfileRating {
+  id: string;
+  targetUid: string;
+  authorUid: string;
+  authorUsername: string;
+  authorPfp: string;
+  rating: number; // 1 to 5
+  comment: string;
   timestamp: any;
 }

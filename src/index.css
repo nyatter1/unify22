@@ -212,4 +212,316 @@
     0% { background-position: 0 100%, 40px 100%; }
     100% { background-position: 0 -100%, 40px -100%; }
   }
+
+  /* New Effects */
+  .effect-wind {
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    background-size: 200% 100%;
+    animation: wind 3s linear infinite;
+    pointer-events: none;
+  }
+  @keyframes wind {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  .effect-fog {
+    background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
+    animation: fog 5s ease-in-out infinite alternate;
+    pointer-events: none;
+  }
+  @keyframes fog {
+    0% { transform: scale(1); opacity: 0.3; }
+    100% { transform: scale(1.5); opacity: 0.1; }
+  }
+
+  .effect-data {
+    background: linear-gradient(to bottom, rgba(0,255,0,0) 0%, rgba(0,255,0,0.1) 50%, rgba(0,255,0,0) 100%);
+    background-size: 100% 20px;
+    animation: data 2s linear infinite;
+    pointer-events: none;
+  }
+  @keyframes data {
+    0% { background-position: 0 -20px; }
+    100% { background-position: 0 20px; }
+  }
+
+  .effect-circuit {
+    background-image: radial-gradient(rgba(0,255,255,0.2) 1px, transparent 1px);
+    background-size: 20px 20px;
+    pointer-events: none;
+  }
+
+  .effect-neon-grid {
+    background-image: linear-gradient(rgba(255,0,255,0.1) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(255,0,255,0.1) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
+
+  .effect-fire {
+    background: linear-gradient(to top, rgba(255,100,0,0.4), rgba(255,0,0,0.2), transparent);
+    animation: fire 1s ease-in-out infinite alternate;
+    pointer-events: none;
+  }
+  @keyframes fire {
+    0% { transform: translateY(0) scaleY(1); }
+    100% { transform: translateY(-10px) scaleY(1.1); }
+  }
+
+  .effect-water {
+    background: linear-gradient(to bottom, rgba(0,100,255,0.2), rgba(0,200,255,0.2));
+    animation: water 3s ease-in-out infinite alternate;
+    pointer-events: none;
+  }
+  @keyframes water {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(5px); }
+  }
+
+  .effect-plasma {
+    background: radial-gradient(circle, rgba(128,0,255,0.3), rgba(255,0,128,0.3));
+    animation: plasma 5s ease-in-out infinite alternate;
+    pointer-events: none;
+  }
+  @keyframes plasma {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.2); }
+  }
+
+  .effect-nebula {
+    background: radial-gradient(circle at 50% 50%, rgba(128,0,255,0.2), rgba(0,0,0,0.8));
+    animation: nebula 10s ease-in-out infinite alternate;
+    pointer-events: none;
+  }
+  @keyframes nebula {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.5); }
+  }
+
+  .effect-comet {
+    background: linear-gradient(45deg, transparent, rgba(255,255,255,0.3), transparent);
+    background-size: 200% 200%;
+    animation: comet 2s linear infinite;
+    pointer-events: none;
+  }
+  @keyframes comet {
+    0% { background-position: 200% 200%; }
+    100% { background-position: -200% -200%; }
+  }
+
+  .effect-noise {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    opacity: 0.1;
+    pointer-events: none;
+  }
+
+  .effect-grain {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    opacity: 0.05;
+    pointer-events: none;
+  }
+
+  .effect-paper {
+    background-color: #f4e4bc;
+    background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.5' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    opacity: 0.2;
+    pointer-events: none;
+  }
+
+  .effect-canvas {
+    background-color: #d2b48c;
+    background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%239C92AC' fill-opacity='0.4' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='3'/%3E%3Ccircle cx='13' cy='13' r='3'/%3E%3C/g%3E%3C/svg%3E");
+    opacity: 0.1;
+    pointer-events: none;
+  }
+
+  .effect-grid {
+    background-image: linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+    pointer-events: none;
+  }
+
+  .effect-dots {
+    background-image: radial-gradient(rgba(255,255,255,0.2) 1px, transparent 1px);
+    background-size: 10px 10px;
+    pointer-events: none;
+  }
+
+  .effect-stripes {
+    background: repeating-linear-gradient(45deg, rgba(255,255,255,0.05), rgba(255,255,255,0.05) 10px, transparent 10px, transparent 20px);
+    pointer-events: none;
+  }
+
+  .effect-disco {
+    background: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet);
+    background-size: 400% 400%;
+    animation: disco 2s linear infinite;
+    pointer-events: none;
+    mix-blend-mode: overlay;
+  }
+  @keyframes disco {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  .effect-fireworks {
+    background: radial-gradient(circle, rgba(255,255,0,0.5) 0%, transparent 50%);
+    animation: fireworks 1s ease-out infinite;
+    pointer-events: none;
+  }
+  @keyframes fireworks {
+    0% { transform: scale(0); opacity: 1; }
+    100% { transform: scale(2); opacity: 0; }
+  }
+
+  .effect-laser {
+    background: linear-gradient(to right, transparent, rgba(255,0,0,0.5), transparent);
+    animation: laser 0.5s linear infinite;
+    pointer-events: none;
+  }
+  @keyframes laser {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  .effect-wave {
+    background: linear-gradient(to bottom, rgba(255,255,255,0.1), transparent);
+    animation: wave 2s ease-in-out infinite alternate;
+    pointer-events: none;
+  }
+  @keyframes wave {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(10px); }
+  }
+
+  .effect-flow {
+    background: linear-gradient(45deg, rgba(255,255,255,0.1), transparent);
+    animation: flow 5s linear infinite;
+    pointer-events: none;
+  }
+  @keyframes flow {
+    0% { background-position: 0 0; }
+    100% { background-position: 100% 100%; }
+  }
+
+  .effect-warp {
+    background: radial-gradient(circle, rgba(255,255,255,0.2), transparent);
+    animation: warp 2s ease-in-out infinite alternate;
+    pointer-events: none;
+  }
+  @keyframes warp {
+    0% { transform: scale(1); }
+    100% { transform: scale(2); }
+  }
+
+  .effect-tunnel {
+    background: radial-gradient(circle, transparent, rgba(0,0,0,0.5));
+    animation: tunnel 5s linear infinite;
+    pointer-events: none;
+  }
+  @keyframes tunnel {
+    0% { transform: scale(1); }
+    100% { transform: scale(0.5); }
+  }
+
+  .effect-vortex {
+    background: radial-gradient(circle, rgba(255,255,255,0.2), transparent);
+    animation: vortex 5s linear infinite;
+    pointer-events: none;
+  }
+  @keyframes vortex {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  .effect-sparkles {
+    background-image: radial-gradient(white 1px, transparent 2px);
+    background-size: 50px 50px;
+    animation: sparkles 2s linear infinite;
+    pointer-events: none;
+  }
+  @keyframes sparkles {
+    0% { opacity: 0; }
+    50% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+
+  .effect-smoke {
+    background: radial-gradient(circle, rgba(255,255,255,0.1), transparent);
+    animation: smoke 5s ease-in-out infinite alternate;
+    pointer-events: none;
+  }
+  @keyframes smoke {
+    0% { transform: translateY(0) scale(1); opacity: 0.5; }
+    100% { transform: translateY(-50px) scale(1.5); opacity: 0; }
+  }
+
+  .effect-sand {
+    background-image: radial-gradient(rgba(255,200,100,0.2) 1px, transparent 2px);
+    background-size: 5px 5px;
+    animation: sand 2s linear infinite;
+    pointer-events: none;
+  }
+  @keyframes sand {
+    0% { background-position: 0 0; }
+    100% { background-position: 10px 10px; }
+  }
+
+  .effect-lava {
+    background: linear-gradient(to bottom, #ff4500, #ff8c00);
+    animation: lava 5s ease-in-out infinite alternate;
+    pointer-events: none;
+  }
+  @keyframes lava {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(10px); }
+  }
+
+  .effect-ice {
+    background: linear-gradient(to bottom, #e0ffff, #add8e6);
+    animation: ice 5s ease-in-out infinite alternate;
+    pointer-events: none;
+  }
+  @keyframes ice {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-10px); }
+  }
+
+  .effect-shadow {
+    box-shadow: inset 0 0 50px rgba(0,0,0,0.5);
+    pointer-events: none;
+  }
+
+  .effect-light {
+    box-shadow: inset 0 0 50px rgba(255,255,255,0.5);
+    pointer-events: none;
+  }
+
+  .effect-bloom {
+    filter: blur(10px);
+    pointer-events: none;
+  }
+
+  .effect-blur {
+    filter: blur(5px);
+    pointer-events: none;
+  }
+
+  .effect-invert {
+    filter: invert(1);
+    pointer-events: none;
+  }
+
+  .effect-sepia {
+    filter: sepia(1);
+    pointer-events: none;
+  }
+
+  .effect-grayscale {
+    filter: grayscale(1);
+    pointer-events: none;
+  }
 }

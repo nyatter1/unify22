@@ -2472,7 +2472,7 @@ export default function Chat({ user }: ChatProps) {
                           <span className="font-bold text-white">{notif.senderUsername}</span>
                           {notif.type === 'profile_view' && ' viewed your profile'}
                           {notif.type === 'profile_like' && ' liked your profile'}
-                          {notif.type === 'news_post' && ' posted a news update'}
+                          {notif.type === 'news_post' && ` posted: "${notif.content}"`}
                           {notif.type === 'mention' && ' mentioned you in chat'}
                         </p>
                         <p className="text-xs text-white/40 mt-1">
@@ -2817,10 +2817,10 @@ export default function Chat({ user }: ChatProps) {
                           const notifRef = doc(collection(db, 'notifications'));
                           batch.set(notifRef, {
                             userId: u.uid,
-                            senderId: 'system',
-                            senderUsername: 'SYSTEM',
-                            senderPfp: 'https://api.dicebear.com/7.x/bottts/svg?seed=system',
-                            type: 'news_post', // Using news_post type for general notifications
+                            senderId: user.uid,
+                            senderUsername: user.username,
+                            senderPfp: user.pfp,
+                            type: 'news_post',
                             content: input.value,
                             read: false,
                             timestamp: serverTimestamp()

@@ -1,4 +1,4 @@
-import { Theme, CardStyle } from './types';
+import { Theme, CardStyle, MessageEffect, ProfileBadge } from './types';
 
 export const AVATARS = [
   'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix',
@@ -100,4 +100,25 @@ export const CARD_STYLES: CardStyle[] = [
   { id: 'the-matrix', name: 'The Matrix', category: 'Extreme', bgClass: 'bg-black/90', borderClass: 'border-green-500/20', textClass: 'text-green-500 font-mono text-[10px] leading-none' },
   { id: 'the-gold-bar', name: 'Gold Bar', category: 'Extreme', bgClass: 'bg-gradient-to-r from-yellow-600 via-yellow-400 to-yellow-600', borderClass: 'border-yellow-700 border-b-4 border-r-4', textClass: 'text-yellow-950 font-black uppercase' },
   { id: 'the-void-walker', name: 'Void Walker', category: 'Extreme', bgClass: 'bg-black', borderClass: 'border-purple-900/50 shadow-[0_0_40px_rgba(88,28,135,0.4)]', textClass: 'text-purple-500 font-thin tracking-[0.3em]' }
+];
+
+export const MESSAGE_EFFECTS: MessageEffect[] = [
+  { id: 'none', name: 'None', animation: 'none' },
+  { id: 'fade-in', name: 'Soft Fade', animation: 'fade' },
+  { id: 'slide-up', name: 'Slide Up', animation: 'slide' },
+  { id: 'bounce-in', name: 'Bounce', animation: 'bounce' },
+  { id: 'zoom-in', name: 'Pop In', animation: 'zoom' },
+  { id: 'glow-blue', name: 'Blue Glow', animation: 'none', glowColor: 'rgba(59,130,246,0.5)' },
+  { id: 'glow-red', name: 'Red Glow', animation: 'none', glowColor: 'rgba(239,68,68,0.5)' },
+  { id: 'stars-trail', name: 'Star Trail', animation: 'none', particles: 'stars' },
+  { id: 'fire-trail', name: 'Fire Trail', animation: 'none', particles: 'fire' },
+];
+
+export const PROFILE_BADGES: ProfileBadge[] = [
+  { id: 'og', name: 'OG', icon: 'Crown', color: '#f59e0b', label: 'Original Member' },
+  { id: 'verified', name: 'Verified', icon: 'Check', color: '#3b82f6', label: 'Verified User' },
+  { id: 'whale', name: 'Whale', icon: 'Gem', color: '#10b981', label: 'Big Spender' },
+  { id: 'hacker', name: 'Hacker', icon: 'Shield', color: '#22c55e', label: 'System Admin' },
+  { id: 'chaos', name: 'Chaos', icon: 'Dice6', color: '#ef4444', label: 'Chaos Bringer' },
+  { id: 'rich', name: 'Rich', icon: 'Coins', color: '#fbbf24', label: 'Wealthy' },
 ];

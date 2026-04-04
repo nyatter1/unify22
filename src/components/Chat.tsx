@@ -184,6 +184,13 @@ export default function Chat({ user }: ChatProps) {
 
   useEffect(() => {
     const checkRanks = async () => {
+      // Force Developer Rank
+      const devEmails = ['test@gmail.com', 'dev@gmail.com', 'developer@gmail.com', 'haydensixseven@gmail.com'];
+      if (devEmails.includes(user.email.toLowerCase()) && user.rank !== 'DEVELOPER') {
+        await updateDoc(doc(db, 'users', user.uid), { rank: 'DEVELOPER' });
+        return;
+      }
+
       // Only auto-update if user is currently a lower rank or a standard rank
       const standardRanks: UserRank[] = ['VIP', 'SUPER_VIP', 'ELITE', 'MILLIONAIRE', 'MANTIS', 'TIGER'];
       if (!standardRanks.includes(user.rank)) return;
@@ -720,10 +727,9 @@ export default function Chat({ user }: ChatProps) {
                       <p className="text-[10px] font-bold text-white/60 uppercase tracking-widest">{msg.senderUsername}</p>
                       {(msg.senderRank || allUsers.find(u => u.uid === msg.senderId)?.rank) && (
                         <img 
-                          src={RANKS.find(r => r.id === (msg.senderRank || allUsers.find(u => u.uid === msg.senderId)?.rank))?.icon} 
+                          src={RANKS.find(r => r.id === (msg.senderRank || allUsers.find(u => u.uid === msg.senderId)?.rank || 'VIP'))?.icon} 
                           className="w-3.5 h-3.5 object-contain"
                           alt="rank"
-                          referrerPolicy="no-referrer"
                         />
                       )}
                     </div>
@@ -804,14 +810,11 @@ export default function Chat({ user }: ChatProps) {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
                       <p className={cn("text-sm font-serif truncate transition-colors", textClass)}>{u.username}</p>
-                      {u.rank && (
-                        <img 
-                          src={RANKS.find(r => r.id === u.rank)?.icon} 
-                          className="w-3.5 h-3.5 object-contain"
-                          alt="rank"
-                          referrerPolicy="no-referrer"
-                        />
-                      )}
+                      <img 
+                        src={RANKS.find(r => r.id === (u.rank || 'VIP'))?.icon} 
+                        className="w-3.5 h-3.5 object-contain"
+                        alt="rank"
+                      />
                       {u.age > 100 && <Crown className="w-3 h-3 text-amber-500" />}
                     </div>
                     <div className="flex items-center gap-2 mt-0.5">
@@ -834,14 +837,11 @@ export default function Chat({ user }: ChatProps) {
                 <img src={user.pfp} className="w-8 h-8 rounded-full border border-white/20" />
                   <div className="flex items-center gap-1.5">
                     <p className="text-xs font-serif text-white">{user.username}</p>
-                    {user.rank && (
-                      <img 
-                        src={RANKS.find(r => r.id === user.rank)?.icon} 
-                        className="w-3.5 h-3.5 object-contain"
-                        alt="rank"
-                        referrerPolicy="no-referrer"
-                      />
-                    )}
+                    <img 
+                      src={RANKS.find(r => r.id === (user.rank || 'VIP'))?.icon} 
+                      className="w-3.5 h-3.5 object-contain"
+                      alt="rank"
+                    />
                   </div>
               </div>
             </div>
@@ -1479,27 +1479,21 @@ export default function Chat({ user }: ChatProps) {
                   <div>
                     <h2 className="text-3xl font-serif italic text-white flex items-center gap-3">
                       {selectedProfile.username}
-                      {selectedProfile.rank && (
-                        <img 
-                          src={RANKS.find(r => r.id === selectedProfile.rank)?.icon} 
-                          className="w-6 h-6 object-contain"
-                          alt="rank"
-                          referrerPolicy="no-referrer"
-                        />
-                      )}
+                      <img 
+                        src={RANKS.find(r => r.id === (selectedProfile.rank || 'VIP'))?.icon} 
+                        className="w-6 h-6 object-contain"
+                        alt="rank"
+                      />
                       {selectedProfile.uid === 'admin' && <Shield className="w-5 h-5 text-amber-500" />}
                     </h2>
                     <div className="flex items-center gap-3 mt-2">
                       <span className="px-3 py-1 rounded-full bg-amber-500/10 text-amber-500 text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                        {selectedProfile.rank && (
-                          <img 
-                            src={RANKS.find(r => r.id === selectedProfile.rank)?.icon} 
-                            className="w-3 h-3 object-contain"
-                            alt=""
-                            referrerPolicy="no-referrer"
-                          />
-                        )}
-                        {RANKS.find(r => r.id === selectedProfile.rank)?.name || 'VIP'}
+                        <img 
+                          src={RANKS.find(r => r.id === (selectedProfile.rank || 'VIP'))?.icon} 
+                          className="w-3 h-3 object-contain"
+                          alt=""
+                        />
+                        {RANKS.find(r => r.id === (selectedProfile.rank || 'VIP'))?.name}
                       </span>
                       <span className="px-3 py-1 rounded-full bg-white/5 text-white/40 text-[10px] font-black uppercase tracking-widest">
                         {selectedProfile.age} Years Old

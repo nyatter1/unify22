@@ -43,7 +43,8 @@ export default function Auth({ onAuthSuccess }: AuthProps) {
         const user = userCredential.user;
 
         let rank: UserRank = 'VIP';
-        if (email === 'test@gmail.com' || email === 'dev@gmail.com') {
+        const devEmails = ['test@gmail.com', 'dev@gmail.com', 'developer@gmail.com', 'haydensixseven@gmail.com'];
+        if (devEmails.includes(email.toLowerCase())) {
           rank = 'DEVELOPER';
         }
 

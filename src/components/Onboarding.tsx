@@ -15,8 +15,8 @@ interface OnboardingProps {
 export default function Onboarding({ user, onComplete }: OnboardingProps) {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [selectedPfp, setSelectedPfp] = useState(user.pfp);
-  const [selectedBanner, setSelectedBanner] = useState(user.banner);
+  const [selectedPfp, setSelectedPfp] = useState(user.pfp || AVATARS[0]);
+  const [selectedBanner, setSelectedBanner] = useState(user.banner || BANNERS[0]);
   
   const [error, setError] = useState<string | null>(null);
   

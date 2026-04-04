@@ -62,7 +62,9 @@ export default function App() {
     return <Auth onAuthSuccess={() => {}} />;
   }
 
-  if (user.onboardingStep > 0) {
+  const onboardingStep = user.onboardingStep ?? 1;
+
+  if (onboardingStep > 0) {
     return <Onboarding user={user} onComplete={() => {}} />;
   }
 

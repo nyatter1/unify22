@@ -21,6 +21,38 @@ export default function Chat({ user }: ChatProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Auto-fix NaN or 0 balances
+    const fixBalances = async () => {
+      const updates: any = {};
+      let needsUpdate = false;
+
+      // NaN Protection
+      if (isNaN(user.gold)) {
+        updates.gold = 1000;
+        needsUpdate = true;
+      }
+      if (isNaN(user.rubies)) {
+        updates.rubies = 1000; // Prompt said "1000 of that currency" for NaN
+        needsUpdate = true;
+      }
+
+      // One-time Poverty Reset
+      if (!user.hasReceivedReset && (user.gold === 0 && user.rubies === 0)) {
+        updates.gold = 1000;
+        updates.rubies = 10;
+        updates.hasReceivedReset = true;
+        needsUpdate = true;
+      }
+
+      if (needsUpdate) {
+        await updateDoc(doc(db, 'users', user.uid), updates);
+      }
+    };
+
+    fixBalances();
+  }, [user.gold, user.rubies, user.hasReceivedReset, user.uid]);
+
+  useEffect(() => {
     const q = query(collection(db, 'messages'), orderBy('timestamp', 'asc'), limit(50));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Message));
@@ -69,7 +101,7 @@ export default function Chat({ user }: ChatProps) {
         }
 
         const balance = currency === 'gold' ? user.gold : user.rubies;
-        if (balance <= 0) {
+        if (balance <= 0 || isNaN(balance)) {
           showToast(`You have no ${currency} to gamble!`);
           return;
         }

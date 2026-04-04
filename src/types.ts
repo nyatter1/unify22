@@ -11,6 +11,7 @@ export interface UserProfile {
   lastSeen: any;
   gold: number;
   rubies: number;
+  hasReceivedReset?: boolean;
 }
 
 export interface Message {

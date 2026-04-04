@@ -53,6 +53,7 @@ export default function Chat({ user }: ChatProps) {
   const [showCardEditor, setShowCardEditor] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<UserProfile | null>(null);
   const [editTab, setEditTab] = useState<'username' | 'info' | 'bio' | 'pfp' | 'banner' | 'main'>('main');
   const [customizerTab, setCustomizerTab] = useState<'themes' | 'cards'>('themes');
@@ -588,6 +589,14 @@ export default function Chat({ user }: ChatProps) {
         </div>
 
         <div className="flex items-center gap-4">
+          {/* Sidebar Toggle */}
+          <button 
+            onClick={() => setShowSidebar(!showSidebar)}
+            className="lg:hidden p-2 rounded-xl bg-white/5 border border-white/10 text-white/80"
+          >
+            <Users className="w-5 h-5" />
+          </button>
+
           {/* Customizer Toggle */}
           <button 
             onClick={() => setShowCustomizer(true)}
@@ -662,7 +671,7 @@ export default function Chat({ user }: ChatProps) {
       <main className="flex-1 flex overflow-hidden relative z-10">
         {/* Chat Area */}
         <div className="flex-1 flex flex-col min-w-0 border-r border-white/10">
-          <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-8 custom-scrollbar">
             {messages.map((msg, i) => {
               const isMe = msg.senderId === user.uid;
               
@@ -788,16 +797,22 @@ export default function Chat({ user }: ChatProps) {
         </div>
 
         {/* Sidebar - Online Users (Pinned) */}
-        <aside className="w-80 bg-black/40 backdrop-blur-md flex flex-col hidden lg:flex">
-          <div className="p-8 border-b border-white/10">
-            <div className="flex items-center justify-between">
-              <h2 className="font-serif italic text-white text-lg flex items-center gap-3">
-                <Users className="w-5 h-5 text-amber-500" />
-                Online Now
-              </h2>
-              <div className="px-3 py-1 rounded-full text-[10px] font-bold bg-white/5 text-white/60 border border-white/10">
-                {onlineUsers.length}
-              </div>
+        <aside className={cn(
+          "fixed inset-y-0 right-0 z-40 w-80 bg-black/90 backdrop-blur-md flex flex-col transition-transform lg:static lg:transform-none",
+          showSidebar ? "translate-x-0" : "translate-x-full lg:translate-x-0"
+        )}>
+          <div className="p-8 border-b border-white/10 flex items-center justify-between">
+            <h2 className="font-serif italic text-white text-lg flex items-center gap-3">
+              <Users className="w-5 h-5 text-amber-500" />
+              Online Now
+            </h2>
+            <button onClick={() => setShowSidebar(false)} className="lg:hidden text-white/60">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          <div className="px-8 py-4 border-b border-white/10">
+            <div className="px-3 py-1 rounded-full text-[10px] font-bold bg-white/5 text-white/60 border border-white/10 inline-block">
+              {onlineUsers.length} Online
             </div>
           </div>
           

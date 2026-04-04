@@ -96,6 +96,9 @@ export interface UserProfile {
   };
   invites?: number;
   createdAt?: any;
+  xp?: number;
+  level?: number;
+  lastDailyReward?: any;
 }
 
 export interface Message {
@@ -103,9 +106,11 @@ export interface Message {
   senderId: string;
   senderUsername: string;
   senderPfp: string;
+  senderRank?: string;
   text: string;
   timestamp: any;
   type?: 'text' | 'gamble_allin' | 'gamble_dice';
+  likes?: string[];
   gambleData?: {
     currency: 'gold' | 'rubies';
     amount: number;

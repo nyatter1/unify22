@@ -40,10 +40,23 @@ import {
   BookOpen,
   MessageSquare,
   ThumbsUp,
-  ThumbsDown
+  ThumbsDown,
+  ShieldAlert,
+  Gift,
+  Zap,
+  Award,
+  Smile,
+  Terminal,
+  Trash2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
+import { GoogleGenAI } from '@google/genai';
+import confetti from 'canvas-confetti';
+import Markdown from 'react-markdown';
+
+// Initialize Gemini API
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
 
 interface ChatProps {
   user: UserProfile;
@@ -66,6 +79,8 @@ export default function Chat({ user }: ChatProps) {
   const [showUpdates, setShowUpdates] = useState(false);
   const [showRules, setShowRules] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [showDailyReward, setShowDailyReward] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [newsPosts, setNewsPosts] = useState<any[]>([]);
   const [appUpdates, setAppUpdates] = useState<any[]>([]);
@@ -254,12 +269,23 @@ export default function Chat({ user }: ChatProps) {
   }, [user.uid, user.invites, user.gold, user.createdAt, user.rank, allUsers]);
 
   useEffect(() => {
-    const q = query(collection(db, 'notifications'), where('userId', '==', user.uid), orderBy('timestamp', 'desc'), limit(20));
+    const q = query(collection(db, 'notifications'), where('userId', '==', user.uid));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const notifs = snapshot.docs.map(doc => ({
+      let notifs = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       })) as any[];
+      
+      // Sort by timestamp descending in memory to avoid needing a composite index
+      notifs.sort((a, b) => {
+        const timeA = a.timestamp?.toMillis ? a.timestamp.toMillis() : 0;
+        const timeB = b.timestamp?.toMillis ? b.timestamp.toMillis() : 0;
+        return timeB - timeA;
+      });
+      
+      // Limit to 20 in memory
+      notifs = notifs.slice(0, 20);
+      
       setNotifications(notifs);
       setUnreadNotifications(notifs.filter(n => !n.read).length);
     });
@@ -724,11 +750,128 @@ export default function Chat({ user }: ChatProps) {
         return;
       }
 
+      if (command === '/roll') {
+        const max = parseInt(parts[1]) || 100;
+        const result = Math.floor(Math.random() * max) + 1;
+        await addDoc(collection(db, 'messages'), {
+          senderId: user.uid,
+          senderUsername: user.username,
+          senderPfp: user.pfp,
+          senderRank: user.rank || 'VIP',
+          text: `🎲 Rolled a ${result} (1-${max})`,
+          type: 'text',
+          timestamp: serverTimestamp(),
+        });
+        return;
+      }
+
+      if (command === '/flip') {
+        const result = Math.random() > 0.5 ? 'Heads' : 'Tails';
+        await addDoc(collection(db, 'messages'), {
+          senderId: user.uid,
+          senderUsername: user.username,
+          senderPfp: user.pfp,
+          senderRank: user.rank || 'VIP',
+          text: `🪙 Flipped a coin: ${result}`,
+          type: 'text',
+          timestamp: serverTimestamp(),
+        });
+        return;
+      }
+
+      if (command === '/8ball') {
+        const question = parts.slice(1).join(' ');
+        if (!question) {
+          showToast('Ask a question! /8ball [question]');
+          return;
+        }
+        const answers = ['Yes', 'No', 'Maybe', 'Definitely', 'Absolutely not', 'Ask again later', 'I doubt it', 'Without a doubt'];
+        const answer = answers[Math.floor(Math.random() * answers.length)];
+        await addDoc(collection(db, 'messages'), {
+          senderId: user.uid,
+          senderUsername: user.username,
+          senderPfp: user.pfp,
+          senderRank: user.rank || 'VIP',
+          text: `🎱 Question: ${question}\nAnswer: ${answer}`,
+          type: 'text',
+          timestamp: serverTimestamp(),
+        });
+        return;
+      }
+
+      if (command === '/give') {
+        const targetUsername = parts[1];
+        const amount = parseInt(parts[2]);
+        const currency = parts[3]?.toLowerCase() || 'gold';
+
+        if (!targetUsername || isNaN(amount) || amount <= 0 || (currency !== 'gold' && currency !== 'rubies')) {
+          showToast('Usage: /give [username] [amount] [gold|rubies]');
+          return;
+        }
+
+        const balance = currency === 'gold' ? user.gold : user.rubies;
+        if (amount > balance) {
+          showToast(`Insufficient ${currency}!`);
+          return;
+        }
+
+        const targetUser = allUsers.find(u => u.username.toLowerCase() === targetUsername.toLowerCase());
+        if (!targetUser) {
+          showToast('User not found.');
+          return;
+        }
+
+        if (targetUser.uid === user.uid) {
+          showToast('You cannot give to yourself.');
+          return;
+        }
+
+        try {
+          await updateDoc(doc(db, 'users', user.uid), { [currency]: increment(-amount) });
+          await updateDoc(doc(db, 'users', targetUser.uid), { [currency]: increment(amount) });
+          
+          await addDoc(collection(db, 'messages'), {
+            senderId: user.uid,
+            senderUsername: user.username,
+            senderPfp: user.pfp,
+            senderRank: user.rank || 'VIP',
+            text: `🎁 Gave ${amount} ${currency} to ${targetUser.username}!`,
+            type: 'text',
+            timestamp: serverTimestamp(),
+          });
+        } catch (err) {
+          console.error(err);
+          showToast('Failed to give currency');
+        }
+        return;
+      }
+
       showToast('Invalid command!');
       return;
     }
 
     try {
+      // Add XP
+      const currentXp = user.xp || 0;
+      const currentLevel = user.level || 1;
+      const xpGained = Math.floor(Math.random() * 10) + 5; // 5-15 XP per message
+      const newXp = currentXp + xpGained;
+      const xpNeeded = currentLevel * 100;
+      
+      let newLevel = currentLevel;
+      if (newXp >= xpNeeded) {
+        newLevel++;
+        showToast(`🎉 Level Up! You are now level ${newLevel}!`);
+        // Level up sound
+        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3');
+        audio.play().catch(() => {});
+      }
+
+      await updateDoc(doc(db, 'users', user.uid), {
+        xp: newLevel > currentLevel ? newXp - xpNeeded : newXp,
+        level: newLevel
+      });
+
       await addDoc(collection(db, 'messages'), {
         senderId: user.uid,
         senderUsername: user.username,
@@ -738,6 +881,54 @@ export default function Chat({ user }: ChatProps) {
         type: 'text',
         timestamp: serverTimestamp(),
       });
+
+      // Mentions Logic
+      const mentionRegex = /@([a-zA-Z0-9_]+)/g;
+      const mentions = [...text.matchAll(mentionRegex)].map(m => m[1]);
+      
+      if (mentions.length > 0) {
+        mentions.forEach(async (mentionedUsername) => {
+          const targetUser = allUsers.find(u => u.username.toLowerCase() === mentionedUsername.toLowerCase());
+          if (targetUser && targetUser.uid !== user.uid) {
+            await addDoc(collection(db, 'notifications'), {
+              userId: targetUser.uid,
+              senderId: user.uid,
+              senderUsername: user.username,
+              senderPfp: user.pfp,
+              type: 'mention',
+              read: false,
+              timestamp: serverTimestamp()
+            });
+          }
+        });
+      }
+
+      // Bot Logic
+      if (text.toLowerCase().includes('@unibot')) {
+        try {
+          const prompt = text.replace(/@unibot/gi, '').trim();
+          const response = await ai.models.generateContent({
+            model: "gemini-3-flash-preview",
+            contents: `You are UniBot, a helpful and slightly sarcastic AI assistant in a chatroom called Uni-Fy. A user named ${user.username} (Rank: ${user.rank}) just said: "${prompt}". Respond concisely and playfully.`,
+          });
+          
+          if (response.text) {
+            await addDoc(collection(db, 'messages'), {
+              senderId: 'unibot',
+              senderUsername: 'UniBot',
+              senderPfp: 'https://api.dicebear.com/7.x/bottts/svg?seed=unibot&backgroundColor=10b981',
+              senderRank: 'DEVELOPER',
+              text: response.text,
+              type: 'text',
+              timestamp: serverTimestamp(),
+              isBot: true
+            });
+          }
+        } catch (err) {
+          console.error('Bot error:', err);
+        }
+      }
+
     } catch (err) {
       console.error(err);
     }
@@ -790,6 +981,26 @@ export default function Chat({ user }: ChatProps) {
             className="lg:hidden p-2 rounded-xl bg-white/5 border border-white/10 text-white/80"
           >
             <Users className="w-5 h-5" />
+          </button>
+
+          {/* Admin Panel Toggle */}
+          {user.rank === 'DEVELOPER' && (
+            <button 
+              onClick={() => setShowAdminPanel(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500/20 border border-red-500/50 text-red-400 hover:bg-red-500/30 transition-all"
+            >
+              <Terminal className="w-5 h-5" />
+              <span className="text-xs font-bold uppercase tracking-widest hidden sm:inline">Admin</span>
+            </button>
+          )}
+
+          {/* Daily Reward Toggle */}
+          <button 
+            onClick={() => setShowDailyReward(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/20 border border-amber-500/50 text-amber-400 hover:bg-amber-500/30 transition-all"
+          >
+            <Gift className="w-5 h-5" />
+            <span className="text-xs font-bold uppercase tracking-widest hidden sm:inline">Daily</span>
           </button>
 
           {/* Rules Toggle */}
@@ -987,6 +1198,9 @@ export default function Chat({ user }: ChatProps) {
                   <div className={cn("space-y-1.5", isMe ? "items-end" : "items-start")}>
                     <div className={cn("flex items-center gap-2 px-1", isMe && "flex-row-reverse")}>
                       <p className="text-[10px] font-bold text-white/60 uppercase tracking-widest">{msg.senderUsername}</p>
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-white/10 text-white/40">
+                        Lv.{allUsers.find(u => u.uid === msg.senderId)?.level || 1}
+                      </span>
                       {(msg.senderRank || allUsers.find(u => u.uid === msg.senderId)?.rank) && (
                         <img 
                           src={allUsers.find(u => u.uid === msg.senderId)?.customRank?.icon || RANKS.find(r => r.id === (msg.senderRank || allUsers.find(u => u.uid === msg.senderId)?.rank || 'VIP'))?.icon} 
@@ -996,12 +1210,29 @@ export default function Chat({ user }: ChatProps) {
                       )}
                     </div>
                     <div 
+                      onDoubleClick={async () => {
+                        if (!msg.id) return;
+                        const msgRef = doc(db, 'messages', msg.id);
+                        const hasLiked = msg.likes?.includes(user.uid);
+                        const newLikes = hasLiked 
+                          ? (msg.likes || []).filter((id: string) => id !== user.uid)
+                          : [...(msg.likes || []), user.uid];
+                        await updateDoc(msgRef, { likes: newLikes });
+                      }}
                       className={cn(
-                        "px-5 py-3 rounded-2xl shadow-2xl relative overflow-hidden",
+                        "px-5 py-3 rounded-2xl shadow-2xl relative overflow-hidden cursor-pointer transition-transform active:scale-95",
                         isMe ? "rounded-tr-none bg-white text-black font-medium" : "rounded-tl-none bg-black/60 border border-white/10 text-white/80 backdrop-blur-md"
                       )}
                     >
-                      <p className="text-sm leading-relaxed">{msg.text}</p>
+                      <div className="text-sm leading-relaxed prose prose-invert max-w-none [&_p]:m-0 [&_pre]:bg-black/20 [&_pre]:p-2 [&_pre]:rounded-lg [&_code]:bg-black/20 [&_code]:px-1 [&_code]:rounded">
+                        <Markdown>{msg.text}</Markdown>
+                      </div>
+                      {msg.likes && msg.likes.length > 0 && (
+                        <div className="absolute -bottom-2 -right-2 bg-black/80 backdrop-blur-md border border-white/10 rounded-full px-2 py-0.5 flex items-center gap-1 shadow-xl">
+                          <Heart className="w-3 h-3 text-red-500 fill-red-500" />
+                          <span className="text-[10px] font-bold text-white">{msg.likes.length}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </motion.div>
@@ -1057,7 +1288,23 @@ export default function Chat({ user }: ChatProps) {
           </div>
           
           <div className="flex-1 overflow-y-auto p-6 space-y-5 custom-scrollbar">
-            {onlineUsers.map((u) => {
+            {[{
+              uid: 'unibot',
+              username: 'UniBot',
+              pfp: 'https://api.dicebear.com/7.x/bottts/svg?seed=unibot&backgroundColor=10b981',
+              rank: 'DEVELOPER',
+              email: 'bot@unify.com',
+              gold: 999999,
+              rubies: 999999,
+              level: 100,
+              createdAt: new Date(),
+              age: 0,
+              gender: 'other',
+              banner: '',
+              onboardingStep: 4,
+              isOnline: true,
+              lastSeen: new Date()
+            } as UserProfile, ...onlineUsers].map((u) => {
               const { className, style, textClass } = getCardStyles(u);
               return (
                 <motion.div 
@@ -2263,6 +2510,7 @@ export default function Chat({ user }: ChatProps) {
                           {notif.type === 'profile_view' && ' viewed your profile'}
                           {notif.type === 'profile_like' && ' liked your profile'}
                           {notif.type === 'news_post' && ' posted a news update'}
+                          {notif.type === 'mention' && ' mentioned you in chat'}
                         </p>
                         <p className="text-xs text-white/40 mt-1">
                           {notif.timestamp?.toDate ? notif.timestamp.toDate().toLocaleString() : 'Just now'}
@@ -2564,6 +2812,201 @@ export default function Chat({ user }: ChatProps) {
                     </div>
                   ))
                 )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {showAdminPanel && user.rank === 'DEVELOPER' && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-4xl bg-zinc-900 border border-red-500/30 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+            >
+              <div className="p-6 border-b border-red-500/20 flex items-center justify-between bg-red-500/5">
+                <div className="flex items-center gap-3">
+                  <Terminal className="w-6 h-6 text-red-500" />
+                  <h2 className="text-xl font-serif italic text-red-500">Developer Console</h2>
+                </div>
+                <button onClick={() => setShowAdminPanel(false)} className="p-2 rounded-full hover:bg-white/10 text-white/60">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="p-6 overflow-y-auto flex-1 space-y-8">
+                {/* System Broadcast */}
+                <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
+                  <h3 className="text-sm font-bold text-white mb-4 uppercase tracking-widest flex items-center gap-2">
+                    <ShieldAlert className="w-4 h-4 text-amber-500" />
+                    System Broadcast
+                  </h3>
+                  <div className="flex gap-4">
+                    <input type="text" id="broadcastMessage" placeholder="Enter broadcast message..." className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white" />
+                    <button 
+                      onClick={async () => {
+                        const input = document.getElementById('broadcastMessage') as HTMLInputElement;
+                        if (!input.value) return;
+                        await addDoc(collection(db, 'messages'), {
+                          text: `[SYSTEM BROADCAST]: ${input.value}`,
+                          uid: 'system',
+                          username: 'SYSTEM',
+                          pfp: 'https://api.dicebear.com/7.x/bottts/svg?seed=system',
+                          rank: 'DEVELOPER',
+                          timestamp: serverTimestamp(),
+                          isSystem: true
+                        });
+                        input.value = '';
+                        showToast('Broadcast sent!');
+                      }}
+                      className="px-6 py-3 rounded-xl bg-amber-500 text-black font-bold uppercase tracking-widest hover:bg-amber-400 transition-colors"
+                    >
+                      Send
+                    </button>
+                  </div>
+                </div>
+
+                {/* Nuke Chat */}
+                <div className="p-6 rounded-2xl bg-red-500/10 border border-red-500/20">
+                  <h3 className="text-sm font-bold text-red-500 mb-4 uppercase tracking-widest flex items-center gap-2">
+                    <Trash2 className="w-4 h-4" />
+                    Danger Zone
+                  </h3>
+                  <button 
+                    onClick={async () => {
+                      if (window.confirm('Are you sure you want to nuke the chat? This cannot be undone.')) {
+                        const msgs = await getDocs(collection(db, 'messages'));
+                        const batch = writeBatch(db);
+                        msgs.docs.forEach(doc => batch.delete(doc.ref));
+                        await batch.commit();
+                        showToast('Chat nuked!');
+                      }
+                    }}
+                    className="w-full py-3 rounded-xl bg-red-500 text-white font-bold uppercase tracking-widest hover:bg-red-600 transition-colors"
+                  >
+                    Nuke Chat
+                  </button>
+                </div>
+
+                {/* User Management */}
+                <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
+                  <h3 className="text-sm font-bold text-white mb-4 uppercase tracking-widest flex items-center gap-2">
+                    <Users className="w-4 h-4 text-blue-400" />
+                    User Management ({allUsers.length})
+                  </h3>
+                  <div className="space-y-2 max-h-96 overflow-y-auto pr-2">
+                    {allUsers.map(u => (
+                      <div key={u.uid} className="flex items-center justify-between p-3 rounded-xl bg-black/40 border border-white/5">
+                        <div className="flex items-center gap-3">
+                          <img src={u.pfp} alt="" className="w-8 h-8 rounded-full" />
+                          <div>
+                            <p className="text-sm font-bold text-white">{u.username}</p>
+                            <p className="text-xs text-white/40">{u.email}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <select 
+                            value={u.rank}
+                            onChange={async (e) => {
+                              await updateDoc(doc(db, 'users', u.uid), { rank: e.target.value });
+                              showToast(`Updated rank for ${u.username}`);
+                            }}
+                            className="bg-black border border-white/10 rounded-lg px-2 py-1 text-xs text-white"
+                          >
+                            {RANKS.map(r => (
+                              <option key={r.id} value={r.id}>{r.name}</option>
+                            ))}
+                          </select>
+                          <button 
+                            onClick={async () => {
+                              const gold = prompt(`Add gold to ${u.username} (current: ${u.gold}):`, '1000');
+                              if (gold && !isNaN(Number(gold))) {
+                                await updateDoc(doc(db, 'users', u.uid), { gold: increment(Number(gold)) });
+                                showToast(`Added ${gold} gold to ${u.username}`);
+                              }
+                            }}
+                            className="p-2 rounded-lg bg-yellow-500/20 text-yellow-500 hover:bg-yellow-500/30"
+                          >
+                            <Coins className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showDailyReward && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-sm bg-zinc-900 border border-amber-500/30 rounded-3xl overflow-hidden shadow-2xl flex flex-col"
+            >
+              <div className="p-6 text-center space-y-6">
+                <div className="w-20 h-20 mx-auto bg-amber-500/20 rounded-full flex items-center justify-center border border-amber-500/50">
+                  <Gift className="w-10 h-10 text-amber-500" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-serif italic text-white mb-2">Daily Reward</h2>
+                  <p className="text-sm text-white/60">Claim your daily login bonus!</p>
+                </div>
+                
+                <div className="flex justify-center gap-4 py-4">
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-yellow-500">+500</p>
+                    <p className="text-xs text-white/40 uppercase tracking-widest">Gold</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-red-500">+10</p>
+                    <p className="text-xs text-white/40 uppercase tracking-widest">Rubies</p>
+                  </div>
+                </div>
+
+                <button 
+                  onClick={async () => {
+                    const lastClaim = user.lastDailyReward?.toDate ? user.lastDailyReward.toDate() : new Date(0);
+                    const now = new Date();
+                    const hoursSinceLastClaim = (now.getTime() - lastClaim.getTime()) / (1000 * 60 * 60);
+                    
+                    if (hoursSinceLastClaim < 24) {
+                      showToast(`You can claim again in ${Math.ceil(24 - hoursSinceLastClaim)} hours`);
+                      return;
+                    }
+
+                    await updateDoc(doc(db, 'users', user.uid), {
+                      gold: increment(500),
+                      rubies: increment(10),
+                      lastDailyReward: serverTimestamp()
+                    });
+
+                    confetti({
+                      particleCount: 100,
+                      spread: 70,
+                      origin: { y: 0.6 },
+                      colors: ['#eab308', '#ef4444']
+                    });
+
+                    showToast('Daily reward claimed!');
+                    setShowDailyReward(false);
+                  }}
+                  className="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-bold uppercase tracking-widest hover:opacity-90 transition-opacity"
+                >
+                  Claim Reward
+                </button>
+                <button 
+                  onClick={() => setShowDailyReward(false)}
+                  className="w-full py-3 rounded-2xl bg-white/5 text-white/60 font-bold uppercase tracking-widest hover:bg-white/10 transition-colors"
+                >
+                  Maybe Later
+                </button>
               </div>
             </motion.div>
           </div>

@@ -33,7 +33,14 @@ import {
   ChevronRight,
   Search,
   ArrowUp,
-  Star
+  Star,
+  Bell,
+  Newspaper,
+  RefreshCw,
+  BookOpen,
+  MessageSquare,
+  ThumbsUp,
+  ThumbsDown
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
@@ -55,6 +62,14 @@ export default function Chat({ user }: ChatProps) {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
+  const [showNews, setShowNews] = useState(false);
+  const [showUpdates, setShowUpdates] = useState(false);
+  const [showRules, setShowRules] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [newsPosts, setNewsPosts] = useState<any[]>([]);
+  const [appUpdates, setAppUpdates] = useState<any[]>([]);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [selectedProfile, setSelectedProfile] = useState<UserProfile | null>(null);
   const [editTab, setEditTab] = useState<'username' | 'info' | 'bio' | 'pfp' | 'banner' | 'main' | 'rank'>('main');
   const [customizerTab, setCustomizerTab] = useState<'themes' | 'cards' | 'borders' | 'effects'>('themes');
@@ -239,6 +254,43 @@ export default function Chat({ user }: ChatProps) {
   }, [user.uid, user.invites, user.gold, user.createdAt, user.rank, allUsers]);
 
   useEffect(() => {
+    const q = query(collection(db, 'notifications'), where('userId', '==', user.uid), orderBy('timestamp', 'desc'), limit(20));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const notifs = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as any[];
+      setNotifications(notifs);
+      setUnreadNotifications(notifs.filter(n => !n.read).length);
+    });
+    return () => unsubscribe();
+  }, [user.uid]);
+
+  useEffect(() => {
+    const q = query(collection(db, 'news'), orderBy('timestamp', 'desc'), limit(20));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const news = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as any[];
+      setNewsPosts(news);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const q = query(collection(db, 'updates'), orderBy('timestamp', 'desc'), limit(20));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const updates = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as any[];
+      setAppUpdates(updates);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
     const q = query(collection(db, 'messages'), orderBy('timestamp', 'desc'), limit(50));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Message));
@@ -320,6 +372,19 @@ export default function Chat({ user }: ChatProps) {
       if (!userDoc.empty) {
         setSelectedProfile(userDoc.docs[0].data() as UserProfile);
         setShowProfileModal(true);
+        
+        // Send notification if viewing someone else's profile
+        if (uid !== user.uid) {
+          await addDoc(collection(db, 'notifications'), {
+            userId: uid,
+            senderId: user.uid,
+            senderUsername: user.username,
+            senderPfp: user.pfp,
+            type: 'profile_view',
+            read: false,
+            timestamp: serverTimestamp()
+          });
+        }
       }
     } catch (err) {
       console.error(err);
@@ -340,6 +405,19 @@ export default function Chat({ user }: ChatProps) {
       await updateDoc(userRef, { likes: newLikes });
       setSelectedProfile(prev => prev ? { ...prev, likes: newLikes } : null);
       showToast(isLiked ? 'Unliked profile' : 'Liked profile!');
+
+      // Send notification if liking someone else's profile
+      if (!isLiked && targetUid !== user.uid) {
+        await addDoc(collection(db, 'notifications'), {
+          userId: targetUid,
+          senderId: user.uid,
+          senderUsername: user.username,
+          senderPfp: user.pfp,
+          type: 'profile_like',
+          read: false,
+          timestamp: serverTimestamp()
+        });
+      }
     } catch (err) {
       console.error(err);
       showToast('Failed to toggle like');
@@ -430,6 +508,19 @@ export default function Chat({ user }: ChatProps) {
       showToast('Failed to save theme');
     }
   };
+
+  const playNotificationSound = () => {
+    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+    audio.play().catch(e => console.log('Audio play failed', e));
+  };
+
+  const prevUnreadRef = useRef(unreadNotifications);
+  useEffect(() => {
+    if (unreadNotifications > prevUnreadRef.current) {
+      playNotificationSound();
+    }
+    prevUnreadRef.current = unreadNotifications;
+  }, [unreadNotifications]);
 
   const saveCustomCard = async () => {
     if (!newCard.name) return showToast('Card name is required');
@@ -614,7 +705,11 @@ export default function Chat({ user }: ChatProps) {
         return;
       }
 
-      if (command === '/clearchat' && user.email === 'haydensixseven@gmail.com') {
+      if (command === '/clear' || command === '/clearchat') {
+        if (user.rank !== 'DEVELOPER') {
+          showToast('Only developers can use this command.');
+          return;
+        }
         try {
           const q = query(collection(db, 'messages'));
           const snapshot = await getDocs(q);
@@ -695,6 +790,51 @@ export default function Chat({ user }: ChatProps) {
             className="lg:hidden p-2 rounded-xl bg-white/5 border border-white/10 text-white/80"
           >
             <Users className="w-5 h-5" />
+          </button>
+
+          {/* Rules Toggle */}
+          <button 
+            onClick={() => setShowRules(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white/80 hover:bg-white/10 hover:border-white/20 transition-all"
+          >
+            <BookOpen className="w-5 h-5" />
+            <span className="text-xs font-bold uppercase tracking-widest hidden sm:inline">Rules</span>
+          </button>
+
+          {/* Updates Toggle */}
+          <button 
+            onClick={() => setShowUpdates(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white/80 hover:bg-white/10 hover:border-white/20 transition-all"
+          >
+            <RefreshCw className="w-5 h-5" />
+            <span className="text-xs font-bold uppercase tracking-widest hidden sm:inline">Updates</span>
+          </button>
+
+          {/* News Toggle */}
+          <button 
+            onClick={() => setShowNews(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white/80 hover:bg-white/10 hover:border-white/20 transition-all"
+          >
+            <Newspaper className="w-5 h-5" />
+            <span className="text-xs font-bold uppercase tracking-widest hidden sm:inline">News</span>
+          </button>
+
+          {/* Notifications Toggle */}
+          <button 
+            onClick={() => {
+              setShowNotifications(true);
+              // Mark all as read
+              notifications.filter(n => !n.read).forEach(n => {
+                updateDoc(doc(db, 'notifications', n.id), { read: true });
+              });
+            }}
+            className="relative flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white/80 hover:bg-white/10 hover:border-white/20 transition-all"
+          >
+            <Bell className="w-5 h-5" />
+            <span className="text-xs font-bold uppercase tracking-widest hidden sm:inline">Notifs</span>
+            {unreadNotifications > 0 && (
+              <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-black"></span>
+            )}
           </button>
 
           {/* Customizer Toggle */}
@@ -2089,6 +2229,340 @@ export default function Chat({ user }: ChatProps) {
                       Back to Menu
                     </button>
                   </div>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {showNotifications && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-md bg-zinc-900 border border-white/10 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[80vh]"
+            >
+              <div className="p-6 border-b border-white/10 flex items-center justify-between">
+                <h2 className="text-xl font-serif italic text-white">Notifications</h2>
+                <button onClick={() => setShowNotifications(false)} className="p-2 rounded-full hover:bg-white/10 text-white/60">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="p-4 overflow-y-auto flex-1 space-y-2">
+                {notifications.length === 0 ? (
+                  <p className="text-center text-white/40 py-8">No notifications yet</p>
+                ) : (
+                  notifications.map(notif => (
+                    <div key={notif.id} className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5">
+                      <img src={notif.senderPfp} alt="" className="w-10 h-10 rounded-full object-cover" />
+                      <div className="flex-1">
+                        <p className="text-sm text-white/80">
+                          <span className="font-bold text-white">{notif.senderUsername}</span>
+                          {notif.type === 'profile_view' && ' viewed your profile'}
+                          {notif.type === 'profile_like' && ' liked your profile'}
+                          {notif.type === 'news_post' && ' posted a news update'}
+                        </p>
+                        <p className="text-xs text-white/40 mt-1">
+                          {notif.timestamp?.toDate ? notif.timestamp.toDate().toLocaleString() : 'Just now'}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showRules && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-2xl bg-zinc-900 border border-white/10 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[80vh]"
+            >
+              <div className="p-6 border-b border-white/10 flex items-center justify-between">
+                <h2 className="text-xl font-serif italic text-white">Rules</h2>
+                <button onClick={() => setShowRules(false)} className="p-2 rounded-full hover:bg-white/10 text-white/60">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="p-6 overflow-y-auto flex-1 space-y-8">
+                <div>
+                  <h3 className="text-lg font-bold text-amber-500 mb-4 uppercase tracking-widest">Staff Rules</h3>
+                  <ul className="list-disc list-inside space-y-2 text-white/80">
+                    <li>Do not abuse your power.</li>
+                    <li>Treat all members with respect.</li>
+                    <li>Only use commands when necessary.</li>
+                    <li>Keep the chat safe and friendly.</li>
+                  </ul>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-blue-400 mb-4 uppercase tracking-widest">Member Rules</h3>
+                  <ul className="list-disc list-inside space-y-2 text-white/80">
+                    <li>Be respectful to everyone.</li>
+                    <li>No spamming or flooding the chat.</li>
+                    <li>No NSFW content.</li>
+                    <li>Listen to staff members.</li>
+                  </ul>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showUpdates && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-2xl bg-zinc-900 border border-white/10 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[80vh]"
+            >
+              <div className="p-6 border-b border-white/10 flex items-center justify-between">
+                <h2 className="text-xl font-serif italic text-white">Updates</h2>
+                <button onClick={() => setShowUpdates(false)} className="p-2 rounded-full hover:bg-white/10 text-white/60">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="p-6 overflow-y-auto flex-1 space-y-6">
+                {user.rank === 'DEVELOPER' || user.rank === 'FOUNDER' ? (
+                  <div className="mb-8 p-4 rounded-2xl bg-white/5 border border-white/10">
+                    <h3 className="text-sm font-bold text-white mb-4 uppercase tracking-widest">Add Update</h3>
+                    <input type="text" id="updateVersion" placeholder="Version (e.g. v1.1.0)" className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white mb-4" />
+                    <input type="text" id="updateTitle" placeholder="Title" className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white mb-4" />
+                    <textarea id="updateContent" placeholder="Content" className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white mb-4 h-24 resize-none"></textarea>
+                    <button 
+                      onClick={async () => {
+                        const version = (document.getElementById('updateVersion') as HTMLInputElement).value;
+                        const title = (document.getElementById('updateTitle') as HTMLInputElement).value;
+                        const content = (document.getElementById('updateContent') as HTMLTextAreaElement).value;
+                        if (!version || !title || !content) return;
+                        await addDoc(collection(db, 'updates'), { version, title, content, timestamp: serverTimestamp() });
+                        (document.getElementById('updateVersion') as HTMLInputElement).value = '';
+                        (document.getElementById('updateTitle') as HTMLInputElement).value = '';
+                        (document.getElementById('updateContent') as HTMLTextAreaElement).value = '';
+                      }}
+                      className="w-full py-3 rounded-xl bg-white text-black font-bold uppercase tracking-widest"
+                    >
+                      Post Update
+                    </button>
+                  </div>
+                ) : null}
+
+                {appUpdates.length === 0 ? (
+                  <p className="text-center text-white/40 py-8">No updates yet</p>
+                ) : (
+                  appUpdates.map(update => (
+                    <div key={update.id} className="p-6 rounded-2xl bg-white/5 border border-white/10">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-bold text-white">{update.title}</h3>
+                        <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-500 text-xs font-bold">{update.version}</span>
+                      </div>
+                      <p className="text-white/80 whitespace-pre-wrap">{update.content}</p>
+                      <p className="text-xs text-white/40 mt-4">
+                        {update.timestamp?.toDate ? update.timestamp.toDate().toLocaleString() : 'Just now'}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showNews && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-3xl bg-zinc-900 border border-white/10 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+            >
+              <div className="p-6 border-b border-white/10 flex items-center justify-between">
+                <h2 className="text-xl font-serif italic text-white">News</h2>
+                <button onClick={() => setShowNews(false)} className="p-2 rounded-full hover:bg-white/10 text-white/60">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="p-6 overflow-y-auto flex-1 space-y-6">
+                {user.rank === 'DEVELOPER' || user.rank === 'FOUNDER' ? (
+                  <div className="mb-8 p-4 rounded-2xl bg-white/5 border border-white/10">
+                    <h3 className="text-sm font-bold text-white mb-4 uppercase tracking-widest">Add News Post</h3>
+                    <textarea id="newsContent" placeholder="What's new?" className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white mb-4 h-24 resize-none"></textarea>
+                    <input type="text" id="newsImage" placeholder="Image URL (optional)" className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white mb-4" />
+                    <button 
+                      onClick={async () => {
+                        const content = (document.getElementById('newsContent') as HTMLTextAreaElement).value;
+                        const imageUrl = (document.getElementById('newsImage') as HTMLInputElement).value;
+                        if (!content) return;
+                        
+                        const newPost = {
+                          authorId: user.uid,
+                          authorUsername: user.username,
+                          authorPfp: user.pfp,
+                          content,
+                          imageUrl: imageUrl || null,
+                          likes: [],
+                          dislikes: [],
+                          comments: [],
+                          timestamp: serverTimestamp()
+                        };
+                        
+                        await addDoc(collection(db, 'news'), newPost);
+                        
+                        // Notify everyone
+                        allUsers.forEach(u => {
+                          if (u.uid !== user.uid) {
+                            addDoc(collection(db, 'notifications'), {
+                              userId: u.uid,
+                              senderId: user.uid,
+                              senderUsername: user.username,
+                              senderPfp: user.pfp,
+                              type: 'news_post',
+                              read: false,
+                              timestamp: serverTimestamp()
+                            });
+                          }
+                        });
+
+                        (document.getElementById('newsContent') as HTMLTextAreaElement).value = '';
+                        (document.getElementById('newsImage') as HTMLInputElement).value = '';
+                      }}
+                      className="w-full py-3 rounded-xl bg-white text-black font-bold uppercase tracking-widest"
+                    >
+                      Post News
+                    </button>
+                  </div>
+                ) : null}
+
+                {newsPosts.length === 0 ? (
+                  <p className="text-center text-white/40 py-8">No news yet</p>
+                ) : (
+                  newsPosts.map(post => (
+                    <div key={post.id} className="p-6 rounded-2xl bg-white/5 border border-white/10">
+                      <div className="flex items-center gap-3 mb-4">
+                        <img src={post.authorPfp} alt="" className="w-10 h-10 rounded-full object-cover" />
+                        <div>
+                          <p className="text-sm font-bold text-white">{post.authorUsername}</p>
+                          <p className="text-xs text-white/40">
+                            {post.timestamp?.toDate ? post.timestamp.toDate().toLocaleString() : 'Just now'}
+                          </p>
+                        </div>
+                      </div>
+                      <p className="text-white/80 whitespace-pre-wrap mb-4">{post.content}</p>
+                      {post.imageUrl && (
+                        <img src={post.imageUrl} alt="" className="w-full rounded-xl mb-4 object-cover max-h-96" />
+                      )}
+                      
+                      <div className="flex items-center gap-4 border-t border-white/10 pt-4">
+                        <button 
+                          onClick={async () => {
+                            const postRef = doc(db, 'news', post.id);
+                            const hasLiked = post.likes?.includes(user.uid);
+                            const hasDisliked = post.dislikes?.includes(user.uid);
+                            
+                            let newLikes = post.likes || [];
+                            let newDislikes = post.dislikes || [];
+                            
+                            if (hasLiked) {
+                              newLikes = newLikes.filter((id: string) => id !== user.uid);
+                            } else {
+                              newLikes.push(user.uid);
+                              newDislikes = newDislikes.filter((id: string) => id !== user.uid);
+                            }
+                            
+                            await updateDoc(postRef, { likes: newLikes, dislikes: newDislikes });
+                          }}
+                          className={cn("flex items-center gap-2 text-sm", post.likes?.includes(user.uid) ? "text-amber-500" : "text-white/60 hover:text-white")}
+                        >
+                          <ThumbsUp className="w-4 h-4" />
+                          {post.likes?.length || 0}
+                        </button>
+                        
+                        <button 
+                          onClick={async () => {
+                            const postRef = doc(db, 'news', post.id);
+                            const hasLiked = post.likes?.includes(user.uid);
+                            const hasDisliked = post.dislikes?.includes(user.uid);
+                            
+                            let newLikes = post.likes || [];
+                            let newDislikes = post.dislikes || [];
+                            
+                            if (hasDisliked) {
+                              newDislikes = newDislikes.filter((id: string) => id !== user.uid);
+                            } else {
+                              newDislikes.push(user.uid);
+                              newLikes = newLikes.filter((id: string) => id !== user.uid);
+                            }
+                            
+                            await updateDoc(postRef, { likes: newLikes, dislikes: newDislikes });
+                          }}
+                          className={cn("flex items-center gap-2 text-sm", post.dislikes?.includes(user.uid) ? "text-red-500" : "text-white/60 hover:text-white")}
+                        >
+                          <ThumbsDown className="w-4 h-4" />
+                          {post.dislikes?.length || 0}
+                        </button>
+
+                        <div className="flex items-center gap-2 text-sm text-white/60">
+                          <MessageSquare className="w-4 h-4" />
+                          {post.comments?.length || 0}
+                        </div>
+                      </div>
+
+                      {/* Comments Section */}
+                      <div className="mt-4 space-y-4">
+                        {post.comments?.map((comment: any) => (
+                          <div key={comment.id} className="flex gap-3 bg-black/20 p-3 rounded-xl">
+                            <img src={comment.authorPfp} alt="" className="w-8 h-8 rounded-full object-cover" />
+                            <div>
+                              <p className="text-xs font-bold text-white">{comment.authorUsername}</p>
+                              <p className="text-sm text-white/80">{comment.text}</p>
+                            </div>
+                          </div>
+                        ))}
+                        <div className="flex gap-2">
+                          <input 
+                            type="text" 
+                            id={`comment-${post.id}`}
+                            placeholder="Add a comment..." 
+                            className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm text-white"
+                            onKeyDown={async (e) => {
+                              if (e.key === 'Enter') {
+                                const input = e.currentTarget;
+                                const text = input.value.trim();
+                                if (!text) return;
+                                
+                                const newComment = {
+                                  id: Date.now().toString(),
+                                  authorId: user.uid,
+                                  authorUsername: user.username,
+                                  authorPfp: user.pfp,
+                                  text,
+                                  timestamp: new Date()
+                                };
+                                
+                                await updateDoc(doc(db, 'news', post.id), {
+                                  comments: [...(post.comments || []), newComment]
+                                });
+                                
+                                input.value = '';
+                              }
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))
                 )}
               </div>
             </motion.div>

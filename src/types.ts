@@ -115,3 +115,45 @@ export interface Message {
     diceRoll?: number;
   };
 }
+
+export interface AppNotification {
+  id: string;
+  userId: string;
+  senderId: string;
+  senderUsername: string;
+  senderPfp: string;
+  type: 'profile_view' | 'profile_like' | 'news_post';
+  content?: string;
+  read: boolean;
+  timestamp: any;
+}
+
+export interface NewsComment {
+  id: string;
+  authorId: string;
+  authorUsername: string;
+  authorPfp: string;
+  text: string;
+  timestamp: any;
+}
+
+export interface NewsPost {
+  id: string;
+  authorId: string;
+  authorUsername: string;
+  authorPfp: string;
+  content: string;
+  imageUrl?: string;
+  likes: string[];
+  dislikes: string[];
+  comments: NewsComment[];
+  timestamp: any;
+}
+
+export interface AppUpdate {
+  id: string;
+  version: string;
+  title: string;
+  content: string;
+  timestamp: any;
+}

@@ -51,6 +51,8 @@ export default function Auth({ onAuthSuccess }: AuthProps) {
           gold: 1000,
           rubies: 10,
           hasReceivedReset: false,
+          theme: 'luxury-black',
+          cardStyle: 'default',
         });
       }
       onAuthSuccess();

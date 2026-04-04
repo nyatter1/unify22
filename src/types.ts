@@ -12,6 +12,8 @@ export interface UserProfile {
   gold: number;
   rubies: number;
   hasReceivedReset?: boolean;
+  theme?: string;
+  cardStyle?: string;
 }
 
 export interface Message {

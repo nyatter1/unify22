@@ -35,25 +35,6 @@ export interface CardStyle {
   };
 }
 
-export interface MessageEffect {
-  id: string;
-  name: string;
-  animation: 'none' | 'fade' | 'slide' | 'bounce' | 'zoom';
-  particles?: 'none' | 'stars' | 'hearts' | 'bubbles' | 'fire';
-  bubbleBorder?: string;
-  glowColor?: string;
-  isCustom?: boolean;
-}
-
-export interface ProfileBadge {
-  id: string;
-  name: string;
-  icon: string;
-  color: string;
-  label?: string;
-  isCustom?: boolean;
-}
-
 export interface UserProfile {
   uid: string;
   username: string;
@@ -70,12 +51,8 @@ export interface UserProfile {
   hasReceivedReset?: boolean;
   theme?: string;
   cardStyle?: string;
-  messageEffect?: string;
-  selectedBadge?: string;
   customThemes?: Theme[];
   customCardStyles?: CardStyle[];
-  customMessageEffects?: MessageEffect[];
-  customBadges?: ProfileBadge[];
 }
 
 export interface Message {

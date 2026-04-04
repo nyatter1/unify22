@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { auth, db } from '../firebase';
 import { collection, query, orderBy, limit, onSnapshot, addDoc, serverTimestamp, doc, updateDoc, where, increment, getDocs, deleteDoc, writeBatch } from 'firebase/firestore';
-import { UserProfile, Message, Theme, CardStyle, MessageEffect, ProfileBadge } from '../types';
-import { THEMES, CARD_STYLES, MESSAGE_EFFECTS, PROFILE_BADGES } from '../constants';
-import { Send, LogOut, Users, Infinity, Circle, Shield, Crown, Wallet, Gem, Coins, AlertCircle, Dice1, Dice2, Dice3, Dice4, Dice5, Dice6, Palette, X, Check, Zap, Award } from 'lucide-react';
+import { UserProfile, Message, Theme, CardStyle } from '../types';
+import { THEMES, CARD_STYLES } from '../constants';
+import { Send, LogOut, Users, Infinity, Circle, Shield, Crown, Wallet, Gem, Coins, AlertCircle, Dice1, Dice2, Dice3, Dice4, Dice5, Dice6, Palette, X, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 
@@ -21,9 +21,7 @@ export default function Chat({ user }: ChatProps) {
   const [showCustomizer, setShowCustomizer] = useState(false);
   const [showThemeEditor, setShowThemeEditor] = useState(false);
   const [showCardEditor, setShowCardEditor] = useState(false);
-  const [showMessageEffectEditor, setShowMessageEffectEditor] = useState(false);
-  const [showBadgeEditor, setShowBadgeEditor] = useState(false);
-  const [customizerTab, setCustomizerTab] = useState<'themes' | 'cards' | 'effects' | 'badges'>('themes');
+  const [customizerTab, setCustomizerTab] = useState<'themes' | 'cards'>('themes');
   const [toast, setToast] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -62,31 +60,10 @@ export default function Chat({ user }: ChatProps) {
     }
   });
 
-  const [newMessageEffect, setNewMessageEffect] = useState<Partial<MessageEffect>>({
-    name: '',
-    animation: 'none',
-    particles: 'none',
-    bubbleBorder: '#ffffff20',
-    glowColor: '',
-    isCustom: true
-  });
-
-  const [newBadge, setNewBadge] = useState<Partial<ProfileBadge>>({
-    name: '',
-    icon: 'Crown',
-    color: '#ffffff',
-    label: '',
-    isCustom: true
-  });
-
   const allThemes = [...THEMES, ...(user.customThemes || [])];
   const allCardStyles = [...CARD_STYLES, ...(user.customCardStyles || [])];
-  const allMessageEffects = [...MESSAGE_EFFECTS, ...(user.customMessageEffects || [])];
-  const allBadges = [...PROFILE_BADGES, ...(user.customBadges || [])];
   
   const currentTheme = allThemes.find(t => t.id === user.theme) || THEMES[0];
-  const currentMessageEffect = allMessageEffects.find(e => e.id === user.messageEffect) || MESSAGE_EFFECTS[0];
-  const currentBadge = allBadges.find(b => b.id === user.selectedBadge);
 
   const getCardStyles = (u: UserProfile) => {
     const uCardStyles = [...CARD_STYLES, ...(u.customCardStyles || [])];
@@ -191,7 +168,7 @@ export default function Chat({ user }: ChatProps) {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const updateCustomization = async (field: 'theme' | 'cardStyle' | 'messageEffect' | 'selectedBadge', value: string) => {
+  const updateCustomization = async (field: 'theme' | 'cardStyle', value: string) => {
     try {
       await updateDoc(doc(db, 'users', user.uid), { [field]: value });
     } catch (err) {
@@ -235,44 +212,6 @@ export default function Chat({ user }: ChatProps) {
     } catch (err) {
       console.error(err);
       showToast('Failed to save card');
-    }
-  };
-
-  const saveCustomMessageEffect = async () => {
-    if (!newMessageEffect.name) return showToast('Effect name is required');
-    const effectId = `custom-effect-${Date.now()}`;
-    const effect = { ...newMessageEffect, id: effectId } as MessageEffect;
-    
-    try {
-      const userRef = doc(db, 'users', user.uid);
-      await updateDoc(userRef, {
-        customMessageEffects: [...(user.customMessageEffects || []), effect],
-        messageEffect: effectId
-      });
-      setShowMessageEffectEditor(false);
-      showToast('Custom effect saved!');
-    } catch (err) {
-      console.error(err);
-      showToast('Failed to save effect');
-    }
-  };
-
-  const saveCustomBadge = async () => {
-    if (!newBadge.name) return showToast('Badge name is required');
-    const badgeId = `custom-badge-${Date.now()}`;
-    const badge = { ...newBadge, id: badgeId } as ProfileBadge;
-    
-    try {
-      const userRef = doc(db, 'users', user.uid);
-      await updateDoc(userRef, {
-        customBadges: [...(user.customBadges || []), badge],
-        selectedBadge: badgeId
-      });
-      setShowBadgeEditor(false);
-      showToast('Custom badge saved!');
-    } catch (err) {
-      console.error(err);
-      showToast('Failed to save badge');
     }
   };
 
@@ -778,24 +717,6 @@ export default function Chat({ user }: ChatProps) {
                     >
                       User Cards
                     </button>
-                    <button 
-                      onClick={() => setCustomizerTab('effects')}
-                      className={cn(
-                        "px-6 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all",
-                        customizerTab === 'effects' ? "bg-white text-black shadow-xl" : "text-white/40 hover:text-white"
-                      )}
-                    >
-                      Effects
-                    </button>
-                    <button 
-                      onClick={() => setCustomizerTab('badges')}
-                      className={cn(
-                        "px-6 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all",
-                        customizerTab === 'badges' ? "bg-white text-black shadow-xl" : "text-white/40 hover:text-white"
-                      )}
-                    >
-                      Badges
-                    </button>
                   </div>
                 </div>
                 <button 
@@ -859,7 +780,7 @@ export default function Chat({ user }: ChatProps) {
                       );
                     })}
                   </div>
-                ) : customizerTab === 'cards' ? (
+                ) : (
                   <div className="space-y-12">
                     {/* Create Custom Card Button */}
                     <button 
@@ -912,77 +833,6 @@ export default function Chat({ user }: ChatProps) {
                         </div>
                       );
                     })}
-                  </div>
-                ) : customizerTab === 'effects' ? (
-                  <div className="space-y-12">
-                    <button 
-                      onClick={() => setShowMessageEffectEditor(true)}
-                      className="w-full p-8 rounded-3xl border-2 border-dashed border-white/10 hover:border-amber-500/50 hover:bg-amber-500/5 transition-all group flex flex-col items-center justify-center gap-4"
-                    >
-                      <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <Zap className="w-6 h-6 text-amber-500" />
-                      </div>
-                      <div className="text-center">
-                        <p className="text-white font-bold uppercase tracking-widest text-sm">Create Message Effect</p>
-                        <p className="text-white/40 text-xs mt-1">Add some flare to your messages</p>
-                      </div>
-                    </button>
-
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                      {allMessageEffects.map(e => (
-                        <button
-                          key={e.id}
-                          onClick={() => updateCustomization('messageEffect', e.id)}
-                          className={cn(
-                            "p-6 rounded-2xl border-2 transition-all hover:scale-[1.02] active:scale-95 flex flex-col items-center gap-3",
-                            user.messageEffect === e.id ? "border-amber-500 bg-amber-500/5" : "border-white/5 bg-white/5"
-                          )}
-                        >
-                          <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
-                            <Zap className={cn("w-5 h-5", user.messageEffect === e.id ? "text-amber-500" : "text-white/40")} />
-                          </div>
-                          <span className="text-xs font-bold text-white uppercase tracking-widest">{e.name}</span>
-                          {user.messageEffect === e.id && <Check className="w-4 h-4 text-amber-500" />}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-12">
-                    <button 
-                      onClick={() => setShowBadgeEditor(true)}
-                      className="w-full p-8 rounded-3xl border-2 border-dashed border-white/10 hover:border-amber-500/50 hover:bg-amber-500/5 transition-all group flex flex-col items-center justify-center gap-4"
-                    >
-                      <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <Award className="w-6 h-6 text-amber-500" />
-                      </div>
-                      <div className="text-center">
-                        <p className="text-white font-bold uppercase tracking-widest text-sm">Create Custom Badge</p>
-                        <p className="text-white/40 text-xs mt-1">Show off your unique status</p>
-                      </div>
-                    </button>
-
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                      {allBadges.map(b => (
-                        <button
-                          key={b.id}
-                          onClick={() => updateCustomization('selectedBadge', b.id)}
-                          className={cn(
-                            "p-6 rounded-2xl border-2 transition-all hover:scale-[1.02] active:scale-95 flex flex-col items-center gap-3",
-                            user.selectedBadge === b.id ? "border-amber-500 bg-amber-500/5" : "border-white/5 bg-white/5"
-                          )}
-                        >
-                          <div 
-                            className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg"
-                            style={{ backgroundColor: `${b.color}20`, border: `1px solid ${b.color}40` }}
-                          >
-                            <span style={{ color: b.color }}>{b.icon === 'Crown' ? <Crown className="w-5 h-5" /> : b.icon === 'Check' ? <Check className="w-5 h-5" /> : b.icon === 'Gem' ? <Gem className="w-5 h-5" /> : b.icon === 'Shield' ? <Shield className="w-5 h-5" /> : b.icon === 'Dice6' ? <Dice6 className="w-5 h-5" /> : <Coins className="w-5 h-5" />}</span>
-                          </div>
-                          <span className="text-xs font-bold text-white uppercase tracking-widest">{b.name}</span>
-                          {user.selectedBadge === b.id && <Check className="w-4 h-4 text-amber-500" />}
-                        </button>
-                      ))}
-                    </div>
                   </div>
                 )}
               </div>
@@ -1343,195 +1193,6 @@ export default function Chat({ user }: ChatProps) {
                   className="flex-[2] py-4 rounded-2xl bg-white text-black font-bold uppercase tracking-widest text-xs hover:scale-[1.02] active:scale-95 transition-all shadow-xl"
                 >
                   Save & Apply Card
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Message Effect Editor Modal */}
-      <AnimatePresence>
-        {showMessageEffectEditor && (
-          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowMessageEffectEditor(false)}
-              className="absolute inset-0 bg-black/90 backdrop-blur-2xl"
-            />
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-2xl bg-[#0a0a0a] border border-white/10 rounded-[2.5rem] overflow-hidden flex flex-col shadow-2xl"
-            >
-              <div className="p-8 border-b border-white/5 flex items-center justify-between">
-                <h3 className="text-2xl font-serif italic text-white">Design Message Effect</h3>
-                <button onClick={() => setShowMessageEffectEditor(false)} className="p-2 hover:bg-white/5 rounded-full text-white/40"><X /></button>
-              </div>
-              
-              <div className="p-8 space-y-8 overflow-y-auto custom-scrollbar">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Effect Name</label>
-                    <input 
-                      type="text" 
-                      value={newMessageEffect.name}
-                      onChange={e => setNewMessageEffect({...newMessageEffect, name: e.target.value})}
-                      placeholder="e.g. Star Burst"
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500/50"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Animation</label>
-                    <select 
-                      value={newMessageEffect.animation}
-                      onChange={e => setNewMessageEffect({...newMessageEffect, animation: e.target.value as any})}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none"
-                    >
-                      <option value="none" className="bg-zinc-900">None</option>
-                      <option value="fade" className="bg-zinc-900">Fade In</option>
-                      <option value="slide" className="bg-zinc-900">Slide Up</option>
-                      <option value="bounce" className="bg-zinc-900">Bounce</option>
-                      <option value="zoom" className="bg-zinc-900">Pop In</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Particles</label>
-                    <select 
-                      value={newMessageEffect.particles}
-                      onChange={e => setNewMessageEffect({...newMessageEffect, particles: e.target.value as any})}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none"
-                    >
-                      <option value="none" className="bg-zinc-900">None</option>
-                      <option value="stars" className="bg-zinc-900">Stars</option>
-                      <option value="hearts" className="bg-zinc-900">Hearts</option>
-                      <option value="bubbles" className="bg-zinc-900">Bubbles</option>
-                      <option value="fire" className="bg-zinc-900">Fire</option>
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Glow Color</label>
-                    <input 
-                      type="color" 
-                      value={newMessageEffect.glowColor}
-                      onChange={e => setNewMessageEffect({...newMessageEffect, glowColor: e.target.value})}
-                      className="w-full h-12 rounded-xl bg-transparent border-none cursor-pointer"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-8 bg-black/40 border-t border-white/5 flex gap-4">
-                <button 
-                  onClick={() => setShowMessageEffectEditor(false)}
-                  className="flex-1 py-4 rounded-2xl border border-white/10 text-white font-bold uppercase tracking-widest text-xs hover:bg-white/5 transition-all"
-                >
-                  Cancel
-                </button>
-                <button 
-                  onClick={saveCustomMessageEffect}
-                  className="flex-[2] py-4 rounded-2xl bg-white text-black font-bold uppercase tracking-widest text-xs hover:scale-[1.02] active:scale-95 transition-all shadow-xl"
-                >
-                  Save & Apply Effect
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Badge Editor Modal */}
-      <AnimatePresence>
-        {showBadgeEditor && (
-          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowBadgeEditor(false)}
-              className="absolute inset-0 bg-black/90 backdrop-blur-2xl"
-            />
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-2xl bg-[#0a0a0a] border border-white/10 rounded-[2.5rem] overflow-hidden flex flex-col shadow-2xl"
-            >
-              <div className="p-8 border-b border-white/5 flex items-center justify-between">
-                <h3 className="text-2xl font-serif italic text-white">Design Badge</h3>
-                <button onClick={() => setShowBadgeEditor(false)} className="p-2 hover:bg-white/5 rounded-full text-white/40"><X /></button>
-              </div>
-              
-              <div className="p-8 space-y-8 overflow-y-auto custom-scrollbar">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Badge Name</label>
-                    <input 
-                      type="text" 
-                      value={newBadge.name}
-                      onChange={e => setNewBadge({...newBadge, name: e.target.value})}
-                      placeholder="e.g. Pro Player"
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500/50"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Icon</label>
-                    <select 
-                      value={newBadge.icon}
-                      onChange={e => setNewBadge({...newBadge, icon: e.target.value as any})}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none"
-                    >
-                      <option value="Crown" className="bg-zinc-900">Crown</option>
-                      <option value="Check" className="bg-zinc-900">Check</option>
-                      <option value="Gem" className="bg-zinc-900">Gem</option>
-                      <option value="Shield" className="bg-zinc-900">Shield</option>
-                      <option value="Dice6" className="bg-zinc-900">Dice</option>
-                      <option value="Coins" className="bg-zinc-900">Coins</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Color</label>
-                    <input 
-                      type="color" 
-                      value={newBadge.color}
-                      onChange={e => setNewBadge({...newBadge, color: e.target.value})}
-                      className="w-full h-12 rounded-xl bg-transparent border-none cursor-pointer"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Label (Optional)</label>
-                    <input 
-                      type="text" 
-                      value={newBadge.label}
-                      onChange={e => setNewBadge({...newBadge, label: e.target.value})}
-                      placeholder="e.g. Top 1% Player"
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500/50"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-8 bg-black/40 border-t border-white/5 flex gap-4">
-                <button 
-                  onClick={() => setShowBadgeEditor(false)}
-                  className="flex-1 py-4 rounded-2xl border border-white/10 text-white font-bold uppercase tracking-widest text-xs hover:bg-white/5 transition-all"
-                >
-                  Cancel
-                </button>
-                <button 
-                  onClick={saveCustomBadge}
-                  className="flex-[2] py-4 rounded-2xl bg-white text-black font-bold uppercase tracking-widest text-xs hover:scale-[1.02] active:scale-95 transition-all shadow-xl"
-                >
-                  Save & Apply Badge
                 </button>
               </div>
             </motion.div>

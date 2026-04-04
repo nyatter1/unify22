@@ -1,14 +1,3 @@
-import { Theme } from './types';
-
-export const THEMES: Theme[] = Array.from({ length: 100 }).map((_, i) => ({
-  id: `theme-${i}`,
-  name: `Theme ${i + 1}`,
-  primary: `hsl(${i * 3.6}, 70%, 50%)`,
-  secondary: `hsl(${(i * 3.6 + 180) % 360}, 70%, 50%)`,
-  bg: i % 2 === 0 ? '#0f172a' : '#ffffff',
-  text: i % 2 === 0 ? '#f8fafc' : '#0f172a',
-}));
-
 export const AVATARS = [
   'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix',
   'https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka',

@@ -6,7 +6,6 @@ export interface UserProfile {
   gender: 'male' | 'female' | 'other';
   pfp: string;
   banner: string;
-  theme: string;
   onboardingStep: number;
   isOnline: boolean;
   lastSeen: any;
@@ -19,13 +18,4 @@ export interface Message {
   senderPfp: string;
   text: string;
   timestamp: any;
-}
-
-export interface Theme {
-  id: string;
-  name: string;
-  primary: string;
-  secondary: string;
-  bg: string;
-  text: string;
 }

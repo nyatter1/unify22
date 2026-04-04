@@ -51,6 +51,8 @@ export interface UserProfile {
   hasReceivedReset?: boolean;
   theme?: string;
   cardStyle?: string;
+  bio?: string;
+  likes?: string[]; // Array of UIDs who liked this profile
   customThemes?: Theme[];
   customCardStyles?: CardStyle[];
 }

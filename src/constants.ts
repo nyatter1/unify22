@@ -8,20 +8,20 @@ export interface RankInfo {
 }
 
 export const RANKS: RankInfo[] = [
-  { id: 'DEVELOPER', name: 'DEVELOPER', icon: '/verified.gif', priority: 100 },
-  { id: 'FOUNDER', name: 'FOUNDER', icon: '/founder.gif', priority: 90 },
-  { id: 'MOTHER_OF_PURITY', name: 'Mother Of Purity', icon: '/MoP.gif', priority: 85 },
-  { id: 'STAR', name: 'STAR', icon: '/superadmin.png', priority: 80 },
-  { id: 'ADMINISTRATION', name: 'ADMINISTRATION', icon: '/admin.png', priority: 70 },
-  { id: 'MODERATOR', name: 'MODERATOR', icon: '/mod.png', priority: 60 },
-  { id: 'TIGER', name: 'T.I.G.E.R', icon: '/tiger.png', priority: 50 },
-  { id: 'DRAGON', name: 'Dragon', icon: '/dragon.png', priority: 45 },
-  { id: 'MANTIS', name: 'Mantis', icon: '/mantis.png', priority: 40 },
-  { id: 'SNAKE', name: 'Snake', icon: '/snake.png', priority: 35 },
-  { id: 'MILLIONAIRE', name: 'Millionaire', icon: '/gold.png', priority: 30 },
-  { id: 'ELITE', name: 'The ELITE', icon: '/elite.png', priority: 25 },
-  { id: 'SUPER_VIP', name: 'Super VIP', icon: '/super-vip.gif', priority: 20 },
-  { id: 'VIP', name: 'VIP', icon: '/vip.gif', priority: 10 },
+  { id: 'DEVELOPER', name: 'DEVELOPER', icon: 'https://raw.githubusercontent.com/nyatter1/ranks/main/verified.gif', priority: 100 },
+  { id: 'FOUNDER', name: 'FOUNDER', icon: 'https://raw.githubusercontent.com/nyatter1/ranks/main/founder.gif', priority: 90 },
+  { id: 'MOTHER_OF_PURITY', name: 'Mother Of Purity', icon: 'https://raw.githubusercontent.com/nyatter1/ranks/main/MoP.gif', priority: 85 },
+  { id: 'STAR', name: 'STAR', icon: 'https://raw.githubusercontent.com/nyatter1/ranks/main/superadmin.png', priority: 80 },
+  { id: 'ADMINISTRATION', name: 'ADMINISTRATION', icon: 'https://raw.githubusercontent.com/nyatter1/ranks/main/admin.png', priority: 70 },
+  { id: 'MODERATOR', name: 'MODERATOR', icon: 'https://raw.githubusercontent.com/nyatter1/ranks/main/mod.png', priority: 60 },
+  { id: 'TIGER', name: 'T.I.G.E.R', icon: 'https://raw.githubusercontent.com/nyatter1/ranks/main/tiger.png', priority: 50 },
+  { id: 'DRAGON', name: 'Dragon', icon: 'https://raw.githubusercontent.com/nyatter1/ranks/main/dragon.png', priority: 45 },
+  { id: 'MANTIS', name: 'Mantis', icon: 'https://raw.githubusercontent.com/nyatter1/ranks/main/mantis.png', priority: 40 },
+  { id: 'SNAKE', name: 'Snake', icon: 'https://raw.githubusercontent.com/nyatter1/ranks/main/snake.png', priority: 35 },
+  { id: 'MILLIONAIRE', name: 'Millionaire', icon: 'https://raw.githubusercontent.com/nyatter1/ranks/main/gold.png', priority: 30 },
+  { id: 'ELITE', name: 'The ELITE', icon: 'https://raw.githubusercontent.com/nyatter1/ranks/main/elite.png', priority: 25 },
+  { id: 'SUPER_VIP', name: 'Super VIP', icon: 'https://raw.githubusercontent.com/nyatter1/ranks/main/super-vip.gif', priority: 20 },
+  { id: 'VIP', name: 'VIP', icon: 'https://raw.githubusercontent.com/nyatter1/ranks/main/vip.gif', priority: 10 },
 ];
 
 export const AVATARS = [

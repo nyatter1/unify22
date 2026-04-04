@@ -48,6 +48,8 @@ export default function Auth({ onAuthSuccess }: AuthProps) {
           onboardingStep: 1,
           isOnline: true,
           lastSeen: new Date(),
+          gold: 1000,
+          rubies: 10,
         });
       }
       onAuthSuccess();

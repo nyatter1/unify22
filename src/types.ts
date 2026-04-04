@@ -9,6 +9,8 @@ export interface UserProfile {
   onboardingStep: number;
   isOnline: boolean;
   lastSeen: any;
+  gold: number;
+  rubies: number;
 }
 
 export interface Message {
@@ -18,4 +20,13 @@ export interface Message {
   senderPfp: string;
   text: string;
   timestamp: any;
+  type?: 'text' | 'gamble_allin' | 'gamble_dice';
+  gambleData?: {
+    currency: 'gold' | 'rubies';
+    amount: number;
+    result: 'won' | 'lost';
+    multiplier: number;
+    winAmount: number;
+    diceRoll?: number;
+  };
 }

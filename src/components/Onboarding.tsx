@@ -18,6 +18,8 @@ export default function Onboarding({ user, onComplete }: OnboardingProps) {
   const [selectedPfp, setSelectedPfp] = useState(user.pfp);
   const [selectedBanner, setSelectedBanner] = useState(user.banner);
   
+  const [error, setError] = useState<string | null>(null);
+  
   const pfpInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
 
@@ -27,7 +29,8 @@ export default function Onboarding({ user, onComplete }: OnboardingProps) {
 
     // Check file size (Firestore limit is 1MB per document, so we should keep it small)
     if (file.size > 500000) { // 500KB limit for safety
-      alert('File is too large. Please choose an image under 500KB.');
+      setError('File is too large. Please choose an image under 500KB.');
+      setTimeout(() => setError(null), 3000);
       return;
     }
 
@@ -92,6 +95,17 @@ export default function Onboarding({ user, onComplete }: OnboardingProps) {
         </div>
 
         <AnimatePresence mode="wait">
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-12 z-50 bg-red-500/90 backdrop-blur-md text-white px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-2xl border border-red-400/20"
+            >
+              {error}
+            </motion.div>
+          )}
+
           {step === 1 && (
             <motion.div
               key="step1"

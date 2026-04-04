@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { auth, db } from '../firebase';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { Infinity, Mail, Lock, User, Calendar, ChevronDown, Loader2 } from 'lucide-react';
+import { Infinity, Mail, Lock, User, Calendar, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 
@@ -21,7 +21,6 @@ export default function Auth({ onAuthSuccess }: AuthProps) {
   const [username, setUsername] = useState('');
   const [age, setAge] = useState<number | ''>('');
   const [gender, setGender] = useState<'male' | 'female' | 'other' | ''>('');
-  const [showAgeDropdown, setShowAgeDropdown] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,39 +104,15 @@ export default function Auth({ onAuthSuccess }: AuthProps) {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="relative">
                     <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-                    <button
-                      type="button"
-                      onClick={() => setShowAgeDropdown(!showAgeDropdown)}
-                      className="w-full bg-slate-800/50 border border-slate-700 rounded-xl py-3 pl-11 pr-4 text-left text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all flex items-center justify-between"
-                    >
-                      <span>{age || 'Age'}</span>
-                      <ChevronDown className={cn("w-4 h-4 transition-transform", showAgeDropdown && "rotate-180")} />
-                    </button>
-                    
-                    <AnimatePresence>
-                      {showAgeDropdown && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: 10 }}
-                          className="absolute top-full left-0 w-full mt-2 bg-slate-800 border border-slate-700 rounded-xl max-h-48 overflow-y-auto z-50 shadow-xl"
-                        >
-                          {Array.from({ length: 1000 }, (_, i) => i + 1).map((num) => (
-                            <button
-                              key={num}
-                              type="button"
-                              onClick={() => {
-                                setAge(num);
-                                setShowAgeDropdown(false);
-                              }}
-                              className="w-full text-left px-4 py-2 hover:bg-amber-500 hover:text-slate-950 text-slate-300 transition-colors"
-                            >
-                              {num}
-                            </button>
-                          ))}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                    <input
+                      type="number"
+                      placeholder="Age"
+                      min="1"
+                      max="1000"
+                      value={age}
+                      onChange={(e) => setAge(e.target.value ? Number(e.target.value) : '')}
+                      className="w-full bg-slate-800/50 border border-slate-700 rounded-xl py-3 pl-11 pr-4 text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all"
+                    />
                   </div>
 
                   <select

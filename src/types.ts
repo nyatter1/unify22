@@ -127,7 +127,7 @@ export interface AppNotification {
   senderId: string;
   senderUsername: string;
   senderPfp: string;
-  type: 'profile_view' | 'profile_like' | 'news_post';
+  type: 'profile_view' | 'profile_like' | 'news_post' | 'mention' | 'custom_admin';
   content?: string;
   read: boolean;
   timestamp: any;

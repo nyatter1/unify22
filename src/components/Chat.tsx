@@ -2836,6 +2836,45 @@ export default function Chat({ user }: ChatProps) {
                 </button>
               </div>
               <div className="p-6 overflow-y-auto flex-1 space-y-8">
+                {/* Global Notification */}
+                <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
+                  <h3 className="text-sm font-bold text-white mb-4 uppercase tracking-widest flex items-center gap-2">
+                    <Bell className="w-4 h-4 text-purple-400" />
+                    Global Notification
+                  </h3>
+                  <div className="flex gap-4">
+                    <input type="text" id="globalNotification" placeholder="Enter notification message..." className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white" />
+                    <button 
+                      onClick={async () => {
+                        const input = document.getElementById('globalNotification') as HTMLInputElement;
+                        if (!input.value) return;
+                        
+                        const batch = writeBatch(db);
+                        allUsers.forEach(u => {
+                          const notifRef = doc(collection(db, 'notifications'));
+                          batch.set(notifRef, {
+                            userId: u.uid,
+                            senderId: 'system',
+                            senderUsername: 'SYSTEM',
+                            senderPfp: 'https://api.dicebear.com/7.x/bottts/svg?seed=system',
+                            type: 'news_post', // Using news_post type for general notifications
+                            content: input.value,
+                            read: false,
+                            timestamp: serverTimestamp()
+                          });
+                        });
+                        
+                        await batch.commit();
+                        input.value = '';
+                        showToast('Global notification sent!');
+                      }}
+                      className="px-6 py-3 rounded-xl bg-purple-500 text-white font-bold uppercase tracking-widest hover:bg-purple-400 transition-colors"
+                    >
+                      Send
+                    </button>
+                  </div>
+                </div>
+
                 {/* System Broadcast */}
                 <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
                   <h3 className="text-sm font-bold text-white mb-4 uppercase tracking-widest flex items-center gap-2">

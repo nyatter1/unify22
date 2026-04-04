@@ -110,7 +110,6 @@ export interface Message {
   text: string;
   timestamp: any;
   type?: 'text' | 'gamble_allin' | 'gamble_dice';
-  likes?: string[];
   gambleData?: {
     currency: 'gold' | 'rubies';
     amount: number;

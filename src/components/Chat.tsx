@@ -904,30 +904,8 @@ export default function Chat({ user }: ChatProps) {
       }
 
       // Bot Logic
-      if (text.toLowerCase().includes('@unibot')) {
-        try {
-          const prompt = text.replace(/@unibot/gi, '').trim();
-          const response = await ai.models.generateContent({
-            model: "gemini-3-flash-preview",
-            contents: `You are UniBot, a helpful and slightly sarcastic AI assistant in a chatroom called Uni-Fy. A user named ${user.username} (Rank: ${user.rank}) just said: "${prompt}". Respond concisely and playfully.`,
-          });
-          
-          if (response.text) {
-            await addDoc(collection(db, 'messages'), {
-              senderId: 'unibot',
-              senderUsername: 'UniBot',
-              senderPfp: 'https://api.dicebear.com/7.x/bottts/svg?seed=unibot&backgroundColor=10b981',
-              senderRank: 'DEVELOPER',
-              text: response.text,
-              type: 'text',
-              timestamp: serverTimestamp(),
-              isBot: true
-            });
-          }
-        } catch (err) {
-          console.error('Bot error:', err);
-        }
-      }
+      // UniBot is just a player now, no AI response logic.
+
 
     } catch (err) {
       console.error(err);
@@ -1210,29 +1188,14 @@ export default function Chat({ user }: ChatProps) {
                       )}
                     </div>
                     <div 
-                      onDoubleClick={async () => {
-                        if (!msg.id) return;
-                        const msgRef = doc(db, 'messages', msg.id);
-                        const hasLiked = msg.likes?.includes(user.uid);
-                        const newLikes = hasLiked 
-                          ? (msg.likes || []).filter((id: string) => id !== user.uid)
-                          : [...(msg.likes || []), user.uid];
-                        await updateDoc(msgRef, { likes: newLikes });
-                      }}
                       className={cn(
-                        "px-5 py-3 rounded-2xl shadow-2xl relative overflow-hidden cursor-pointer transition-transform active:scale-95",
+                        "px-5 py-3 rounded-2xl shadow-2xl relative overflow-hidden",
                         isMe ? "rounded-tr-none bg-white text-black font-medium" : "rounded-tl-none bg-black/60 border border-white/10 text-white/80 backdrop-blur-md"
                       )}
                     >
                       <div className="text-sm leading-relaxed prose prose-invert max-w-none [&_p]:m-0 [&_pre]:bg-black/20 [&_pre]:p-2 [&_pre]:rounded-lg [&_code]:bg-black/20 [&_code]:px-1 [&_code]:rounded">
                         <Markdown>{msg.text}</Markdown>
                       </div>
-                      {msg.likes && msg.likes.length > 0 && (
-                        <div className="absolute -bottom-2 -right-2 bg-black/80 backdrop-blur-md border border-white/10 rounded-full px-2 py-0.5 flex items-center gap-1 shadow-xl">
-                          <Heart className="w-3 h-3 text-red-500 fill-red-500" />
-                          <span className="text-[10px] font-bold text-white">{msg.likes.length}</span>
-                        </div>
-                      )}
                     </div>
                   </div>
                 </motion.div>

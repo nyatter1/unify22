@@ -1,3 +1,29 @@
+export interface Theme {
+  id: string;
+  name: string;
+  category: string;
+  background: string; // URL or CSS color
+  textColor: string;
+  accentColor: string;
+  isCustom?: boolean;
+}
+
+export interface CardStyle {
+  id: string;
+  name: string;
+  category: string;
+  bgClass: string;
+  borderClass: string;
+  textClass: string;
+  isCustom?: boolean;
+  customStyles?: {
+    background?: string;
+    border?: string;
+    textColor?: string;
+    effect?: 'none' | 'glow' | 'pulse' | 'glitch' | 'neon';
+  };
+}
+
 export interface UserProfile {
   uid: string;
   username: string;
@@ -14,6 +40,8 @@ export interface UserProfile {
   hasReceivedReset?: boolean;
   theme?: string;
   cardStyle?: string;
+  customThemes?: Theme[];
+  customCardStyles?: CardStyle[];
 }
 
 export interface Message {

@@ -1,3 +1,5 @@
+import { Theme, CardStyle } from './types';
+
 export const AVATARS = [
   'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix',
   'https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka',
@@ -17,24 +19,6 @@ export const BANNERS = [
   'https://images.unsplash.com/photo-1508739773434-c26b3d09e071',
   'https://images.unsplash.com/photo-1478760329108-5c3ed9d495a0',
 ];
-
-export interface Theme {
-  id: string;
-  name: string;
-  category: string;
-  background: string; // URL or CSS color
-  textColor: string;
-  accentColor: string;
-}
-
-export interface CardStyle {
-  id: string;
-  name: string;
-  category: string;
-  bgClass: string;
-  borderClass: string;
-  textClass: string;
-}
 
 export const THEMES: Theme[] = [
   // The Essentials

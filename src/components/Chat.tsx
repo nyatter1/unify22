@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { auth, db } from '../firebase';
 import { collection, query, orderBy, limit, onSnapshot, addDoc, serverTimestamp, doc, updateDoc, where, increment } from 'firebase/firestore';
-import { UserProfile, Message } from '../types';
+import { UserProfile, Message, Theme, CardStyle } from '../types';
 import { THEMES, CARD_STYLES } from '../constants';
 import { Send, LogOut, Users, Infinity, Circle, Shield, Crown, Wallet, Gem, Coins, AlertCircle, Dice1, Dice2, Dice3, Dice4, Dice5, Dice6, Palette, X, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -19,11 +19,74 @@ export default function Chat({ user }: ChatProps) {
   const [newMessage, setNewMessage] = useState('');
   const [showWallet, setShowWallet] = useState(false);
   const [showCustomizer, setShowCustomizer] = useState(false);
+  const [showThemeEditor, setShowThemeEditor] = useState(false);
+  const [showCardEditor, setShowCardEditor] = useState(false);
   const [customizerTab, setCustomizerTab] = useState<'themes' | 'cards'>('themes');
   const [toast, setToast] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const currentTheme = THEMES.find(t => t.id === user.theme) || THEMES[0];
+  const [newTheme, setNewTheme] = useState<Partial<Theme>>({
+    name: '',
+    background: '#000000',
+    textColor: 'text-white',
+    accentColor: 'white',
+    category: 'Custom',
+    isCustom: true
+  });
+
+  const [newCard, setNewCard] = useState<Partial<CardStyle>>({
+    name: '',
+    category: 'Custom',
+    bgClass: '',
+    borderClass: '',
+    textClass: '',
+    isCustom: true,
+    customStyles: {
+      background: '#000000',
+      border: '#ffffff',
+      textColor: '#ffffff',
+      effect: 'none'
+    }
+  });
+
+  const allThemes = [...THEMES, ...(user.customThemes || [])];
+  const allCardStyles = [...CARD_STYLES, ...(user.customCardStyles || [])];
+  const currentTheme = allThemes.find(t => t.id === user.theme) || THEMES[0];
+
+  const getCardStyles = (u: UserProfile) => {
+    const uCardStyles = [...CARD_STYLES, ...(u.customCardStyles || [])];
+    const style = uCardStyles.find(s => s.id === u.cardStyle) || CARD_STYLES[0];
+    
+    if (style.isCustom && style.customStyles) {
+      const { background, border, textColor, effect } = style.customStyles;
+      let className = "flex items-center gap-4 group cursor-pointer p-3 rounded-2xl border transition-all";
+      
+      if (effect === 'glow') className += " shadow-[0_0_20px_rgba(255,255,255,0.2)]";
+      if (effect === 'pulse') className += " animate-pulse";
+      if (effect === 'glitch') className += " skew-x-1 -rotate-1";
+      if (effect === 'neon') className += " shadow-[0_0_15px_rgba(255,255,255,0.4)]";
+
+      return {
+        className,
+        style: {
+          backgroundColor: background,
+          borderColor: border,
+          color: textColor,
+        },
+        textClass: ""
+      };
+    }
+
+    return {
+      className: cn(
+        "flex items-center gap-4 group cursor-pointer p-3 rounded-2xl border transition-all",
+        style.bgClass,
+        style.borderClass
+      ),
+      style: {},
+      textClass: style.textClass
+    };
+  };
 
   useEffect(() => {
     // Auto-fix NaN or 0 balances
@@ -92,6 +155,44 @@ export default function Chat({ user }: ChatProps) {
     } catch (err) {
       console.error(err);
       showToast('Failed to update customization');
+    }
+  };
+
+  const saveCustomTheme = async () => {
+    if (!newTheme.name) return showToast('Theme name is required');
+    const themeId = `custom-${Date.now()}`;
+    const theme = { ...newTheme, id: themeId } as Theme;
+    
+    try {
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, {
+        customThemes: [...(user.customThemes || []), theme],
+        theme: themeId
+      });
+      setShowThemeEditor(false);
+      showToast('Custom theme saved!');
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to save theme');
+    }
+  };
+
+  const saveCustomCard = async () => {
+    if (!newCard.name) return showToast('Card name is required');
+    const cardId = `custom-card-${Date.now()}`;
+    const card = { ...newCard, id: cardId } as CardStyle;
+    
+    try {
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, {
+        customCardStyles: [...(user.customCardStyles || []), card],
+        cardStyle: cardId
+      });
+      setShowCardEditor(false);
+      showToast('Custom card saved!');
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to save card');
     }
   };
 
@@ -460,17 +561,14 @@ export default function Chat({ user }: ChatProps) {
           
           <div className="flex-1 overflow-y-auto p-6 space-y-5 custom-scrollbar">
             {onlineUsers.map((u) => {
-              const cardStyle = CARD_STYLES.find(s => s.id === u.cardStyle) || CARD_STYLES[0];
+              const { className, style, textClass } = getCardStyles(u);
               return (
                 <motion.div 
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   key={u.uid} 
-                  className={cn(
-                    "flex items-center gap-4 group cursor-pointer p-3 rounded-2xl border transition-all",
-                    cardStyle.bgClass,
-                    cardStyle.borderClass
-                  )}
+                  className={className}
+                  style={style}
                 >
                   <div className="relative">
                     <img src={u.pfp} className="relative w-12 h-12 rounded-full border border-white/20 object-cover transition-transform group-hover:scale-105" />
@@ -478,13 +576,13 @@ export default function Chat({ user }: ChatProps) {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <p className={cn("text-sm font-serif truncate transition-colors", cardStyle.textClass)}>{u.username}</p>
+                      <p className={cn("text-sm font-serif truncate transition-colors", textClass)}>{u.username}</p>
                       {u.age > 100 && <Crown className="w-3 h-3 text-amber-500" />}
                     </div>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-[9px] text-white/40 uppercase tracking-widest font-bold">{u.age}Y</span>
+                      <span className="text-[9px] opacity-60 uppercase tracking-widest font-bold">{u.age}Y</span>
                       <span className="w-1 h-1 rounded-full bg-white/10" />
-                      <span className="text-[9px] text-white/40 uppercase tracking-widest font-bold">{u.gender}</span>
+                      <span className="text-[9px] opacity-60 uppercase tracking-widest font-bold">{u.gender}</span>
                     </div>
                   </div>
                 </motion.div>
@@ -571,69 +669,374 @@ export default function Chat({ user }: ChatProps) {
               <div className="flex-1 overflow-y-auto p-10 custom-scrollbar">
                 {customizerTab === 'themes' ? (
                   <div className="space-y-12">
-                    {['Essentials', 'Aesthetic', 'Street', 'Brain Rot', 'Niche'].map(category => (
-                      <div key={category} className="space-y-6">
-                        <h3 className="text-sm font-bold text-amber-500 uppercase tracking-[0.3em] pl-2 border-l-2 border-amber-500">{category}</h3>
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                          {THEMES.filter(t => t.category === category).map(t => (
-                            <button
-                              key={t.id}
-                              onClick={() => updateCustomization('theme', t.id)}
-                              className={cn(
-                                "group relative aspect-video rounded-2xl overflow-hidden border-2 transition-all hover:scale-[1.02] active:scale-95",
-                                user.theme === t.id ? "border-amber-500 shadow-[0_0_30px_rgba(245,158,11,0.3)]" : "border-white/5 hover:border-white/20"
-                              )}
-                            >
-                              <div 
-                                className="absolute inset-0 transition-transform group-hover:scale-110 duration-700"
-                                style={{ 
-                                  backgroundColor: t.background,
-                                }}
-                              />
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                              <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
-                                <span className="text-xs font-bold text-white uppercase tracking-widest">{t.name}</span>
-                                {user.theme === t.id && <Check className="w-4 h-4 text-amber-500" />}
-                              </div>
-                            </button>
-                          ))}
-                        </div>
+                    {/* Create Custom Theme Button */}
+                    <button 
+                      onClick={() => setShowThemeEditor(true)}
+                      className="w-full p-8 rounded-3xl border-2 border-dashed border-white/10 hover:border-amber-500/50 hover:bg-amber-500/5 transition-all group flex flex-col items-center justify-center gap-4"
+                    >
+                      <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Palette className="w-6 h-6 text-amber-500" />
                       </div>
-                    ))}
+                      <div className="text-center">
+                        <p className="text-white font-bold uppercase tracking-widest text-sm">Create Your Own Theme</p>
+                        <p className="text-white/40 text-xs mt-1">Design a unique look for your eyes only</p>
+                      </div>
+                    </button>
+
+                    {['Custom', 'Essentials', 'Aesthetic', 'Street', 'Brain Rot', 'Niche'].map(category => {
+                      const categoryThemes = allThemes.filter(t => t.category === category);
+                      if (categoryThemes.length === 0) return null;
+                      
+                      return (
+                        <div key={category} className="space-y-6">
+                          <h3 className="text-sm font-bold text-amber-500 uppercase tracking-[0.3em] pl-2 border-l-2 border-amber-500">{category}</h3>
+                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                            {categoryThemes.map(t => (
+                              <button
+                                key={t.id}
+                                onClick={() => updateCustomization('theme', t.id)}
+                                className={cn(
+                                  "group relative aspect-video rounded-2xl overflow-hidden border-2 transition-all hover:scale-[1.02] active:scale-95",
+                                  user.theme === t.id ? "border-amber-500 shadow-[0_0_30px_rgba(245,158,11,0.3)]" : "border-white/5 hover:border-white/20"
+                                )}
+                              >
+                                <div 
+                                  className="absolute inset-0 transition-transform group-hover:scale-110 duration-700"
+                                  style={{ 
+                                    backgroundColor: t.background,
+                                  }}
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                                <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
+                                  <span className="text-xs font-bold text-white uppercase tracking-widest">{t.name}</span>
+                                  {user.theme === t.id && <Check className="w-4 h-4 text-amber-500" />}
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="space-y-12">
-                    {['Elite', 'Fun', 'Street', 'Premium', 'Minimal', 'Extreme'].map(category => (
-                      <div key={category} className="space-y-6">
-                        <h3 className="text-sm font-bold text-amber-500 uppercase tracking-[0.3em] pl-2 border-l-2 border-amber-500">{category}</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                          {CARD_STYLES.filter(s => s.category === category).map(s => (
-                            <button
-                              key={s.id}
-                              onClick={() => updateCustomization('cardStyle', s.id)}
-                              className={cn(
-                                "group relative p-4 rounded-2xl border-2 transition-all hover:scale-[1.02] active:scale-95 text-left",
-                                user.cardStyle === s.id ? "border-amber-500 shadow-[0_0_30px_rgba(245,158,11,0.3)]" : "border-white/5 hover:border-white/20"
-                              )}
-                            >
-                              <div className={cn("flex items-center gap-4 p-3 rounded-xl border", s.bgClass, s.borderClass)}>
-                                <img src={user.pfp} className="w-10 h-10 rounded-full border border-white/20" />
-                                <div className="flex-1 min-w-0">
-                                  <p className={cn("text-sm font-serif truncate", s.textClass)}>{user.username}</p>
-                                  <p className="text-[9px] text-white/40 uppercase tracking-widest font-bold">{user.age}Y • {user.gender}</p>
-                                </div>
-                                {user.cardStyle === s.id && <Check className="w-4 h-4 text-amber-500" />}
-                              </div>
-                              <div className="mt-3 flex items-center justify-between px-1">
-                                <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">{s.name}</span>
-                              </div>
-                            </button>
-                          ))}
-                        </div>
+                    {/* Create Custom Card Button */}
+                    <button 
+                      onClick={() => setShowCardEditor(true)}
+                      className="w-full p-8 rounded-3xl border-2 border-dashed border-white/10 hover:border-amber-500/50 hover:bg-amber-500/5 transition-all group flex flex-col items-center justify-center gap-4"
+                    >
+                      <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Infinity className="w-6 h-6 text-amber-500" />
                       </div>
-                    ))}
+                      <div className="text-center">
+                        <p className="text-white font-bold uppercase tracking-widest text-sm">Create Your Own Card</p>
+                        <p className="text-white/40 text-xs mt-1">Stand out with a fully custom player card</p>
+                      </div>
+                    </button>
+
+                    {['Custom', 'Elite', 'Fun', 'Street', 'Premium', 'Minimal', 'Extreme'].map(category => {
+                      const categoryCards = allCardStyles.filter(s => s.category === category);
+                      if (categoryCards.length === 0) return null;
+
+                      return (
+                        <div key={category} className="space-y-6">
+                          <h3 className="text-sm font-bold text-amber-500 uppercase tracking-[0.3em] pl-2 border-l-2 border-amber-500">{category}</h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {categoryCards.map(s => {
+                              const { className, style, textClass } = getCardStyles({ ...user, cardStyle: s.id });
+                              return (
+                                <button
+                                  key={s.id}
+                                  onClick={() => updateCustomization('cardStyle', s.id)}
+                                  className={cn(
+                                    "group relative p-4 rounded-2xl border-2 transition-all hover:scale-[1.02] active:scale-95 text-left",
+                                    user.cardStyle === s.id ? "border-amber-500 shadow-[0_0_30px_rgba(245,158,11,0.3)]" : "border-white/5 hover:border-white/20"
+                                  )}
+                                >
+                                  <div className={className} style={style}>
+                                    <img src={user.pfp} className="w-10 h-10 rounded-full border border-white/20" />
+                                    <div className="flex-1 min-w-0">
+                                      <p className={cn("text-sm font-serif truncate", textClass)}>{user.username}</p>
+                                      <p className="text-[9px] opacity-40 uppercase tracking-widest font-bold">{user.age}Y • {user.gender}</p>
+                                    </div>
+                                    {user.cardStyle === s.id && <Check className="w-4 h-4 text-amber-500" />}
+                                  </div>
+                                  <div className="mt-3 flex items-center justify-between px-1">
+                                    <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">{s.name}</span>
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+      {/* Theme Editor Modal */}
+      <AnimatePresence>
+        {showThemeEditor && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowThemeEditor(false)}
+              className="absolute inset-0 bg-black/90 backdrop-blur-2xl"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-2xl bg-[#0a0a0a] border border-white/10 rounded-[2.5rem] overflow-hidden flex flex-col shadow-2xl"
+            >
+              <div className="p-8 border-b border-white/5 flex items-center justify-between">
+                <h3 className="text-2xl font-serif italic text-white">Design Theme</h3>
+                <button onClick={() => setShowThemeEditor(false)} className="p-2 hover:bg-white/5 rounded-full text-white/40"><X /></button>
+              </div>
+              
+              <div className="p-8 space-y-8 overflow-y-auto custom-scrollbar">
+                {/* Preview */}
+                <div className="space-y-3">
+                  <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Live Preview</p>
+                  <div 
+                    className="aspect-video rounded-3xl border-2 border-white/10 overflow-hidden flex flex-col p-6 gap-4"
+                    style={{ backgroundColor: newTheme.background }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-white/10" />
+                      <div className="space-y-2">
+                        <div className="h-2 w-24 rounded-full bg-white/20" />
+                        <div className="h-1.5 w-16 rounded-full bg-white/10" />
+                      </div>
+                    </div>
+                    <div className="flex-1 rounded-2xl bg-black/20 border border-white/5 p-4">
+                      <p className={cn("text-sm", newTheme.textColor)}>This is how your chat will look.</p>
+                    </div>
+                    <div className="h-10 rounded-xl bg-white flex items-center justify-center">
+                      <span className="text-xs font-bold uppercase tracking-widest text-black">Send Message</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Theme Name</label>
+                    <input 
+                      type="text" 
+                      value={newTheme.name}
+                      onChange={e => setNewTheme({...newTheme, name: e.target.value})}
+                      placeholder="e.g. Midnight Soul"
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500/50"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Background Color</label>
+                    <div className="flex gap-2">
+                      <input 
+                        type="color" 
+                        value={newTheme.background}
+                        onChange={e => setNewTheme({...newTheme, background: e.target.value})}
+                        className="w-12 h-12 rounded-xl bg-transparent border-none cursor-pointer"
+                      />
+                      <input 
+                        type="text" 
+                        value={newTheme.background}
+                        onChange={e => setNewTheme({...newTheme, background: e.target.value})}
+                        className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white font-mono text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Text Color</label>
+                    <select 
+                      value={newTheme.textColor}
+                      onChange={e => setNewTheme({...newTheme, textColor: e.target.value})}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none"
+                    >
+                      <option value="text-white" className="bg-zinc-900">White</option>
+                      <option value="text-zinc-400" className="bg-zinc-900">Dimmed</option>
+                      <option value="text-amber-500" className="bg-zinc-900">Amber</option>
+                      <option value="text-emerald-500" className="bg-zinc-900">Emerald</option>
+                      <option value="text-sky-500" className="bg-zinc-900">Sky</option>
+                      <option value="text-pink-500" className="bg-zinc-900">Pink</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Accent Color</label>
+                    <select 
+                      value={newTheme.accentColor}
+                      onChange={e => setNewTheme({...newTheme, accentColor: e.target.value})}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none"
+                    >
+                      <option value="white" className="bg-zinc-900">White</option>
+                      <option value="amber-500" className="bg-zinc-900">Amber</option>
+                      <option value="emerald-500" className="bg-zinc-900">Emerald</option>
+                      <option value="sky-500" className="bg-zinc-900">Sky</option>
+                      <option value="pink-500" className="bg-zinc-900">Pink</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-8 bg-black/40 border-t border-white/5 flex gap-4">
+                <button 
+                  onClick={() => setShowThemeEditor(false)}
+                  className="flex-1 py-4 rounded-2xl border border-white/10 text-white font-bold uppercase tracking-widest text-xs hover:bg-white/5 transition-all"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={saveCustomTheme}
+                  className="flex-[2] py-4 rounded-2xl bg-white text-black font-bold uppercase tracking-widest text-xs hover:scale-[1.02] active:scale-95 transition-all shadow-xl"
+                >
+                  Save & Apply Theme
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Card Editor Modal */}
+      <AnimatePresence>
+        {showCardEditor && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowCardEditor(false)}
+              className="absolute inset-0 bg-black/90 backdrop-blur-2xl"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-2xl bg-[#0a0a0a] border border-white/10 rounded-[2.5rem] overflow-hidden flex flex-col shadow-2xl"
+            >
+              <div className="p-8 border-b border-white/5 flex items-center justify-between">
+                <h3 className="text-2xl font-serif italic text-white">Design Card</h3>
+                <button onClick={() => setShowCardEditor(false)} className="p-2 hover:bg-white/5 rounded-full text-white/40"><X /></button>
+              </div>
+              
+              <div className="p-8 space-y-8 overflow-y-auto custom-scrollbar">
+                {/* Preview */}
+                <div className="space-y-3">
+                  <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Live Preview</p>
+                  <div 
+                    className={cn(
+                      "flex items-center gap-4 p-6 rounded-2xl border transition-all",
+                      newCard.customStyles?.effect === 'glow' && "shadow-[0_0_30px_rgba(255,255,255,0.2)]",
+                      newCard.customStyles?.effect === 'pulse' && "animate-pulse",
+                      newCard.customStyles?.effect === 'glitch' && "skew-x-2 -rotate-1",
+                      newCard.customStyles?.effect === 'neon' && "shadow-[0_0_20px_rgba(255,255,255,0.4)]"
+                    )}
+                    style={{ 
+                      backgroundColor: newCard.customStyles?.background,
+                      borderColor: newCard.customStyles?.border,
+                      color: newCard.customStyles?.textColor
+                    }}
+                  >
+                    <img src={user.pfp} className="w-12 h-12 rounded-full border border-white/20" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-lg font-serif truncate">{user.username}</p>
+                      <p className="text-[10px] opacity-60 uppercase tracking-widest font-bold">{user.age}Y • {user.gender}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Card Name</label>
+                    <input 
+                      type="text" 
+                      value={newCard.name}
+                      onChange={e => setNewCard({...newCard, name: e.target.value})}
+                      placeholder="e.g. Elite Member"
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500/50"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Special Effect</label>
+                    <select 
+                      value={newCard.customStyles?.effect}
+                      onChange={e => setNewCard({
+                        ...newCard, 
+                        customStyles: { ...newCard.customStyles!, effect: e.target.value as any }
+                      })}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none"
+                    >
+                      <option value="none" className="bg-zinc-900">None</option>
+                      <option value="glow" className="bg-zinc-900">Soft Glow</option>
+                      <option value="pulse" className="bg-zinc-900">Pulse</option>
+                      <option value="glitch" className="bg-zinc-900">Glitch</option>
+                      <option value="neon" className="bg-zinc-900">Neon Aura</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Background</label>
+                    <input 
+                      type="color" 
+                      value={newCard.customStyles?.background}
+                      onChange={e => setNewCard({
+                        ...newCard, 
+                        customStyles: { ...newCard.customStyles!, background: e.target.value }
+                      })}
+                      className="w-full h-12 rounded-xl bg-transparent border-none cursor-pointer"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Border</label>
+                    <input 
+                      type="color" 
+                      value={newCard.customStyles?.border}
+                      onChange={e => setNewCard({
+                        ...newCard, 
+                        customStyles: { ...newCard.customStyles!, border: e.target.value }
+                      })}
+                      className="w-full h-12 rounded-xl bg-transparent border-none cursor-pointer"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Text</label>
+                    <input 
+                      type="color" 
+                      value={newCard.customStyles?.textColor}
+                      onChange={e => setNewCard({
+                        ...newCard, 
+                        customStyles: { ...newCard.customStyles!, textColor: e.target.value }
+                      })}
+                      className="w-full h-12 rounded-xl bg-transparent border-none cursor-pointer"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-8 bg-black/40 border-t border-white/5 flex gap-4">
+                <button 
+                  onClick={() => setShowCardEditor(false)}
+                  className="flex-1 py-4 rounded-2xl border border-white/10 text-white font-bold uppercase tracking-widest text-xs hover:bg-white/5 transition-all"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={saveCustomCard}
+                  className="flex-[2] py-4 rounded-2xl bg-white text-black font-bold uppercase tracking-widest text-xs hover:scale-[1.02] active:scale-95 transition-all shadow-xl"
+                >
+                  Save & Apply Card
+                </button>
               </div>
             </motion.div>
           </div>

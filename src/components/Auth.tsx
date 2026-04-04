@@ -65,7 +65,6 @@ export default function Auth({ onAuthSuccess }: AuthProps) {
           theme: 'luxury-black',
           cardStyle: 'default',
           rank,
-          invites: 0,
           createdAt: new Date(),
         });
       }

@@ -1,4 +1,4 @@
-import { Theme, CardStyle, UserRank } from './types';
+import { Theme, CardStyle, UserRank, Border, ProfileEffect } from './types';
 
 export interface RankInfo {
   id: UserRank;
@@ -21,6 +21,8 @@ export const RANKS: RankInfo[] = [
   { id: 'MILLIONAIRE', name: 'Millionaire', icon: 'https://raw.githubusercontent.com/nyatter1/ranks/main/gold.png', priority: 30 },
   { id: 'ELITE', name: 'The ELITE', icon: 'https://raw.githubusercontent.com/nyatter1/ranks/main/elite.png', priority: 25 },
   { id: 'SUPER_VIP', name: 'Super VIP', icon: 'https://raw.githubusercontent.com/nyatter1/ranks/main/super-vip.gif', priority: 20 },
+  { id: 'GOOD_GIRL', name: 'Good Girl', icon: 'https://api.dicebear.com/7.x/icons/svg?seed=heart&backgroundColor=ffb6c1', priority: 15 },
+  { id: 'BUNNY', name: 'Bunny', icon: 'https://api.dicebear.com/7.x/icons/svg?seed=rabbit&backgroundColor=ff69b4', priority: 12 },
   { id: 'VIP', name: 'VIP', icon: 'https://raw.githubusercontent.com/nyatter1/ranks/main/vip.gif', priority: 10 },
 ];
 
@@ -125,3 +127,52 @@ export const CARD_STYLES: CardStyle[] = [
   { id: 'the-gold-bar', name: 'Gold Bar', category: 'Extreme', bgClass: 'bg-gradient-to-r from-yellow-600 via-yellow-400 to-yellow-600', borderClass: 'border-yellow-700 border-b-4 border-r-4', textClass: 'text-yellow-950 font-black uppercase' },
   { id: 'the-void-walker', name: 'Void Walker', category: 'Extreme', bgClass: 'bg-black', borderClass: 'border-purple-900/50 shadow-[0_0_40px_rgba(88,28,135,0.4)]', textClass: 'text-purple-500 font-thin tracking-[0.3em]' }
 ];
+
+export const PROFILE_EFFECTS: ProfileEffect[] = [
+  { id: 'effect-none', name: 'None', category: 'Basic', className: '' },
+  { id: 'effect-snow', name: 'Snowfall', category: 'Weather', className: 'effect-snow' },
+  { id: 'effect-rain', name: 'Rainstorm', category: 'Weather', className: 'effect-rain' },
+  { id: 'effect-matrix', name: 'Matrix Rain', category: 'Cyber', className: 'effect-matrix' },
+  { id: 'effect-scanline', name: 'Scanlines', category: 'Cyber', className: 'effect-scanline' },
+  { id: 'effect-glitch', name: 'Cyber Glitch', category: 'Cyber', className: 'effect-glitch' },
+  { id: 'effect-fireflies', name: 'Fireflies', category: 'Elements', className: 'effect-fireflies' },
+  { id: 'effect-stars', name: 'Starfield', category: 'Space', className: 'effect-stars' },
+  { id: 'effect-pulse', name: 'Neon Pulse', category: 'Cyber', className: 'effect-pulse' },
+  { id: 'effect-confetti', name: 'Confetti', category: 'Party', className: 'effect-confetti' },
+  { id: 'effect-floating-orbs', name: 'Floating Orbs', category: 'Elements', className: 'effect-floating-orbs' },
+  { id: 'effect-lightning', name: 'Lightning', category: 'Weather', className: 'effect-lightning' },
+  { id: 'effect-aurora', name: 'Aurora Borealis', category: 'Space', className: 'effect-aurora' },
+  { id: 'effect-blood-rain', name: 'Blood Rain', category: 'Weather', className: 'effect-blood-rain' },
+  { id: 'effect-bubbles', name: 'Bubbles', category: 'Elements', className: 'effect-bubbles' }
+];
+
+export const BORDERS: Border[] = (() => {
+  const colors = ['red', 'orange', 'amber', 'yellow', 'lime', 'green', 'emerald', 'teal', 'cyan', 'sky', 'blue', 'indigo', 'violet', 'purple', 'fuchsia', 'pink', 'rose', 'slate', 'gray', 'zinc', 'neutral', 'stone'];
+  const styles = ['solid', 'dashed', 'dotted', 'double'];
+  const widths = ['2', '4', '8'];
+  const borders: Border[] = [];
+  let id = 1;
+  for (const color of colors) {
+    for (const style of styles) {
+      for (const width of widths) {
+        borders.push({
+          id: `border-${id++}`,
+          name: `${color.charAt(0).toUpperCase() + color.slice(1)} ${style.charAt(0).toUpperCase() + style.slice(1)} ${width}px`,
+          category: 'Basic',
+          className: `border-${color}-500 border-${style} border-${width}`
+        });
+      }
+    }
+  }
+  borders.push(
+    { id: 'border-gold-glow', name: 'Gold Glow', category: 'Special', className: 'border-amber-400 border-4 shadow-[0_0_15px_rgba(251,191,36,0.8)]' },
+    { id: 'border-neon-pink', name: 'Neon Pink', category: 'Special', className: 'border-pink-500 border-4 shadow-[0_0_20px_rgba(236,72,153,0.8)]' },
+    { id: 'border-cyber-blue', name: 'Cyber Blue', category: 'Special', className: 'border-cyan-400 border-[6px] border-double shadow-[0_0_25px_rgba(34,211,238,0.6)]' },
+    { id: 'border-toxic', name: 'Toxic Sludge', category: 'Special', className: 'border-lime-500 border-8 border-dotted shadow-[0_0_30px_rgba(132,204,22,0.5)]' },
+    { id: 'border-blood', name: 'Blood Moon', category: 'Special', className: 'border-red-600 border-4 shadow-[inset_0_0_20px_rgba(220,38,38,0.8),0_0_20px_rgba(220,38,38,0.8)]' },
+    { id: 'border-rainbow', name: 'Rainbow Flow', category: 'Special', className: 'border-transparent border-4 bg-clip-border bg-gradient-to-r from-red-500 via-yellow-500 via-green-500 via-blue-500 to-purple-500 animate-[gradient_3s_linear_infinite] bg-[length:200%_auto]' },
+    { id: 'border-glitch', name: 'Glitch', category: 'Special', className: 'border-white border-4 skew-x-2 -rotate-1 shadow-[2px_2px_0_rgba(255,0,0,0.5),-2px_-2px_0_rgba(0,255,255,0.5)]' },
+    { id: 'border-void', name: 'The Void', category: 'Special', className: 'border-black border-8 shadow-[0_0_50px_rgba(0,0,0,1)]' }
+  );
+  return borders;
+})();

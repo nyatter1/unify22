@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { auth, db } from '../firebase';
 import { collection, query, orderBy, limit, onSnapshot, addDoc, serverTimestamp, doc, updateDoc, where, increment, getDocs, deleteDoc, writeBatch } from 'firebase/firestore';
 import { UserProfile, Message, Theme, CardStyle, UserRank } from '../types';
-import { THEMES, CARD_STYLES, AVATARS, BANNERS, RANKS, RankInfo } from '../constants';
+import { THEMES, CARD_STYLES, AVATARS, BANNERS, RANKS, RankInfo, BORDERS, PROFILE_EFFECTS } from '../constants';
 import { 
   Send, 
   LogOut, 
@@ -32,7 +32,8 @@ import {
   Camera, 
   ChevronRight,
   Search,
-  ArrowUp
+  ArrowUp,
+  Star
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
@@ -55,8 +56,8 @@ export default function Chat({ user }: ChatProps) {
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<UserProfile | null>(null);
-  const [editTab, setEditTab] = useState<'username' | 'info' | 'bio' | 'pfp' | 'banner' | 'main'>('main');
-  const [customizerTab, setCustomizerTab] = useState<'themes' | 'cards'>('themes');
+  const [editTab, setEditTab] = useState<'username' | 'info' | 'bio' | 'pfp' | 'banner' | 'main' | 'rank'>('main');
+  const [customizerTab, setCustomizerTab] = useState<'themes' | 'cards' | 'borders' | 'effects'>('themes');
   const [toast, setToast] = useState<string | null>(null);
   const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -97,6 +98,12 @@ export default function Chat({ user }: ChatProps) {
       fontFamily: 'sans'
     }
   });
+
+  const [customRankForm, setCustomRankForm] = useState({
+    name: user.customRank?.name || '',
+    icon: user.customRank?.icon || ''
+  });
+  const customRankInputRef = useRef<HTMLInputElement>(null);
 
   const allThemes = [...THEMES, ...(user.customThemes || [])];
   const allCardStyles = [...CARD_STYLES, ...(user.customCardStyles || [])];
@@ -295,7 +302,7 @@ export default function Chat({ user }: ChatProps) {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const updateCustomization = async (field: 'theme' | 'cardStyle' | 'username' | 'age' | 'gender' | 'bio' | 'pfp' | 'banner', value: any) => {
+  const updateCustomization = async (field: 'theme' | 'cardStyle' | 'border' | 'profileEffect' | 'username' | 'age' | 'gender' | 'bio' | 'pfp' | 'banner', value: any) => {
     try {
       await updateDoc(doc(db, 'users', user.uid), { [field]: value });
       if (selectedProfile?.uid === user.uid) {
@@ -357,6 +364,54 @@ export default function Chat({ user }: ChatProps) {
     reader.readAsDataURL(file);
   };
 
+  const handleRankIconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 1024 * 1024) {
+      showToast('File too large! Max 1MB.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      setCustomRankForm(prev => ({ ...prev, icon: base64String }));
+      showToast('Rank icon uploaded!');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const saveCustomRank = async () => {
+    if (!customRankForm.name || !customRankForm.icon) {
+      showToast('Name and icon are required for a custom rank');
+      return;
+    }
+
+    try {
+      await updateDoc(doc(db, 'users', user.uid), {
+        customRank: customRankForm
+      });
+      showToast('Custom rank saved!');
+      setEditTab('main');
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to save custom rank');
+    }
+  };
+
+  const resetCustomRank = async () => {
+    try {
+      await updateDoc(doc(db, 'users', user.uid), {
+        customRank: null
+      });
+      window.location.reload();
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to reset custom rank');
+    }
+  };
+
   const saveCustomTheme = async () => {
     if (!newTheme.name) return showToast('Theme name is required');
     const themeId = `custom-${Date.now()}`;
@@ -406,6 +461,51 @@ export default function Chat({ user }: ChatProps) {
     if (text.startsWith('/')) {
       const parts = text.split(' ');
       const command = parts[0].toLowerCase();
+
+      if (command === '/ranks') {
+        if (user.rank !== 'DEVELOPER') {
+          showToast('Only developers can use this command.');
+          return;
+        }
+        const ranksList = RANKS.map(r => r.id).join(', ');
+        showToast(`Available ranks: ${ranksList}`);
+        return;
+      }
+
+      if (command === '/rank') {
+        if (user.rank !== 'DEVELOPER') {
+          showToast('Only developers can use this command.');
+          return;
+        }
+        const targetUsername = parts[1];
+        const targetRankId = parts[2]?.toUpperCase();
+
+        if (!targetUsername || !targetRankId) {
+          showToast('Usage: /rank {username} {rank_id}');
+          return;
+        }
+
+        const targetUser = allUsers.find(u => u.username.toLowerCase() === targetUsername.toLowerCase());
+        if (!targetUser) {
+          showToast('User not found.');
+          return;
+        }
+
+        const rankExists = RANKS.find(r => r.id === targetRankId);
+        if (!rankExists) {
+          showToast('Invalid rank. Use /ranks to see available ranks.');
+          return;
+        }
+
+        try {
+          await updateDoc(doc(db, 'users', targetUser.uid), { rank: targetRankId });
+          showToast(`Rank updated for ${targetUsername} to ${targetRankId}`);
+        } catch (err) {
+          console.error(err);
+          showToast('Failed to update rank.');
+        }
+        return;
+      }
 
       if (command === '/allin') {
         const currency = parts[1]?.toLowerCase();
@@ -749,7 +849,7 @@ export default function Chat({ user }: ChatProps) {
                       <p className="text-[10px] font-bold text-white/60 uppercase tracking-widest">{msg.senderUsername}</p>
                       {(msg.senderRank || allUsers.find(u => u.uid === msg.senderId)?.rank) && (
                         <img 
-                          src={RANKS.find(r => r.id === (msg.senderRank || allUsers.find(u => u.uid === msg.senderId)?.rank || 'VIP'))?.icon} 
+                          src={allUsers.find(u => u.uid === msg.senderId)?.customRank?.icon || RANKS.find(r => r.id === (msg.senderRank || allUsers.find(u => u.uid === msg.senderId)?.rank || 'VIP'))?.icon} 
                           className="w-3.5 h-3.5 object-contain"
                           alt="rank"
                         />
@@ -839,7 +939,7 @@ export default function Chat({ user }: ChatProps) {
                     <div className="flex items-center gap-1.5">
                       <p className={cn("text-sm font-serif truncate transition-colors", textClass)}>{u.username}</p>
                       <img 
-                        src={RANKS.find(r => r.id === (u.rank || 'VIP'))?.icon} 
+                        src={u.customRank?.icon || RANKS.find(r => r.id === (u.rank || 'VIP'))?.icon} 
                         className="w-3.5 h-3.5 object-contain"
                         alt="rank"
                       />
@@ -866,7 +966,7 @@ export default function Chat({ user }: ChatProps) {
                   <div className="flex items-center gap-1.5">
                     <p className="text-xs font-serif text-white">{user.username}</p>
                     <img 
-                      src={RANKS.find(r => r.id === (user.rank || 'VIP'))?.icon} 
+                      src={user.customRank?.icon || RANKS.find(r => r.id === (user.rank || 'VIP'))?.icon} 
                       className="w-3.5 h-3.5 object-contain"
                       alt="rank"
                     />
@@ -899,11 +999,11 @@ export default function Chat({ user }: ChatProps) {
               <div className="h-24 border-b border-white/5 flex items-center justify-between px-10 bg-black/20">
                 <div className="flex items-center gap-8">
                   <h2 className="text-3xl font-serif italic text-white">Customise</h2>
-                  <div className="flex bg-white/5 p-1 rounded-2xl border border-white/5">
+                  <div className="flex bg-white/5 p-1 rounded-2xl border border-white/5 overflow-x-auto custom-scrollbar">
                     <button 
                       onClick={() => setCustomizerTab('themes')}
                       className={cn(
-                        "px-6 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all",
+                        "px-6 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all whitespace-nowrap",
                         customizerTab === 'themes' ? "bg-white text-black shadow-xl" : "text-white/40 hover:text-white"
                       )}
                     >
@@ -912,11 +1012,29 @@ export default function Chat({ user }: ChatProps) {
                     <button 
                       onClick={() => setCustomizerTab('cards')}
                       className={cn(
-                        "px-6 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all",
+                        "px-6 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all whitespace-nowrap",
                         customizerTab === 'cards' ? "bg-white text-black shadow-xl" : "text-white/40 hover:text-white"
                       )}
                     >
                       User Cards
+                    </button>
+                    <button 
+                      onClick={() => setCustomizerTab('borders')}
+                      className={cn(
+                        "px-6 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all whitespace-nowrap",
+                        customizerTab === 'borders' ? "bg-white text-black shadow-xl" : "text-white/40 hover:text-white"
+                      )}
+                    >
+                      Borders
+                    </button>
+                    <button 
+                      onClick={() => setCustomizerTab('effects')}
+                      className={cn(
+                        "px-6 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all whitespace-nowrap",
+                        customizerTab === 'effects' ? "bg-white text-black shadow-xl" : "text-white/40 hover:text-white"
+                      )}
+                    >
+                      Effects
                     </button>
                   </div>
                 </div>
@@ -981,7 +1099,7 @@ export default function Chat({ user }: ChatProps) {
                       );
                     })}
                   </div>
-                ) : (
+                ) : customizerTab === 'cards' ? (
                   <div className="space-y-12">
                     {/* Create Custom Card Button */}
                     <button 
@@ -1035,7 +1153,68 @@ export default function Chat({ user }: ChatProps) {
                       );
                     })}
                   </div>
-                )}
+                ) : customizerTab === 'borders' ? (
+                  <div className="space-y-12">
+                    {['Basic', 'Special'].map(category => {
+                      const categoryBorders = BORDERS.filter(b => b.category === category);
+                      if (categoryBorders.length === 0) return null;
+
+                      return (
+                        <div key={category} className="space-y-6">
+                          <h3 className="text-sm font-bold text-amber-500 uppercase tracking-[0.3em] pl-2 border-l-2 border-amber-500">{category}</h3>
+                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                            {categoryBorders.map(b => (
+                              <button
+                                key={b.id}
+                                onClick={() => updateCustomization('border', b.id)}
+                                className={cn(
+                                  "group relative aspect-square rounded-2xl overflow-hidden border-2 transition-all hover:scale-[1.02] active:scale-95 flex flex-col items-center justify-center gap-4 bg-white/5",
+                                  user.border === b.id ? "border-amber-500 shadow-[0_0_30px_rgba(245,158,11,0.3)]" : "border-white/5 hover:border-white/20"
+                                )}
+                              >
+                                <div className={cn("w-16 h-16 rounded-full", b.className)} />
+                                <span className="text-[10px] font-bold text-white uppercase tracking-widest text-center px-2">{b.name}</span>
+                                {user.border === b.id && <Check className="absolute top-2 right-2 w-4 h-4 text-amber-500" />}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : customizerTab === 'effects' ? (
+                  <div className="space-y-12">
+                    {['Basic', 'Weather', 'Cyber', 'Material', 'Elements', 'Space', 'Party'].map(category => {
+                      const categoryEffects = PROFILE_EFFECTS.filter(e => e.category === category);
+                      if (categoryEffects.length === 0) return null;
+
+                      return (
+                        <div key={category} className="space-y-6">
+                          <h3 className="text-sm font-bold text-amber-500 uppercase tracking-[0.3em] pl-2 border-l-2 border-amber-500">{category}</h3>
+                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                            {categoryEffects.map(e => (
+                              <button
+                                key={e.id}
+                                onClick={() => updateCustomization('profileEffect', e.id)}
+                                className={cn(
+                                  "group relative aspect-video rounded-2xl overflow-hidden border-2 transition-all hover:scale-[1.02] active:scale-95 bg-zinc-900",
+                                  user.profileEffect === e.id ? "border-amber-500 shadow-[0_0_30px_rgba(245,158,11,0.3)]" : "border-white/5 hover:border-white/20"
+                                )}
+                              >
+                                <div className={cn("absolute inset-0", e.className)} />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                                <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
+                                  <span className="text-xs font-bold text-white uppercase tracking-widest">{e.name}</span>
+                                  {user.profileEffect === e.id && <Check className="w-4 h-4 text-amber-500" />}
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : null}
               </div>
             </motion.div>
           </div>
@@ -1416,7 +1595,10 @@ export default function Chat({ user }: ChatProps) {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-xl bg-zinc-900 border border-white/10 rounded-[3rem] overflow-hidden shadow-2xl flex flex-col"
+              className={cn(
+                "relative w-full max-w-xl bg-zinc-900 rounded-[3rem] overflow-hidden shadow-2xl flex flex-col",
+                BORDERS.find(b => b.id === selectedProfile.border)?.className || "border border-white/10"
+              )}
             >
               {/* Banner */}
               <div 
@@ -1441,7 +1623,7 @@ export default function Chat({ user }: ChatProps) {
                 )}
                 
                 {/* Actions */}
-                <div className="absolute top-6 right-6 flex items-center gap-3">
+                <div className="absolute top-6 right-6 flex items-center gap-3 z-20">
                   {selectedProfile.uid === user.uid && (
                     <button 
                       onClick={() => {
@@ -1464,25 +1646,30 @@ export default function Chat({ user }: ChatProps) {
 
               {/* Profile Info */}
               <div className="px-10 pb-10 -mt-16 relative">
-                <div className="flex items-end justify-between mb-6">
-                  <div 
-                    className={cn(
-                      "relative group",
-                      selectedProfile.uid === user.uid && "cursor-pointer"
-                    )}
-                    onClick={() => selectedProfile.uid === user.uid && pfpInputRef.current?.click()}
-                  >
-                    <img 
-                      src={selectedProfile.pfp} 
-                      className="w-32 h-32 rounded-full border-4 border-zinc-900 object-cover shadow-2xl transition-transform group-hover:scale-105"
-                    />
-                    {selectedProfile.uid === user.uid && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Camera className="w-6 h-6 text-white" />
-                      </div>
-                    )}
-                    <div className="absolute bottom-2 right-2 w-6 h-6 bg-green-500 border-4 border-zinc-900 rounded-full" />
-                  </div>
+                {/* Profile Effect Container */}
+                {selectedProfile.profileEffect && (
+                  <div className={cn("absolute inset-0 z-0 rounded-b-[3rem] overflow-hidden pointer-events-none", PROFILE_EFFECTS.find(e => e.id === selectedProfile.profileEffect)?.className)} />
+                )}
+                <div className="relative z-10">
+                  <div className="flex items-end justify-between mb-6">
+                    <div 
+                      className={cn(
+                        "relative group",
+                        selectedProfile.uid === user.uid && "cursor-pointer"
+                      )}
+                      onClick={() => selectedProfile.uid === user.uid && pfpInputRef.current?.click()}
+                    >
+                      <img 
+                        src={selectedProfile.pfp} 
+                        className="w-32 h-32 rounded-full border-4 border-zinc-900 object-cover shadow-2xl transition-transform group-hover:scale-105 relative z-10"
+                      />
+                      {selectedProfile.uid === user.uid && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                          <Camera className="w-6 h-6 text-white" />
+                        </div>
+                      )}
+                      <div className="absolute bottom-2 right-2 w-6 h-6 bg-green-500 border-4 border-zinc-900 rounded-full z-30" />
+                    </div>
                   
                   <div className="flex items-center gap-4 mb-4">
                     <div className="text-center px-6 py-2 rounded-2xl bg-white/5 border border-white/5">
@@ -1508,7 +1695,7 @@ export default function Chat({ user }: ChatProps) {
                     <h2 className="text-3xl font-serif italic text-white flex items-center gap-3">
                       {selectedProfile.username}
                       <img 
-                        src={RANKS.find(r => r.id === (selectedProfile.rank || 'VIP'))?.icon} 
+                        src={selectedProfile.customRank?.icon || RANKS.find(r => r.id === (selectedProfile.rank || 'VIP'))?.icon} 
                         className="w-6 h-6 object-contain"
                         alt="rank"
                       />
@@ -1517,11 +1704,11 @@ export default function Chat({ user }: ChatProps) {
                     <div className="flex items-center gap-3 mt-2">
                       <span className="px-3 py-1 rounded-full bg-amber-500/10 text-amber-500 text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
                         <img 
-                          src={RANKS.find(r => r.id === (selectedProfile.rank || 'VIP'))?.icon} 
+                          src={selectedProfile.customRank?.icon || RANKS.find(r => r.id === (selectedProfile.rank || 'VIP'))?.icon} 
                           className="w-3 h-3 object-contain"
                           alt=""
                         />
-                        {RANKS.find(r => r.id === (selectedProfile.rank || 'VIP'))?.name}
+                        {selectedProfile.customRank?.name || RANKS.find(r => r.id === (selectedProfile.rank || 'VIP'))?.name}
                       </span>
                       <span className="px-3 py-1 rounded-full bg-white/5 text-white/40 text-[10px] font-black uppercase tracking-widest">
                         {selectedProfile.age} Years Old
@@ -1559,6 +1746,7 @@ export default function Chat({ user }: ChatProps) {
                       </div>
                     </div>
                   </div>
+                </div>
                 </div>
               </div>
             </motion.div>
@@ -1652,6 +1840,22 @@ export default function Chat({ user }: ChatProps) {
                       <ChevronRight className="w-5 h-5 text-white/20 group-hover:text-amber-500 transition-colors" />
                     </button>
 
+                    <button 
+                      onClick={() => setEditTab('rank')}
+                      className="w-full p-6 rounded-2xl bg-white/5 border border-white/5 hover:border-amber-500/50 hover:bg-amber-500/5 transition-all flex items-center justify-between group"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center">
+                          <Star className="w-5 h-5 text-red-500" />
+                        </div>
+                        <div className="text-left">
+                          <p className="text-white font-bold text-sm">Custom Rank</p>
+                          <p className="text-white/40 text-xs truncate max-w-[200px]">{user.customRank?.name || 'Create custom rank'}</p>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-5 h-5 text-white/20 group-hover:text-amber-500 transition-colors" />
+                    </button>
+
                     <div className="grid grid-cols-2 gap-4">
                       <button 
                         onClick={() => pfpInputRef.current?.click()}
@@ -1720,15 +1924,6 @@ export default function Chat({ user }: ChatProps) {
                             <p className="text-white/40 text-[10px] uppercase tracking-widest font-bold">{user.invites || 0} Total Invites</p>
                           </div>
                         </div>
-                        <button 
-                          onClick={async () => {
-                            await updateDoc(doc(db, 'users', user.uid), { invites: (user.invites || 0) + 1 });
-                            showToast('Invite simulated!');
-                          }}
-                          className="px-4 py-2 rounded-xl bg-amber-500 text-black text-[10px] font-bold uppercase tracking-widest hover:scale-105 transition-all"
-                        >
-                          Simulate Invite
-                        </button>
                       </div>
                     </div>
                   </div>
@@ -1819,6 +2014,59 @@ export default function Chat({ user }: ChatProps) {
                     >
                       Back to Menu
                     </button>
+                  </div>
+                ) : editTab === 'rank' ? (
+                  <div className="space-y-6">
+                    <div className="space-y-4">
+                      <div className="flex flex-col items-center gap-4">
+                        <div className="relative">
+                          <img 
+                            src={customRankForm.icon || RANKS.find(r => r.id === user.rank)?.icon} 
+                            className="w-24 h-24 rounded-xl object-contain bg-black/20 p-2 border border-white/10" 
+                          />
+                          <button 
+                            onClick={() => customRankInputRef.current?.click()}
+                            className="absolute -bottom-2 -right-2 p-2 rounded-full bg-amber-500 text-black shadow-xl hover:scale-110 transition-transform"
+                          >
+                            <Camera className="w-4 h-4" />
+                          </button>
+                        </div>
+                        <p className="text-white/40 text-xs uppercase tracking-widest font-bold">Upload Rank Icon (.gif or image)</p>
+                        <input 
+                          type="file" 
+                          ref={customRankInputRef} 
+                          onChange={handleRankIconUpload} 
+                          accept="image/*" 
+                          className="hidden" 
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Rank Name</label>
+                        <input 
+                          type="text" 
+                          value={customRankForm.name}
+                          onChange={(e) => setCustomRankForm(prev => ({ ...prev, name: e.target.value }))}
+                          className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white focus:outline-none focus:border-amber-500/50"
+                          placeholder="Enter custom rank name..."
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex gap-4">
+                      <button 
+                        onClick={resetCustomRank}
+                        className="flex-1 py-4 rounded-2xl bg-red-500/10 text-red-500 border border-red-500/20 font-bold uppercase tracking-widest text-sm hover:bg-red-500/20 transition-colors"
+                      >
+                        Reset
+                      </button>
+                      <button 
+                        onClick={saveCustomRank}
+                        className="flex-1 py-4 rounded-2xl bg-amber-500 text-black font-bold uppercase tracking-widest text-sm shadow-xl hover:bg-amber-400 transition-colors"
+                      >
+                        Save Rank
+                      </button>
+                    </div>
                   </div>
                 ) : (
                   <div className="space-y-6 flex flex-col items-center">

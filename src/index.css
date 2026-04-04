@@ -15,3 +15,201 @@
     background: rgba(148, 163, 184, 0.4);
   }
 }
+
+@layer utilities {
+  .effect-snow {
+    background-image: radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 40px),
+                      radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 30px),
+                      radial-gradient(white, rgba(255,255,255,.1) 2px, transparent 40px);
+    background-size: 550px 550px, 350px 350px, 250px 250px;
+    background-position: 0 0, 40px 60px, 130px 270px;
+    animation: snow 10s linear infinite;
+    pointer-events: none;
+    mix-blend-mode: screen;
+  }
+  @keyframes snow {
+    0% { background-position: 0 0, 40px 60px, 130px 270px; }
+    100% { background-position: 550px 550px, 390px 410px, 380px 520px; }
+  }
+
+  .effect-rain {
+    background-image: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0.2) 50%, rgba(255,255,255,0));
+    background-size: 2px 50px;
+    animation: rain 0.5s linear infinite;
+    pointer-events: none;
+    mix-blend-mode: screen;
+  }
+  @keyframes rain {
+    0% { background-position: 0 0; }
+    100% { background-position: 20px 500px; }
+  }
+
+  .effect-matrix {
+    background: linear-gradient(rgba(0, 255, 0, 0) 50%, rgba(0, 255, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    background-size: 100% 2px, 3px 100%;
+    animation: matrix 10s linear infinite;
+    pointer-events: none;
+    mix-blend-mode: screen;
+  }
+  @keyframes matrix {
+    0% { background-position: 0 0; }
+    100% { background-position: 0 1000px; }
+  }
+
+  .effect-scanline {
+    background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0), rgba(255,255,255,0.2) 50%, rgba(255,255,255,0), rgba(255,255,255,0));
+    background-size: 100% 8px;
+    animation: scanline 8s linear infinite;
+    pointer-events: none;
+    mix-blend-mode: overlay;
+  }
+  @keyframes scanline {
+    0% { background-position: 0 0; }
+    100% { background-position: 0 100vh; }
+  }
+
+  .effect-glitch {
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(255, 0, 0, 0.1) 2px,
+      rgba(255, 0, 0, 0.1) 4px,
+      transparent 4px,
+      transparent 6px,
+      rgba(0, 255, 255, 0.1) 6px,
+      rgba(0, 255, 255, 0.1) 8px
+    );
+    animation: glitch 2s infinite;
+    pointer-events: none;
+    mix-blend-mode: overlay;
+  }
+  @keyframes glitch {
+    0% { transform: translate(0) }
+    20% { transform: translate(-2px, 2px) }
+    40% { transform: translate(-2px, -2px) }
+    60% { transform: translate(2px, 2px) }
+    80% { transform: translate(2px, -2px) }
+    100% { transform: translate(0) }
+  }
+
+  .effect-fireflies {
+    background-image: radial-gradient(rgba(255, 255, 150, 0.8) 1px, transparent 4px),
+                      radial-gradient(rgba(255, 255, 150, 0.8) 1px, transparent 3px);
+    background-size: 100px 100px, 150px 150px;
+    background-position: 0 0, 50px 50px;
+    animation: fireflies 15s ease-in-out infinite alternate;
+    pointer-events: none;
+    mix-blend-mode: screen;
+  }
+  @keyframes fireflies {
+    0% { background-position: 0 0, 50px 50px; opacity: 0.5; }
+    50% { opacity: 1; }
+    100% { background-position: 100px 100px, -50px -50px; opacity: 0.5; }
+  }
+
+  .effect-stars {
+    background-image: radial-gradient(white 1px, transparent 2px),
+                      radial-gradient(white 1px, transparent 2px);
+    background-size: 150px 150px, 250px 250px;
+    background-position: 0 0, 75px 75px;
+    animation: stars 60s linear infinite;
+    pointer-events: none;
+    mix-blend-mode: screen;
+  }
+  @keyframes stars {
+    0% { background-position: 0 0, 75px 75px; }
+    100% { background-position: 1500px 1500px, 2575px 2575px; }
+  }
+
+  .effect-pulse {
+    background: radial-gradient(circle, rgba(0,255,255,0.2) 0%, transparent 70%);
+    background-size: 200% 200%;
+    background-position: center;
+    animation: pulse-bg 3s ease-in-out infinite alternate;
+    pointer-events: none;
+    mix-blend-mode: screen;
+  }
+  @keyframes pulse-bg {
+    0% { transform: scale(1); opacity: 0.5; }
+    100% { transform: scale(1.5); opacity: 1; }
+  }
+
+  .effect-confetti {
+    background-image: radial-gradient(circle at 50% 50%, red 2px, transparent 3px),
+                      radial-gradient(circle at 50% 50%, blue 2px, transparent 3px),
+                      radial-gradient(circle at 50% 50%, yellow 2px, transparent 3px),
+                      radial-gradient(circle at 50% 50%, green 2px, transparent 3px);
+    background-size: 100px 100px, 120px 120px, 150px 150px, 180px 180px;
+    background-position: 0 0, 30px 40px, 60px 80px, 90px 120px;
+    animation: confetti 5s linear infinite;
+    pointer-events: none;
+    mix-blend-mode: screen;
+  }
+  @keyframes confetti {
+    0% { background-position: 0 0, 30px -40px, 60px -80px, 90px -120px; }
+    100% { background-position: 0 500px, 30px 460px, 60px 420px, 90px 380px; }
+  }
+
+  .effect-floating-orbs {
+    background-image: radial-gradient(circle, rgba(255,255,255,0.1) 10px, transparent 20px),
+                      radial-gradient(circle, rgba(255,255,255,0.05) 20px, transparent 40px);
+    background-size: 200px 200px, 300px 300px;
+    background-position: 0 0, 100px 100px;
+    animation: floating-orbs 20s ease-in-out infinite alternate;
+    pointer-events: none;
+    mix-blend-mode: screen;
+  }
+  @keyframes floating-orbs {
+    0% { background-position: 0 0, 100px 100px; transform: scale(1); }
+    100% { background-position: 100px -100px, -100px 200px; transform: scale(1.2); }
+  }
+
+  .effect-lightning {
+    background: linear-gradient(to right, transparent 48%, rgba(255,255,255,0.8) 50%, transparent 52%);
+    background-size: 200% 100%;
+    animation: lightning 5s infinite;
+    pointer-events: none;
+    mix-blend-mode: screen;
+    opacity: 0;
+  }
+  @keyframes lightning {
+    0%, 95%, 98%, 100% { opacity: 0; }
+    96%, 99% { opacity: 1; }
+  }
+
+  .effect-aurora {
+    background: linear-gradient(45deg, rgba(0,255,128,0.2), rgba(0,128,255,0.2), rgba(128,0,255,0.2));
+    background-size: 400% 400%;
+    animation: aurora 15s ease infinite;
+    pointer-events: none;
+    mix-blend-mode: screen;
+  }
+  @keyframes aurora {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  .effect-blood-rain {
+    background-image: linear-gradient(to bottom, rgba(255,0,0,0), rgba(255,0,0,0.4) 50%, rgba(255,0,0,0));
+    background-size: 2px 50px;
+    animation: rain 0.4s linear infinite;
+    pointer-events: none;
+    mix-blend-mode: screen;
+  }
+
+  .effect-bubbles {
+    background-image: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.2) 2px, transparent 3px),
+                      radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 4px, transparent 5px);
+    background-size: 80px 80px, 120px 120px;
+    background-position: 0 0, 40px 60px;
+    animation: bubbles 10s linear infinite;
+    pointer-events: none;
+    mix-blend-mode: screen;
+  }
+  @keyframes bubbles {
+    0% { background-position: 0 100%, 40px 100%; }
+    100% { background-position: 0 -100%, 40px -100%; }
+  }
+}

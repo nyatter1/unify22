@@ -35,6 +35,20 @@ export interface CardStyle {
   };
 }
 
+export interface Border {
+  id: string;
+  name: string;
+  category: string;
+  className: string;
+}
+
+export interface ProfileEffect {
+  id: string;
+  name: string;
+  category: string;
+  className: string; // CSS class for the effect container
+}
+
 export type UserRank = 
   | 'DEVELOPER' 
   | 'FOUNDER' 
@@ -49,6 +63,8 @@ export type UserRank =
   | 'MILLIONAIRE' 
   | 'ELITE' 
   | 'SUPER_VIP' 
+  | 'GOOD_GIRL'
+  | 'BUNNY'
   | 'VIP';
 
 export interface UserProfile {
@@ -67,11 +83,17 @@ export interface UserProfile {
   hasReceivedReset?: boolean;
   theme?: string;
   cardStyle?: string;
+  border?: string;
+  profileEffect?: string;
   bio?: string;
   likes?: string[]; // Array of UIDs who liked this profile
   customThemes?: Theme[];
   customCardStyles?: CardStyle[];
   rank: UserRank;
+  customRank?: {
+    name: string;
+    icon: string;
+  };
   invites?: number;
   createdAt?: any;
 }

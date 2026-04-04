@@ -500,6 +500,19 @@ export default function Chat({ user }: ChatProps) {
         return;
       }
 
+      if (command === '/bank') {
+        await addDoc(collection(db, 'messages'), {
+          senderId: user.uid,
+          senderUsername: user.username,
+          senderPfp: user.pfp,
+          senderRank: user.rank || 'VIP',
+          text: `🏦 BANK: I currently have ${user.gold.toLocaleString()} Gold and ${user.rubies.toLocaleString()} Rubies!`,
+          type: 'text',
+          timestamp: serverTimestamp(),
+        });
+        return;
+      }
+
       if (command === '/clearchat' && user.email === 'haydensixseven@gmail.com') {
         try {
           const q = query(collection(db, 'messages'));

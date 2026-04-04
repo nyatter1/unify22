@@ -72,14 +72,6 @@ export interface UserProfile {
   customThemes?: Theme[];
   customCardStyles?: CardStyle[];
   rank: UserRank;
-  isBanned?: boolean;
-  banReason?: string;
-  isKicked?: boolean;
-  kickReason?: string;
-  kickUntil?: any;
-  isMuted?: boolean;
-  muteReason?: string;
-  muteUntil?: any;
   invites?: number;
   createdAt?: any;
 }

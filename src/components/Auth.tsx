@@ -30,15 +30,7 @@ export default function Auth({ onAuthSuccess }: AuthProps) {
 
     try {
       if (isLogin) {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          if (userData.isBanned) {
-            await auth.signOut();
-            throw new Error(`You have been banned. Reason: ${userData.banReason || 'No reason provided'}`);
-          }
-        }
+        await signInWithEmailAndPassword(auth, email, password);
       } else {
         if (!username || !age || !gender) throw new Error('Please fill all fields');
         if (Number(age) < 7) throw new Error('You must be at least 7 years old to join');

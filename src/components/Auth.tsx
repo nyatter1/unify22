@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { supabase } from '../supabase';
+import { auth } from '../firebase';
 import { UserRank } from '../types';
 import { Infinity, Mail, Lock, User, Calendar, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';

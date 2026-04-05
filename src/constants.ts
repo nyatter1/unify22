@@ -4,7 +4,7 @@ export interface RankInfo {
   id: UserRank;
   name: string;
   icon: string;
-  priority: number; // Higher is more important
+  priority: number;
 }
 
 export const RANKS: RankInfo[] = [
@@ -24,6 +24,28 @@ export const RANKS: RankInfo[] = [
   { id: 'GOOD_GIRL', name: 'Good Girl', icon: 'https://api.dicebear.com/7.x/icons/svg?seed=heart&backgroundColor=ffb6c1', priority: 15 },
   { id: 'BUNNY', name: 'Bunny', icon: 'https://api.dicebear.com/7.x/icons/svg?seed=rabbit&backgroundColor=ff69b4', priority: 12 },
   { id: 'VIP', name: 'VIP', icon: 'https://raw.githubusercontent.com/nyatter1/ranks/main/vip.gif', priority: 10 },
+  // NEW RANKS
+  { id: 'LEGEND', name: 'LEGEND', icon: 'https://api.dicebear.com/7.x/icons/svg?seed=legend&backgroundColor=ffd700', priority: 95 },
+  { id: 'WARLORD', name: 'Warlord', icon: 'https://api.dicebear.com/7.x/icons/svg?seed=warlord&backgroundColor=8b0000', priority: 88 },
+  { id: 'OVERLORD', name: 'Overlord', icon: 'https://api.dicebear.com/7.x/icons/svg?seed=overlord&backgroundColor=4b0082', priority: 87 },
+  { id: 'PHANTOM', name: 'Phantom', icon: 'https://api.dicebear.com/7.x/icons/svg?seed=phantom&backgroundColor=2d2d2d', priority: 83 },
+  { id: 'SUPREME', name: 'Supreme', icon: 'https://api.dicebear.com/7.x/icons/svg?seed=supreme&backgroundColor=cc0000', priority: 82 },
+  { id: 'EMPEROR', name: 'Emperor', icon: 'https://api.dicebear.com/7.x/icons/svg?seed=emperor&backgroundColor=8b6914', priority: 79 },
+  { id: 'WARCHIEF', name: 'Warchief', icon: 'https://api.dicebear.com/7.x/icons/svg?seed=warchief&backgroundColor=b22222', priority: 75 },
+  { id: 'SHADOW_LORD', name: 'Shadow Lord', icon: 'https://api.dicebear.com/7.x/icons/svg?seed=shadowlord&backgroundColor=1a1a2e', priority: 73 },
+  { id: 'TITAN', name: 'Titan', icon: 'https://api.dicebear.com/7.x/icons/svg?seed=titan&backgroundColor=708090', priority: 68 },
+  { id: 'GUARDIAN', name: 'Guardian', icon: 'https://api.dicebear.com/7.x/icons/svg?seed=guardian&backgroundColor=4169e1', priority: 65 },
+  { id: 'SENTINEL', name: 'Sentinel', icon: 'https://api.dicebear.com/7.x/icons/svg?seed=sentinel&backgroundColor=2e8b57', priority: 62 },
+  { id: 'PHOENIX', name: 'Phoenix', icon: 'https://api.dicebear.com/7.x/icons/svg?seed=phoenix&backgroundColor=ff4500', priority: 55 },
+  { id: 'SPECTER', name: 'Specter', icon: 'https://api.dicebear.com/7.x/icons/svg?seed=specter&backgroundColor=483d8b', priority: 53 },
+  { id: 'VIPER', name: 'Viper', icon: 'https://api.dicebear.com/7.x/icons/svg?seed=viper&backgroundColor=228b22', priority: 48 },
+  { id: 'WOLF', name: 'Wolf', icon: 'https://api.dicebear.com/7.x/icons/svg?seed=wolf&backgroundColor=696969', priority: 43 },
+  { id: 'HAWK', name: 'Hawk', icon: 'https://api.dicebear.com/7.x/icons/svg?seed=hawk&backgroundColor=cd853f', priority: 38 },
+  { id: 'BULL', name: 'Bull', icon: 'https://api.dicebear.com/7.x/icons/svg?seed=bull&backgroundColor=8b4513', priority: 33 },
+  { id: 'LION', name: 'Lion', icon: 'https://api.dicebear.com/7.x/icons/svg?seed=lion&backgroundColor=daa520', priority: 28 },
+  { id: 'ROOKIE', name: 'Rookie', icon: 'https://api.dicebear.com/7.x/icons/svg?seed=rookie&backgroundColor=87ceeb', priority: 5 },
+  { id: 'CADET', name: 'Cadet', icon: 'https://api.dicebear.com/7.x/icons/svg?seed=cadet&backgroundColor=90ee90', priority: 3 },
+  { id: 'RECRUIT', name: 'Recruit', icon: 'https://api.dicebear.com/7.x/icons/svg?seed=recruit&backgroundColor=d3d3d3', priority: 1 },
 ];
 
 export const AVATARS = [
@@ -35,6 +57,57 @@ export const AVATARS = [
   'https://api.dicebear.com/7.x/avataaars/svg?seed=Sophie',
   'https://api.dicebear.com/7.x/avataaars/svg?seed=Leo',
   'https://api.dicebear.com/7.x/avataaars/svg?seed=Mia',
+  // NEW AVATARS - Avataaars
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Zara',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Kai',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Nova',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Rex',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Iris',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Axel',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Cleo',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Blaze',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Jade',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Storm',
+  // Pixel Art style
+  'https://api.dicebear.com/7.x/pixel-art/svg?seed=Alpha',
+  'https://api.dicebear.com/7.x/pixel-art/svg?seed=Beta',
+  'https://api.dicebear.com/7.x/pixel-art/svg?seed=Gamma',
+  'https://api.dicebear.com/7.x/pixel-art/svg?seed=Delta',
+  'https://api.dicebear.com/7.x/pixel-art/svg?seed=Epsilon',
+  'https://api.dicebear.com/7.x/pixel-art/svg?seed=Zeta',
+  'https://api.dicebear.com/7.x/pixel-art/svg?seed=Theta',
+  'https://api.dicebear.com/7.x/pixel-art/svg?seed=Sigma',
+  // Lorelei (anime-ish)
+  'https://api.dicebear.com/7.x/lorelei/svg?seed=Hana',
+  'https://api.dicebear.com/7.x/lorelei/svg?seed=Yuki',
+  'https://api.dicebear.com/7.x/lorelei/svg?seed=Sora',
+  'https://api.dicebear.com/7.x/lorelei/svg?seed=Nami',
+  'https://api.dicebear.com/7.x/lorelei/svg?seed=Kira',
+  'https://api.dicebear.com/7.x/lorelei/svg?seed=Ryu',
+  'https://api.dicebear.com/7.x/lorelei/svg?seed=Hiro',
+  'https://api.dicebear.com/7.x/lorelei/svg?seed=Mei',
+  // Big Smile
+  'https://api.dicebear.com/7.x/big-smile/svg?seed=Happy',
+  'https://api.dicebear.com/7.x/big-smile/svg?seed=Joyful',
+  'https://api.dicebear.com/7.x/big-smile/svg?seed=Sunny',
+  'https://api.dicebear.com/7.x/big-smile/svg?seed=Bright',
+  // Adventurer
+  'https://api.dicebear.com/7.x/adventurer/svg?seed=Quest',
+  'https://api.dicebear.com/7.x/adventurer/svg?seed=Hero',
+  'https://api.dicebear.com/7.x/adventurer/svg?seed=Brave',
+  'https://api.dicebear.com/7.x/adventurer/svg?seed=Bold',
+  // Bottts (robot)
+  'https://api.dicebear.com/7.x/bottts/svg?seed=R2D2',
+  'https://api.dicebear.com/7.x/bottts/svg?seed=HAL9000',
+  'https://api.dicebear.com/7.x/bottts/svg?seed=WALL-E',
+  'https://api.dicebear.com/7.x/bottts/svg?seed=Terminator',
+  'https://api.dicebear.com/7.x/bottts/svg?seed=Optimus',
+  'https://api.dicebear.com/7.x/bottts/svg?seed=Bender',
+  // Identicon style
+  'https://api.dicebear.com/7.x/identicon/svg?seed=Ghost1',
+  'https://api.dicebear.com/7.x/identicon/svg?seed=Ghost2',
+  'https://api.dicebear.com/7.x/identicon/svg?seed=Ghost3',
+  'https://api.dicebear.com/7.x/identicon/svg?seed=Ghost4',
 ];
 
 export const BANNERS = [
@@ -44,17 +117,36 @@ export const BANNERS = [
   'https://images.unsplash.com/photo-1550684848-fac1c5b4e853',
   'https://images.unsplash.com/photo-1508739773434-c26b3d09e071',
   'https://images.unsplash.com/photo-1478760329108-5c3ed9d495a0',
+  // NEW BANNERS
+  'https://images.unsplash.com/photo-1534796636912-3b95b3ab5986', // neon city
+  'https://images.unsplash.com/photo-1518531933037-91b2f5f229cc', // aurora
+  'https://images.unsplash.com/photo-1419242902214-272b3f66ee7a', // galaxy
+  'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b', // mountain
+  'https://images.unsplash.com/photo-1507525428034-b723cf961d3e', // beach
+  'https://images.unsplash.com/photo-1501854140801-50d01698950b', // forest
+  'https://images.unsplash.com/photo-1493246507139-91e8fad9978e', // ocean
+  'https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5', // snowy peak
+  'https://images.unsplash.com/photo-1504701954957-2010ec3bcec1', // abstract blue
+  'https://images.unsplash.com/photo-1525909002-1b05e0c869d8', // purple bokeh
+  'https://images.unsplash.com/photo-1518640467707-6811f4a6ab73', // dark concrete
+  'https://images.unsplash.com/photo-1545987796-200677ee1011', // neon lights
+  'https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3', // starry sky
+  'https://images.unsplash.com/photo-1462275646964-a0e3386b89fa', // fire
+  'https://images.unsplash.com/photo-1559827291-72ee739d0d9a', // underwater
+  'https://images.unsplash.com/photo-1506905925346-21bda4d32df4', // mountains fog
+  'https://images.unsplash.com/photo-1533134486753-c833f0ed4866', // abstract red
+  'https://images.unsplash.com/photo-1558618666-fcd25c85cd64', // dark smoke
+  'https://images.unsplash.com/photo-1557804506-669a67965ba0', // cyber grid
+  'https://images.unsplash.com/photo-1536152470836-b943b246224c', // lightning bolt
 ];
 
 export const THEMES: Theme[] = [
-  // The Essentials
+  // ====== ORIGINAL THEMES ======
   { id: 'vanta', name: 'Vantablack', category: 'Essentials', background: '#000000', textColor: 'text-white', accentColor: 'white' },
   { id: 'pure-white', name: 'Pure White', category: 'Essentials', background: '#ffffff', textColor: 'text-black', accentColor: 'black' },
   { id: 'slate-raw', name: 'Raw Slate', category: 'Essentials', background: '#0f172a', textColor: 'text-slate-200', accentColor: 'slate-400' },
   { id: 'zinc-raw', name: 'Raw Zinc', category: 'Essentials', background: '#18181b', textColor: 'text-zinc-200', accentColor: 'zinc-500' },
   { id: 'stone-raw', name: 'Raw Stone', category: 'Essentials', background: '#1c1917', textColor: 'text-stone-200', accentColor: 'stone-500' },
-
-  // Aesthetic
   { id: 'lofi-night', name: 'Lofi Night', category: 'Aesthetic', background: '#1e1b4b', textColor: 'text-indigo-100', accentColor: 'indigo-500' },
   { id: 'cyber-pink', name: 'Cyber Pink', category: 'Aesthetic', background: '#4c0519', textColor: 'text-pink-100', accentColor: 'pink-500' },
   { id: 'deep-sea', name: 'Deep Sea', category: 'Aesthetic', background: '#083344', textColor: 'text-cyan-100', accentColor: 'cyan-500' },
@@ -62,22 +154,16 @@ export const THEMES: Theme[] = [
   { id: 'royal-velvet', name: 'Royal Velvet', category: 'Aesthetic', background: '#3b0764', textColor: 'text-purple-100', accentColor: 'purple-500' },
   { id: 'blood-moon', name: 'Blood Moon', category: 'Aesthetic', background: '#450a0a', textColor: 'text-red-100', accentColor: 'red-500' },
   { id: 'desert-dusk', name: 'Desert Dusk', category: 'Aesthetic', background: '#431407', textColor: 'text-orange-100', accentColor: 'orange-500' },
-
-  // Street
   { id: 'the-block', name: 'The Block', category: 'Street', background: '#0a0a0a', textColor: 'text-zinc-100', accentColor: 'zinc-800' },
   { id: 'drill-grey', name: 'Drill Grey', category: 'Street', background: '#27272a', textColor: 'text-zinc-200', accentColor: 'zinc-600' },
   { id: 'london-fog', name: 'London Fog', category: 'Street', background: '#1e293b', textColor: 'text-slate-200', accentColor: 'slate-500' },
   { id: 'shadow-realm', name: 'Shadow Realm', category: 'Street', background: '#000000', textColor: 'text-zinc-500', accentColor: 'zinc-900' },
   { id: 'hustle-gold', name: 'Hustle Gold', category: 'Street', background: '#1a1a1a', textColor: 'text-amber-100', accentColor: 'amber-600' },
-
-  // Brain Rot
   { id: 'skibidi-toilet', name: 'Skibidi Toilet', category: 'Brain Rot', background: '#334155', textColor: 'text-slate-100', accentColor: 'slate-400' },
   { id: 'sigma-grindset', name: 'Sigma Grindset', category: 'Brain Rot', background: '#171717', textColor: 'text-amber-200', accentColor: 'amber-500' },
   { id: 'rizzler-pink', name: 'Rizzler Pink', category: 'Brain Rot', background: '#500724', textColor: 'text-pink-100', accentColor: 'pink-400' },
   { id: 'gyatt-red', name: 'Gyatt Red', category: 'Brain Rot', background: '#450a0a', textColor: 'text-red-100', accentColor: 'red-400' },
   { id: 'ohio-state', name: 'Ohio State', category: 'Brain Rot', background: '#0f172a', textColor: 'text-slate-300', accentColor: 'slate-500' },
-
-  // Niche
   { id: 'toxic-waste', name: 'Toxic Waste', category: 'Niche', background: '#052e16', textColor: 'text-lime-400', accentColor: 'lime-500' },
   { id: 'absolute-zero', name: 'Absolute Zero', category: 'Niche', background: '#0c4a6e', textColor: 'text-sky-100', accentColor: 'sky-400' },
   { id: 'savage-mode', name: 'Savage Mode', category: 'Niche', background: '#450a0a', textColor: 'text-red-500', accentColor: 'red-600' },
@@ -86,8 +172,6 @@ export const THEMES: Theme[] = [
   { id: 'ink-blot', name: 'Ink Blot', category: 'Niche', background: '#0a0a0a', textColor: 'text-zinc-500', accentColor: 'zinc-800' },
   { id: 'ash-tray', name: 'Ash Tray', category: 'Niche', background: '#18181b', textColor: 'text-zinc-400', accentColor: 'zinc-600' },
   { id: 'storm-cloud', name: 'Storm Cloud', category: 'Niche', background: '#0f172a', textColor: 'text-slate-400', accentColor: 'slate-500' },
-  
-  // Pop Culture
   { id: 'cartoon-vibe', name: 'Cartoon', category: 'Pop Culture', background: '#fef08a', textColor: 'text-zinc-900', accentColor: 'blue-500', customStyles: { borderStyle: '4px solid #000', bubbleStyle: 'sharp' } },
   { id: 'avengers-hq', name: 'Avengers HQ', category: 'Pop Culture', background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', textColor: 'text-white', accentColor: 'red-600', customStyles: { borderStyle: '1px solid #ef4444', glassEffect: true } },
   { id: 'matrix-code', name: 'The Matrix', category: 'Pop Culture', background: '#000000', textColor: 'text-green-500', accentColor: 'green-600', customStyles: { borderStyle: '1px solid #22c55e', fontFamily: 'mono' } },
@@ -98,8 +182,6 @@ export const THEMES: Theme[] = [
   { id: 'spider-verse', name: 'Spider-Verse', category: 'Pop Culture', background: 'linear-gradient(45deg, #0f172a 0%, #1e1b4b 100%)', textColor: 'text-red-500', accentColor: 'blue-600', customStyles: { borderStyle: '2px solid #ef4444', glassEffect: true } },
   { id: 'batman-dark', name: 'The Bat', category: 'Pop Culture', background: '#000000', textColor: 'text-zinc-400', accentColor: 'zinc-700', customStyles: { borderStyle: '1px solid #3f3f46' } },
   { id: 'pokemon-red', name: 'Pokedex', category: 'Pop Culture', background: '#dc2626', textColor: 'text-white', accentColor: 'white', customStyles: { borderStyle: '4px solid #000', bubbleStyle: 'sharp' } },
-  
-  // Special
   { id: 'royal-gold', name: 'Royal Gold', category: 'Special', background: 'linear-gradient(135deg, #000000 0%, #1a1a1a 100%)', textColor: 'text-amber-400', accentColor: 'amber-500', customStyles: { borderStyle: '2px solid #f59e0b', glassEffect: true } },
   { id: 'frozen-tundra', name: 'Frozen', category: 'Special', background: 'linear-gradient(to bottom, #e0f2fe, #bae6fd)', textColor: 'text-sky-600', accentColor: 'sky-400', customStyles: { borderStyle: '1px solid #38bdf8' } },
   { id: 'neon-night', name: 'Neon Night', category: 'Special', background: '#020617', textColor: 'text-fuchsia-400', accentColor: 'fuchsia-500', customStyles: { borderStyle: '2px solid #d946ef', glassEffect: true } },
@@ -112,7 +194,6 @@ export const THEMES: Theme[] = [
   { id: 'ghost-town', name: 'Ghost Town', category: 'Special', background: '#18181b', textColor: 'text-zinc-400', accentColor: 'zinc-600', customStyles: { borderStyle: '1px solid #52525b' } },
   { id: 'candy-land', name: 'Candy Land', category: 'Special', background: 'linear-gradient(135deg, #fdf2f8 0%, #fbcfe8 100%)', textColor: 'text-pink-500', accentColor: 'pink-400', customStyles: { borderStyle: '2px solid #f472b6' } },
   { id: 'toxic-zone', name: 'Toxic Zone', category: 'Special', background: '#052e16', textColor: 'text-lime-400', accentColor: 'lime-500', customStyles: { borderStyle: '2px solid #84cc16' } },
-  // 50+ More Themes
   { id: 'cyber-neon', name: 'Cyber Neon', category: 'Cyber', background: '#000000', textColor: 'text-cyan-400', accentColor: 'cyan-500', customStyles: { borderStyle: '1px solid #22d3ee', glassEffect: true } },
   { id: 'synth-wave', name: 'Synthwave', category: 'Cyber', background: 'linear-gradient(to bottom, #2e026d, #15162c)', textColor: 'text-pink-400', accentColor: 'pink-500', customStyles: { borderStyle: '1px solid #ec4899' } },
   { id: 'retro-terminal', name: 'Terminal', category: 'Cyber', background: '#0c0c0c', textColor: 'text-green-500', accentColor: 'green-600', customStyles: { fontFamily: 'mono', borderStyle: '1px solid #16a34a' } },
@@ -141,6 +222,7 @@ export const THEMES: Theme[] = [
   { id: 'violet-vibe', name: 'Violet Vibe', category: 'Special', background: '#5b21b6', textColor: 'text-purple-100', accentColor: 'purple-400', customStyles: { borderStyle: '2px solid #a78bfa' } },
   { id: 'onyx-black', name: 'Onyx Black', category: 'Special', background: '#000000', textColor: 'text-zinc-500', accentColor: 'zinc-700', customStyles: { borderStyle: '2px solid #52525b' } },
   { id: 'pearl-white', name: 'Pearl White', category: 'Special', background: '#ffffff', textColor: 'text-slate-400', accentColor: 'slate-200', customStyles: { borderStyle: '2px solid #e2e8f0' } },
+  // (all existing neon themes preserved...)
   { id: 'neon-green', name: 'Neon Green', category: 'Cyber', background: '#022c22', textColor: 'text-green-400', accentColor: 'green-500', customStyles: { borderStyle: '1px solid #4ade80', glassEffect: true } },
   { id: 'neon-red', name: 'Neon Red', category: 'Cyber', background: '#450a0a', textColor: 'text-red-400', accentColor: 'red-500', customStyles: { borderStyle: '1px solid #f87171', glassEffect: true } },
   { id: 'neon-purple', name: 'Neon Purple', category: 'Cyber', background: '#3b0764', textColor: 'text-purple-400', accentColor: 'purple-500', customStyles: { borderStyle: '1px solid #c084fc', glassEffect: true } },
@@ -162,18 +244,167 @@ export const THEMES: Theme[] = [
   { id: 'neon-zinc', name: 'Neon Zinc', category: 'Cyber', background: '#18181b', textColor: 'text-zinc-400', accentColor: 'zinc-500', customStyles: { borderStyle: '1px solid #a1a1aa', glassEffect: true } },
   { id: 'neon-stone', name: 'Neon Stone', category: 'Cyber', background: '#1c1917', textColor: 'text-stone-400', accentColor: 'stone-500', customStyles: { borderStyle: '1px solid #a8a29e', glassEffect: true } },
   { id: 'cyber-gold', name: 'Cyber Gold', category: 'Cyber', background: '#1a1a1a', textColor: 'text-amber-400', accentColor: 'amber-500', customStyles: { borderStyle: '1px solid #fbbf24', glassEffect: true } },
-  { id: 'cyber-silver', name: 'Cyber Silver', category: 'Cyber', background: '#1a1a1a', textColor: 'text-slate-400', accentColor: 'slate-500', customStyles: { borderStyle: '1px solid #94a3b8', glassEffect: true } }
+  { id: 'cyber-silver', name: 'Cyber Silver', category: 'Cyber', background: '#1a1a1a', textColor: 'text-slate-400', accentColor: 'slate-500', customStyles: { borderStyle: '1px solid #94a3b8', glassEffect: true } },
+
+  // ====== NEW THEMES - 150+ ADDITIONS ======
+
+  // Vibe / Y2K
+  { id: 'y2k-baby', name: 'Y2K Baby', category: 'Y2K', background: 'linear-gradient(135deg, #fce4ec, #e1f5fe)', textColor: 'text-pink-600', accentColor: 'cyan-400', customStyles: { borderStyle: '3px solid #f48fb1' } },
+  { id: 'y2k-chrome', name: 'Chrome Dreams', category: 'Y2K', background: 'linear-gradient(135deg, #eceff1, #b0bec5)', textColor: 'text-gray-800', accentColor: 'gray-500', customStyles: { borderStyle: '2px solid #90a4ae' } },
+  { id: 'y2k-frosted', name: 'Frosted Plastic', category: 'Y2K', background: 'rgba(255,255,255,0.15)', textColor: 'text-white', accentColor: 'white', customStyles: { borderStyle: '1px solid rgba(255,255,255,0.4)', glassEffect: true } },
+  { id: 'y2k-bubblegum', name: 'Bubblegum Pop', category: 'Y2K', background: '#ff6eb4', textColor: 'text-white', accentColor: 'yellow-300', customStyles: { borderStyle: '3px solid #ffeb3b' } },
+  { id: 'y2k-electric', name: 'Electric Blue', category: 'Y2K', background: '#0000ff', textColor: 'text-white', accentColor: 'cyan-300', customStyles: { borderStyle: '2px solid #00ffff' } },
+  { id: 'y2k-alien-green', name: 'Alien Invasion', category: 'Y2K', background: '#00ff41', textColor: 'text-black', accentColor: 'black', customStyles: { borderStyle: '2px solid #000' } },
+
+  // Dark Academia
+  { id: 'dark-academia', name: 'Dark Academia', category: 'Academia', background: '#1a1208', textColor: 'text-amber-200', accentColor: 'amber-700', customStyles: { borderStyle: '1px solid #92400e' } },
+  { id: 'light-academia', name: 'Light Academia', category: 'Academia', background: '#f5f0e8', textColor: 'text-stone-700', accentColor: 'stone-500', customStyles: { borderStyle: '1px solid #d6d3d1' } },
+  { id: 'gothic-study', name: 'Gothic Study', category: 'Academia', background: '#0d0a07', textColor: 'text-amber-400', accentColor: 'amber-600', customStyles: { borderStyle: '1px solid #78350f' } },
+  { id: 'library-dust', name: 'Library Dust', category: 'Academia', background: '#2c2416', textColor: 'text-yellow-200', accentColor: 'yellow-700', customStyles: { borderStyle: '1px solid #713f12' } },
+  { id: 'oxford-night', name: 'Oxford Night', category: 'Academia', background: '#1e1a14', textColor: 'text-stone-300', accentColor: 'stone-500' },
+  { id: 'parchment', name: 'Parchment', category: 'Academia', background: '#fdf6e3', textColor: 'text-stone-800', accentColor: 'stone-600', customStyles: { borderStyle: '1px solid #d6d0b0' } },
+
+  // Cottagecore / Nature
+  { id: 'cottagecore', name: 'Cottagecore', category: 'Nature', background: '#fef9ee', textColor: 'text-green-800', accentColor: 'green-600', customStyles: { borderStyle: '2px solid #86efac' } },
+  { id: 'mushroom-log', name: 'Mushroom Log', category: 'Nature', background: '#3d2b1f', textColor: 'text-amber-200', accentColor: 'amber-500', customStyles: { borderStyle: '1px solid #92400e' } },
+  { id: 'spring-bloom', name: 'Spring Bloom', category: 'Nature', background: '#fdf4ff', textColor: 'text-violet-700', accentColor: 'pink-400', customStyles: { borderStyle: '1px solid #d8b4fe' } },
+  { id: 'rainy-day', name: 'Rainy Day', category: 'Nature', background: '#374151', textColor: 'text-blue-200', accentColor: 'blue-400' },
+  { id: 'autumn-forest', name: 'Autumn Forest', category: 'Nature', background: '#431407', textColor: 'text-orange-300', accentColor: 'orange-500', customStyles: { borderStyle: '1px solid #c2410c' } },
+  { id: 'winter-solstice', name: 'Winter Solstice', category: 'Nature', background: '#0c1445', textColor: 'text-blue-100', accentColor: 'blue-300', customStyles: { borderStyle: '1px solid #93c5fd' } },
+  { id: 'summer-heat', name: 'Summer Heat', category: 'Nature', background: '#fbbf24', textColor: 'text-orange-900', accentColor: 'orange-700', customStyles: { borderStyle: '2px solid #d97706' } },
+  { id: 'swamp-thing', name: 'Swamp Thing', category: 'Nature', background: '#1a2e05', textColor: 'text-lime-300', accentColor: 'lime-500', customStyles: { borderStyle: '1px solid #4d7c0f' } },
+  { id: 'desert-sand', name: 'Desert Sand', category: 'Nature', background: '#d4a35a', textColor: 'text-amber-950', accentColor: 'amber-800', customStyles: { borderStyle: '2px solid #92400e' } },
+  { id: 'tundra-ice', name: 'Tundra Ice', category: 'Nature', background: '#cffafe', textColor: 'text-cyan-900', accentColor: 'cyan-600', customStyles: { borderStyle: '1px solid #67e8f9' } },
+
+  // Retro / Vintage
+  { id: 'vhs-static', name: 'VHS Static', category: 'Retro', background: '#1a0a2e', textColor: 'text-purple-300', accentColor: 'pink-400', customStyles: { borderStyle: '2px solid #a855f7', fontFamily: 'mono' } },
+  { id: 'crt-monitor', name: 'CRT Monitor', category: 'Retro', background: '#0a1a0a', textColor: 'text-green-400', accentColor: 'green-600', customStyles: { borderStyle: '3px solid #166534', fontFamily: 'mono' } },
+  { id: 'arcade-cab', name: 'Arcade Cabinet', category: 'Retro', background: '#1c0033', textColor: 'text-yellow-400', accentColor: 'yellow-300', customStyles: { borderStyle: '3px solid #ca8a04' } },
+  { id: 'polaroid', name: 'Polaroid', category: 'Retro', background: '#fffef0', textColor: 'text-gray-700', accentColor: 'gray-500', customStyles: { borderStyle: '8px solid #fff' } },
+  { id: 'sepia-tone', name: 'Sepia Tone', category: 'Retro', background: '#c9a96e', textColor: 'text-stone-900', accentColor: 'stone-700', customStyles: { borderStyle: '1px solid #78350f' } },
+  { id: 'drive-in', name: 'Drive-In Night', category: 'Retro', background: '#0a0a1a', textColor: 'text-yellow-300', accentColor: 'yellow-500', customStyles: { borderStyle: '1px solid #ca8a04' } },
+  { id: '80s-neon', name: '80s Neon', category: 'Retro', background: '#0d0221', textColor: 'text-pink-500', accentColor: 'cyan-400', customStyles: { borderStyle: '2px solid #06b6d4' } },
+  { id: '90s-grunge', name: '90s Grunge', category: 'Retro', background: '#2a2a2a', textColor: 'text-yellow-400', accentColor: 'yellow-600', customStyles: { borderStyle: '4px solid #713f12' } },
+  { id: 'cassette-tape', name: 'Cassette Tape', category: 'Retro', background: '#1f1f1f', textColor: 'text-orange-400', accentColor: 'orange-600', customStyles: { borderStyle: '2px solid #c2410c' } },
+  { id: 'disco-era', name: 'Disco Era', category: 'Retro', background: '#2e003e', textColor: 'text-yellow-300', accentColor: 'pink-500', customStyles: { borderStyle: '1px solid #f472b6' } },
+
+  // Anime / Manga
+  { id: 'shonen-fire', name: 'Shonen Fire', category: 'Anime', background: '#1a0500', textColor: 'text-orange-400', accentColor: 'red-500', customStyles: { borderStyle: '2px solid #ef4444' } },
+  { id: 'shoujo-sakura', name: 'Shoujo Sakura', category: 'Anime', background: '#fff0f6', textColor: 'text-pink-600', accentColor: 'pink-400', customStyles: { borderStyle: '2px solid #f9a8d4' } },
+  { id: 'mecha-steel', name: 'Mecha Steel', category: 'Anime', background: '#1e2433', textColor: 'text-blue-300', accentColor: 'blue-500', customStyles: { borderStyle: '2px solid #3b82f6', glassEffect: true } },
+  { id: 'isekai-forest', name: 'Isekai Forest', category: 'Anime', background: '#0b2516', textColor: 'text-green-300', accentColor: 'green-500', customStyles: { borderStyle: '1px solid #4ade80' } },
+  { id: 'dark-fantasy', name: 'Dark Fantasy', category: 'Anime', background: '#0f0618', textColor: 'text-purple-300', accentColor: 'purple-500', customStyles: { borderStyle: '1px solid #a855f7' } },
+  { id: 'village-idiot', name: 'Village Idiot', category: 'Anime', background: '#78350f', textColor: 'text-amber-100', accentColor: 'amber-300' },
+  { id: 'blue-archive', name: 'Blue Archive', category: 'Anime', background: '#0e1729', textColor: 'text-sky-300', accentColor: 'sky-400', customStyles: { borderStyle: '1px solid #38bdf8' } },
+  { id: 'dungeon-crawler', name: 'Dungeon Crawler', category: 'Anime', background: '#1c0d0d', textColor: 'text-red-300', accentColor: 'red-500', customStyles: { borderStyle: '1px solid #f87171' } },
+
+  // More Pop Culture
+  { id: 'among-us', name: 'Among Us', category: 'Pop Culture', background: '#1a1a2e', textColor: 'text-red-400', accentColor: 'red-600', customStyles: { borderStyle: '2px solid #dc2626' } },
+  { id: 'fortnite-zone', name: 'Fortnite Zone', category: 'Pop Culture', background: '#0a1628', textColor: 'text-blue-400', accentColor: 'yellow-400', customStyles: { borderStyle: '2px solid #facc15' } },
+  { id: 'gta-loading', name: 'GTA Loading', category: 'Pop Culture', background: '#0d1117', textColor: 'text-green-400', accentColor: 'green-500', customStyles: { borderStyle: '1px solid #22c55e', fontFamily: 'mono' } },
+  { id: 'cyberpunk-2077', name: 'Cyberpunk 2077', category: 'Pop Culture', background: '#050a05', textColor: 'text-yellow-400', accentColor: 'cyan-400', customStyles: { borderStyle: '2px solid #06b6d4' } },
+  { id: 'elden-ring', name: 'Elden Ring', category: 'Pop Culture', background: '#0a0605', textColor: 'text-amber-300', accentColor: 'amber-500', customStyles: { borderStyle: '1px solid #d97706' } },
+  { id: 'fnaf-purple', name: 'Purple Guy', category: 'Pop Culture', background: '#2d1b69', textColor: 'text-purple-200', accentColor: 'purple-400', customStyles: { borderStyle: '2px solid #7c3aed' } },
+  { id: 'terraria-dirt', name: 'Terraria', category: 'Pop Culture', background: '#3d2b1f', textColor: 'text-lime-400', accentColor: 'lime-500', customStyles: { borderStyle: '4px solid #1a0e08', bubbleStyle: 'sharp' } },
+  { id: 'hollow-knight', name: 'Hollow Knight', category: 'Pop Culture', background: '#0a0e18', textColor: 'text-slate-300', accentColor: 'slate-400', customStyles: { borderStyle: '1px solid #64748b' } },
+  { id: 'stardew-valley', name: 'Stardew Valley', category: 'Pop Culture', background: '#1a2a1a', textColor: 'text-green-300', accentColor: 'amber-400', customStyles: { borderStyle: '2px solid #92400e' } },
+  { id: 'sonic-speed', name: 'Sonic Speed', category: 'Pop Culture', background: '#003087', textColor: 'text-white', accentColor: 'yellow-400', customStyles: { borderStyle: '3px solid #facc15' } },
+  { id: 'zelda-hyrule', name: 'Hyrule Kingdom', category: 'Pop Culture', background: '#0a1a05', textColor: 'text-green-400', accentColor: 'yellow-400', customStyles: { borderStyle: '2px solid #ca8a04' } },
+  { id: 'mortal-kombat', name: 'Mortal Kombat', category: 'Pop Culture', background: '#0a0000', textColor: 'text-yellow-500', accentColor: 'red-600', customStyles: { borderStyle: '2px solid #dc2626' } },
+  { id: 'dragon-ball', name: 'Dragon Ball', category: 'Pop Culture', background: '#1a0a00', textColor: 'text-orange-400', accentColor: 'yellow-400', customStyles: { borderStyle: '2px solid #fbbf24' } },
+  { id: 'naruto-leaf', name: 'Leaf Village', category: 'Pop Culture', background: '#0a1a0a', textColor: 'text-orange-400', accentColor: 'orange-500', customStyles: { borderStyle: '1px solid #f97316' } },
+
+  // Seasons / Weather
+  { id: 'blizzard', name: 'Blizzard', category: 'Weather', background: '#e8f4f8', textColor: 'text-blue-800', accentColor: 'blue-400', customStyles: { borderStyle: '1px solid #bfdbfe' } },
+  { id: 'thunderstorm', name: 'Thunderstorm', category: 'Weather', background: '#111827', textColor: 'text-yellow-400', accentColor: 'yellow-500', customStyles: { borderStyle: '1px solid #ca8a04' } },
+  { id: 'foggy-dawn', name: 'Foggy Dawn', category: 'Weather', background: '#e5e7eb', textColor: 'text-gray-600', accentColor: 'gray-400' },
+  { id: 'heat-wave', name: 'Heat Wave', category: 'Weather', background: '#7c2d12', textColor: 'text-orange-300', accentColor: 'orange-400', customStyles: { borderStyle: '2px solid #f97316' } },
+  { id: 'monsoon', name: 'Monsoon', category: 'Weather', background: '#1e3a5f', textColor: 'text-cyan-300', accentColor: 'cyan-500', customStyles: { borderStyle: '1px solid #22d3ee' } },
+
+  // Space / Sci-Fi
+  { id: 'mars-colony', name: 'Mars Colony', category: 'Space', background: '#3d1a0a', textColor: 'text-orange-300', accentColor: 'orange-500', customStyles: { borderStyle: '1px solid #ea580c' } },
+  { id: 'neutron-star', name: 'Neutron Star', category: 'Space', background: '#000511', textColor: 'text-cyan-400', accentColor: 'white', customStyles: { borderStyle: '1px solid #06b6d4', glassEffect: true } },
+  { id: 'black-hole', name: 'Event Horizon', category: 'Space', background: '#000000', textColor: 'text-purple-600', accentColor: 'purple-800', customStyles: { borderStyle: '1px solid #581c87' } },
+  { id: 'warp-speed', name: 'Warp Speed', category: 'Space', background: '#020715', textColor: 'text-blue-200', accentColor: 'white', customStyles: { borderStyle: '1px solid #1d4ed8' } },
+  { id: 'lunar-surface', name: 'Lunar Surface', category: 'Space', background: '#d1d5db', textColor: 'text-gray-800', accentColor: 'gray-500', customStyles: { borderStyle: '1px solid #6b7280' } },
+  { id: 'exoplanet', name: 'Exoplanet', category: 'Space', background: '#1a0a3d', textColor: 'text-violet-300', accentColor: 'teal-400', customStyles: { borderStyle: '1px solid #0d9488' } },
+  { id: 'solar-flare', name: 'Solar Flare', category: 'Space', background: '#3d1a00', textColor: 'text-yellow-400', accentColor: 'orange-400', customStyles: { borderStyle: '2px solid #f97316' } },
+  { id: 'deep-space', name: 'Deep Space', category: 'Space', background: '#000108', textColor: 'text-indigo-300', accentColor: 'indigo-500', customStyles: { borderStyle: '1px solid #4f46e5', glassEffect: true } },
+
+  // Music Vibes
+  { id: 'jazz-club', name: 'Jazz Club', category: 'Music', background: '#1a0f00', textColor: 'text-amber-300', accentColor: 'amber-500', customStyles: { borderStyle: '1px solid #92400e' } },
+  { id: 'lo-fi-hip-hop', name: 'Lo-Fi Hip Hop', category: 'Music', background: '#1e1433', textColor: 'text-purple-200', accentColor: 'purple-400' },
+  { id: 'metal-pit', name: 'Metal Pit', category: 'Music', background: '#0a0a0a', textColor: 'text-red-500', accentColor: 'red-700', customStyles: { borderStyle: '3px solid #7f1d1d' } },
+  { id: 'rave-cave', name: 'Rave Cave', category: 'Music', background: '#0d001a', textColor: 'text-fuchsia-400', accentColor: 'cyan-400', customStyles: { borderStyle: '1px solid #06b6d4', glassEffect: true } },
+  { id: 'classical-hall', name: 'Concert Hall', category: 'Music', background: '#1a1005', textColor: 'text-amber-200', accentColor: 'amber-400', customStyles: { borderStyle: '1px solid #d97706' } },
+  { id: 'trap-beat', name: 'Trap Beat', category: 'Music', background: '#0a0a0a', textColor: 'text-green-400', accentColor: 'green-500', customStyles: { borderStyle: '1px solid #15803d', fontFamily: 'mono' } },
+  { id: 'bedroom-pop', name: 'Bedroom Pop', category: 'Music', background: '#fef3c7', textColor: 'text-pink-500', accentColor: 'pink-400', customStyles: { borderStyle: '1px solid #f9a8d4' } },
+  { id: 'punk-zine', name: 'Punk Zine', category: 'Music', background: '#000000', textColor: 'text-yellow-400', accentColor: 'red-500', customStyles: { borderStyle: '4px solid #dc2626' } },
+
+  // Aesthetic Moods
+  { id: 'liminal-space', name: 'Liminal Space', category: 'Mood', background: '#f5f0e0', textColor: 'text-yellow-700', accentColor: 'yellow-500' },
+  { id: 'backrooms', name: 'The Backrooms', category: 'Mood', background: '#c8b560', textColor: 'text-yellow-900', accentColor: 'yellow-800' },
+  { id: 'dreamcore', name: 'Dreamcore', category: 'Mood', background: '#f0e6ff', textColor: 'text-violet-600', accentColor: 'pink-400', customStyles: { borderStyle: '1px solid #c4b5fd' } },
+  { id: 'weirdcore', name: 'Weirdcore', category: 'Mood', background: '#ff6600', textColor: 'text-white', accentColor: 'blue-600', customStyles: { borderStyle: '3px solid #1d4ed8' } },
+  { id: 'voidpunk', name: 'Voidpunk', category: 'Mood', background: '#050510', textColor: 'text-indigo-300', accentColor: 'indigo-500', customStyles: { borderStyle: '1px solid #4338ca' } },
+  { id: 'nostalgia', name: 'Pure Nostalgia', category: 'Mood', background: '#fff9e6', textColor: 'text-amber-800', accentColor: 'amber-600', customStyles: { borderStyle: '1px solid #fcd34d' } },
+  { id: 'existential-dread', name: 'Existential Dread', category: 'Mood', background: '#0a0a0a', textColor: 'text-gray-600', accentColor: 'gray-700' },
+  { id: 'main-character', name: 'Main Character', category: 'Mood', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', textColor: 'text-white', accentColor: 'white', customStyles: { borderStyle: '2px solid rgba(255,255,255,0.4)' } },
+
+  // ASMR / Calm
+  { id: 'ocean-asmr', name: 'Ocean ASMR', category: 'Calm', background: '#0a2a3d', textColor: 'text-cyan-200', accentColor: 'cyan-400' },
+  { id: 'rain-window', name: 'Rain Window', category: 'Calm', background: '#1e2d3d', textColor: 'text-blue-200', accentColor: 'blue-300' },
+  { id: 'spa-day', name: 'Spa Day', category: 'Calm', background: '#f0faf5', textColor: 'text-teal-700', accentColor: 'teal-400', customStyles: { borderStyle: '1px solid #5eead4' } },
+  { id: 'meditation', name: 'Meditation', category: 'Calm', background: '#faf5eb', textColor: 'text-stone-600', accentColor: 'stone-400' },
+  { id: 'campfire', name: 'Campfire', category: 'Calm', background: '#1a0a00', textColor: 'text-orange-300', accentColor: 'orange-500', customStyles: { borderStyle: '1px solid #ea580c' } },
+
+  // Brand-Inspired (non-copyrighted palettes)
+  { id: 'social-red', name: 'Social Red', category: 'Brand', background: '#1a0000', textColor: 'text-red-400', accentColor: 'red-500', customStyles: { borderStyle: '1px solid #ef4444' } },
+  { id: 'social-blue', name: 'Social Blue', category: 'Brand', background: '#00021a', textColor: 'text-blue-400', accentColor: 'blue-500', customStyles: { borderStyle: '1px solid #3b82f6' } },
+  { id: 'messenger-purple', name: 'Messenger', category: 'Brand', background: '#0a001a', textColor: 'text-violet-400', accentColor: 'violet-500', customStyles: { borderStyle: '1px solid #8b5cf6' } },
+  { id: 'streaming-black', name: 'Streaming Black', category: 'Brand', background: '#141414', textColor: 'text-red-500', accentColor: 'red-600', customStyles: { borderStyle: '1px solid #dc2626' } },
+  { id: 'gaming-green', name: 'Gaming Green', category: 'Brand', background: '#0a1a0a', textColor: 'text-green-400', accentColor: 'green-500', customStyles: { borderStyle: '1px solid #22c55e' } },
+  { id: 'cloud-white', name: 'Cloud Platform', category: 'Brand', background: '#f8fafc', textColor: 'text-blue-600', accentColor: 'blue-500', customStyles: { borderStyle: '1px solid #3b82f6' } },
+
+  // Brain Rot additions
+  { id: 'fanum-tax', name: 'Fanum Tax', category: 'Brain Rot', background: '#2a1a00', textColor: 'text-amber-400', accentColor: 'yellow-500', customStyles: { borderStyle: '2px solid #ca8a04' } },
+  { id: 'rizz-aura', name: 'Rizz Aura', category: 'Brain Rot', background: '#3d0050', textColor: 'text-fuchsia-300', accentColor: 'fuchsia-400', customStyles: { borderStyle: '1px solid #d946ef' } },
+  { id: 'no-cap', name: 'No Cap', category: 'Brain Rot', background: '#001a3d', textColor: 'text-blue-400', accentColor: 'white', customStyles: { borderStyle: '2px solid #3b82f6' } },
+  { id: 'cooked', name: 'Cooked', category: 'Brain Rot', background: '#2d0000', textColor: 'text-red-400', accentColor: 'orange-500', customStyles: { borderStyle: '2px solid #ea580c' } },
+  { id: 'griddy', name: 'Do The Griddy', category: 'Brain Rot', background: '#00001a', textColor: 'text-yellow-400', accentColor: 'green-400', customStyles: { borderStyle: '2px solid #22c55e' } },
+  { id: 'based', name: 'Based', category: 'Brain Rot', background: '#0a0a0a', textColor: 'text-white', accentColor: 'white' },
+  { id: 'delulu', name: 'Delulu Era', category: 'Brain Rot', background: '#fce4ec', textColor: 'text-pink-700', accentColor: 'pink-500', customStyles: { borderStyle: '2px solid #f48fb1' } },
+  { id: 'slay', name: 'Slay', category: 'Brain Rot', background: '#1a0028', textColor: 'text-fuchsia-400', accentColor: 'gold', customStyles: { borderStyle: '2px solid #d946ef' } },
+  { id: 'understood-the-assignment', name: 'Assignment Mode', category: 'Brain Rot', background: '#0d0d0d', textColor: 'text-emerald-400', accentColor: 'emerald-500', customStyles: { borderStyle: '1px solid #10b981', fontFamily: 'mono' } },
+
+  // Gradient Themes
+  { id: 'aurora-borealis', name: 'Aurora Borealis', category: 'Gradient', background: 'linear-gradient(135deg, #0a2a1a 0%, #0a1a2a 50%, #1a0a2a 100%)', textColor: 'text-teal-300', accentColor: 'teal-400', customStyles: { borderStyle: '1px solid #5eead4' } },
+  { id: 'northern-lights', name: 'Northern Lights', category: 'Gradient', background: 'linear-gradient(to bottom right, #042f2e, #1e1b4b, #2e1065)', textColor: 'text-green-300', accentColor: 'green-400' },
+  { id: 'dusk-til-dawn', name: 'Dusk Til Dawn', category: 'Gradient', background: 'linear-gradient(to bottom, #0f172a, #1e0a3d, #3d0a1a)', textColor: 'text-pink-300', accentColor: 'pink-500' },
+  { id: 'fire-and-ice', name: 'Fire & Ice', category: 'Gradient', background: 'linear-gradient(to right, #082f49, #450a0a)', textColor: 'text-white', accentColor: 'cyan-400', customStyles: { borderStyle: '1px solid #06b6d4' } },
+  { id: 'toxic-gradient', name: 'Toxic Gradient', category: 'Gradient', background: 'linear-gradient(135deg, #052e16, #422006)', textColor: 'text-lime-400', accentColor: 'lime-500' },
+  { id: 'royal-flush', name: 'Royal Flush', category: 'Gradient', background: 'linear-gradient(135deg, #3b0764, #1e3a8a)', textColor: 'text-indigo-200', accentColor: 'purple-400' },
+  { id: 'blood-sunset', name: 'Blood Sunset', category: 'Gradient', background: 'linear-gradient(to bottom, #450a0a, #7c2d12)', textColor: 'text-orange-300', accentColor: 'red-500' },
+  { id: 'midnight-garden', name: 'Midnight Garden', category: 'Gradient', background: 'linear-gradient(135deg, #022c22, #042f2e)', textColor: 'text-emerald-300', accentColor: 'teal-400' },
+  { id: 'grape-soda', name: 'Grape Soda', category: 'Gradient', background: 'linear-gradient(135deg, #2e1065, #4c1d95)', textColor: 'text-violet-200', accentColor: 'violet-400' },
+  { id: 'cotton-candy', name: 'Cotton Candy', category: 'Gradient', background: 'linear-gradient(to right, #fdf2f8, #ede9fe)', textColor: 'text-pink-500', accentColor: 'violet-400', customStyles: { borderStyle: '1px solid #c4b5fd' } },
+
+  // More Essentials
+  { id: 'true-black', name: 'True Black', category: 'Essentials', background: '#000000', textColor: 'text-gray-100', accentColor: 'gray-400' },
+  { id: 'charcoal', name: 'Charcoal', category: 'Essentials', background: '#1c1c1c', textColor: 'text-gray-200', accentColor: 'gray-500' },
+  { id: 'graphite', name: 'Graphite', category: 'Essentials', background: '#2d2d2d', textColor: 'text-gray-200', accentColor: 'gray-400' },
+  { id: 'cream', name: 'Cream', category: 'Essentials', background: '#fffef5', textColor: 'text-gray-800', accentColor: 'gray-400' },
+  { id: 'off-white', name: 'Off White', category: 'Essentials', background: '#f9f7f4', textColor: 'text-stone-700', accentColor: 'stone-400' },
+  { id: 'matte-black', name: 'Matte Black', category: 'Essentials', background: '#121212', textColor: 'text-zinc-300', accentColor: 'zinc-500' },
 ];
 
 export const CARD_STYLES: CardStyle[] = [
-  // The Elites
+  // ====== ORIGINAL CARD STYLES ======
   { id: 'the-boss', name: 'The Boss', category: 'Elite', bgClass: 'bg-black', borderClass: 'border-amber-500 border-2 shadow-[0_0_20px_rgba(245,158,11,0.4)]', textClass: 'text-amber-500 font-black uppercase tracking-tighter' },
   { id: 'the-goat', name: 'The GOAT', category: 'Elite', bgClass: 'bg-gradient-to-br from-amber-500/20 to-yellow-500/20', borderClass: 'border-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.3)]', textClass: 'text-amber-400 font-black italic' },
   { id: 'the-menace', name: 'The Menace', category: 'Elite', bgClass: 'bg-red-950', borderClass: 'border-red-600 shadow-[0_0_20px_rgba(220,38,38,0.5)]', textClass: 'text-red-500 font-black uppercase' },
   { id: 'the-ghost', name: 'The Ghost', category: 'Elite', bgClass: 'bg-white/5 backdrop-blur-2xl', borderClass: 'border-white/10 shadow-inner', textClass: 'text-white/40 font-light tracking-[0.5em]' },
   { id: 'the-hacker', name: 'The Hacker', category: 'Elite', bgClass: 'bg-black', borderClass: 'border-green-500/60 shadow-[0_0_15px_rgba(34,197,94,0.3)]', textClass: 'text-green-500 font-mono text-xs' },
-
-  // Fun & Weird
   { id: 'skibidi-card', name: 'Skibidi', category: 'Fun', bgClass: 'bg-slate-800', borderClass: 'border-slate-400 border-4 rounded-none', textClass: 'text-slate-100 font-bold uppercase' },
   { id: 'rizzler-card', name: 'The Rizzler', category: 'Fun', bgClass: 'bg-pink-500/10', borderClass: 'border-pink-500/50 shadow-[0_0_20px_rgba(236,72,153,0.4)]', textClass: 'text-pink-400 font-black italic' },
   { id: 'sigma-card', name: 'Sigma', category: 'Fun', bgClass: 'bg-zinc-900', borderClass: 'border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.2)]', textClass: 'text-amber-200 font-black uppercase tracking-widest' },
@@ -181,20 +412,14 @@ export const CARD_STYLES: CardStyle[] = [
   { id: 'glitch-mode', name: 'Glitch Mode', category: 'Fun', bgClass: 'bg-zinc-900', borderClass: 'border-zinc-100/30 skew-x-3 -rotate-1', textClass: 'text-zinc-100 font-mono line-through decoration-red-500' },
   { id: 'toxic-card', name: 'Toxic', category: 'Fun', bgClass: 'bg-lime-500/10', borderClass: 'border-lime-400/60 shadow-[0_0_25px_rgba(163,230,53,0.5)]', textClass: 'text-lime-400 font-bold' },
   { id: 'bubblegum-card', name: 'Bubblegum', category: 'Fun', bgClass: 'bg-pink-500/10', borderClass: 'border-pink-300/40 rounded-full', textClass: 'text-pink-300 font-medium' },
-
-  // Street & Drill
   { id: 'drill-card', name: 'Drill', category: 'Street', bgClass: 'bg-zinc-900', borderClass: 'border-zinc-700 border-2', textClass: 'text-zinc-400 font-black uppercase' },
   { id: 'block-card', name: 'The Block', category: 'Street', bgClass: 'bg-black', borderClass: 'border-zinc-800', textClass: 'text-zinc-600 font-bold' },
   { id: 'london-card', name: 'London Fog', category: 'Street', bgClass: 'bg-slate-900/80', borderClass: 'border-slate-700', textClass: 'text-slate-400' },
   { id: 'hustle-card', name: 'Hustle', category: 'Street', bgClass: 'bg-amber-950/20', borderClass: 'border-amber-600/40', textClass: 'text-amber-500 font-black italic' },
-
-  // Premium
   { id: 'platinum-card', name: 'Platinum', category: 'Premium', bgClass: 'bg-slate-200/10', borderClass: 'border-slate-300/40', textClass: 'text-slate-100 font-bold' },
   { id: 'diamond-card', name: 'Diamond', category: 'Premium', bgClass: 'bg-white/5', borderClass: 'border-white/40 shadow-[0_0_20px_rgba(255,255,255,0.2)]', textClass: 'text-white font-black' },
   { id: 'gold-card', name: 'Gold', category: 'Premium', bgClass: 'bg-amber-500/10', borderClass: 'border-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.3)]', textClass: 'text-amber-400 font-bold' },
   { id: 'royal-card', name: 'Royal', category: 'Premium', bgClass: 'bg-purple-900/40', borderClass: 'border-amber-400/60', textClass: 'text-amber-200 font-serif italic' },
-
-  // Extreme & Experimental
   { id: 'the-giant', name: 'The Giant', category: 'Extreme', bgClass: 'bg-zinc-800 scale-110 z-10', borderClass: 'border-zinc-600 border-4', textClass: 'text-white font-black text-lg' },
   { id: 'the-tiny', name: 'The Tiny', category: 'Extreme', bgClass: 'bg-zinc-900 scale-90', borderClass: 'border-zinc-800', textClass: 'text-zinc-500 text-[10px]' },
   { id: 'the-slanted', name: 'The Slanted', category: 'Extreme', bgClass: 'bg-zinc-900 -rotate-2 skew-x-2', borderClass: 'border-amber-500/30', textClass: 'text-amber-500 italic' },
@@ -203,7 +428,7 @@ export const CARD_STYLES: CardStyle[] = [
   { id: 'the-matrix', name: 'The Matrix', category: 'Extreme', bgClass: 'bg-black/90', borderClass: 'border-green-500/20', textClass: 'text-green-500 font-mono text-[10px] leading-none' },
   { id: 'the-gold-bar', name: 'Gold Bar', category: 'Extreme', bgClass: 'bg-gradient-to-r from-yellow-600 via-yellow-400 to-yellow-600', borderClass: 'border-yellow-700 border-b-4 border-r-4', textClass: 'text-yellow-950 font-black uppercase' },
   { id: 'the-void-walker', name: 'Void Walker', category: 'Extreme', bgClass: 'bg-black', borderClass: 'border-purple-900/50 shadow-[0_0_40px_rgba(88,28,135,0.4)]', textClass: 'text-purple-500 font-thin tracking-[0.3em]' },
-  // 50+ More Card Styles
+  // original neon cards...
   { id: 'card-neon-blue', name: 'Neon Blue', category: 'Cyber', bgClass: 'bg-black', borderClass: 'border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)]', textClass: 'text-blue-400 font-bold' },
   { id: 'card-neon-red', name: 'Neon Red', category: 'Cyber', bgClass: 'bg-black', borderClass: 'border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.5)]', textClass: 'text-red-400 font-bold' },
   { id: 'card-neon-green', name: 'Neon Green', category: 'Cyber', bgClass: 'bg-black', borderClass: 'border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.5)]', textClass: 'text-green-400 font-bold' },
@@ -224,6 +449,7 @@ export const CARD_STYLES: CardStyle[] = [
   { id: 'card-neon-slate', name: 'Neon Slate', category: 'Cyber', bgClass: 'bg-black', borderClass: 'border-slate-500 shadow-[0_0_15px_rgba(100,116,139,0.5)]', textClass: 'text-slate-400 font-bold' },
   { id: 'card-neon-zinc', name: 'Neon Zinc', category: 'Cyber', bgClass: 'bg-black', borderClass: 'border-zinc-500 shadow-[0_0_15px_rgba(113,113,122,0.5)]', textClass: 'text-zinc-400 font-bold' },
   { id: 'card-neon-stone', name: 'Neon Stone', category: 'Cyber', bgClass: 'bg-black', borderClass: 'border-stone-500 shadow-[0_0_15px_rgba(120,113,108,0.5)]', textClass: 'text-stone-400 font-bold' },
+  // glass cards
   { id: 'card-glass-blue', name: 'Glass Blue', category: 'Premium', bgClass: 'bg-blue-500/10 backdrop-blur-md', borderClass: 'border-blue-500/20', textClass: 'text-blue-200' },
   { id: 'card-glass-red', name: 'Glass Red', category: 'Premium', bgClass: 'bg-red-500/10 backdrop-blur-md', borderClass: 'border-red-500/20', textClass: 'text-red-200' },
   { id: 'card-glass-green', name: 'Glass Green', category: 'Premium', bgClass: 'bg-green-500/10 backdrop-blur-md', borderClass: 'border-green-500/20', textClass: 'text-green-200' },
@@ -244,6 +470,7 @@ export const CARD_STYLES: CardStyle[] = [
   { id: 'card-glass-slate', name: 'Glass Slate', category: 'Premium', bgClass: 'bg-slate-500/10 backdrop-blur-md', borderClass: 'border-slate-500/20', textClass: 'text-slate-200' },
   { id: 'card-glass-zinc', name: 'Glass Zinc', category: 'Premium', bgClass: 'bg-zinc-500/10 backdrop-blur-md', borderClass: 'border-zinc-500/20', textClass: 'text-zinc-200' },
   { id: 'card-glass-stone', name: 'Glass Stone', category: 'Premium', bgClass: 'bg-stone-500/10 backdrop-blur-md', borderClass: 'border-stone-500/20', textClass: 'text-stone-200' },
+  // solid cards
   { id: 'card-solid-blue', name: 'Solid Blue', category: 'Basic', bgClass: 'bg-blue-600', borderClass: 'border-blue-400', textClass: 'text-white' },
   { id: 'card-solid-red', name: 'Solid Red', category: 'Basic', bgClass: 'bg-red-600', borderClass: 'border-red-400', textClass: 'text-white' },
   { id: 'card-solid-green', name: 'Solid Green', category: 'Basic', bgClass: 'bg-green-600', borderClass: 'border-green-400', textClass: 'text-white' },
@@ -254,7 +481,7 @@ export const CARD_STYLES: CardStyle[] = [
   { id: 'card-solid-cyan', name: 'Solid Cyan', category: 'Basic', bgClass: 'bg-cyan-600', borderClass: 'border-cyan-400', textClass: 'text-white' },
   { id: 'card-solid-lime', name: 'Solid Lime', category: 'Basic', bgClass: 'bg-lime-600', borderClass: 'border-lime-400', textClass: 'text-white' },
   { id: 'card-solid-teal', name: 'Solid Teal', category: 'Basic', bgClass: 'bg-teal-600', borderClass: 'border-teal-400', textClass: 'text-white' },
-  // More Extreme, Funny, and Special Card Styles
+  // extreme originals
   { id: 'card-glitch-ultra', name: 'Ultra Glitch', category: 'Extreme', bgClass: 'bg-zinc-900 animate-pulse', borderClass: 'border-red-500 skew-x-6 -rotate-2 shadow-[4px_4px_0_#0ff,-4px_-4px_0_#f0f]', textClass: 'text-white font-mono uppercase italic' },
   { id: 'card-void-deep', name: 'Deep Void', category: 'Extreme', bgClass: 'bg-black', borderClass: 'border-white/5 shadow-[0_0_50px_rgba(255,255,255,0.1)_inset]', textClass: 'text-white/20 font-thin tracking-[1em]' },
   { id: 'card-rainbow-extreme', name: 'Rainbow Overload', category: 'Extreme', bgClass: 'bg-gradient-to-r from-red-500 via-yellow-500 via-green-500 via-blue-500 to-purple-500 bg-[length:200%_auto] animate-[gradient_1s_linear_infinite]', borderClass: 'border-white border-4', textClass: 'text-white font-black drop-shadow-lg' },
@@ -263,39 +490,133 @@ export const CARD_STYLES: CardStyle[] = [
   { id: 'card-minecraft-steve', name: 'Blocky', category: 'Fun', bgClass: 'bg-[#4b3621]', borderClass: 'border-[#3f2e1d] border-4 rounded-none', textClass: 'text-[#55ff55] font-mono uppercase' },
   { id: 'card-hacker-green', name: 'Mainframe', category: 'Special', bgClass: 'bg-black', borderClass: 'border-green-500/50 shadow-[0_0_20px_rgba(34,197,94,0.4)]', textClass: 'text-green-500 font-mono text-xs' },
   { id: 'card-royal-diamond', name: 'Royal Diamond', category: 'Special', bgClass: 'bg-white/10 backdrop-blur-2xl', borderClass: 'border-white/40 shadow-[0_0_30px_rgba(255,255,255,0.3)]', textClass: 'text-white font-black tracking-widest' },
-  { id: 'card-blood-moon', name: 'Blood Moon', category: 'Special', bgClass: 'bg-red-950', borderClass: 'border-red-600 shadow-[0_0_25px_rgba(220,38,38,0.6)]', textClass: 'text-red-500 font-black italic' }
+  { id: 'card-blood-moon', name: 'Blood Moon', category: 'Special', bgClass: 'bg-red-950', borderClass: 'border-red-600 shadow-[0_0_25px_rgba(220,38,38,0.6)]', textClass: 'text-red-500 font-black italic' },
+
+  // ====== 200+ NEW CARD STYLES ======
+
+  // Holographic / Iridescent
+  { id: 'card-holo-gold', name: 'Holo Gold', category: 'Holographic', bgClass: 'bg-gradient-to-br from-amber-200 via-yellow-100 to-amber-300', borderClass: 'border-amber-400 border-2', textClass: 'text-amber-900 font-black' },
+  { id: 'card-holo-silver', name: 'Holo Silver', category: 'Holographic', bgClass: 'bg-gradient-to-br from-slate-200 via-white to-slate-300', borderClass: 'border-slate-400 border-2', textClass: 'text-slate-900 font-black' },
+  { id: 'card-holo-rainbow', name: 'Holo Rainbow', category: 'Holographic', bgClass: 'bg-gradient-to-r from-pink-300 via-purple-300 via-blue-300 to-teal-300', borderClass: 'border-white/50 border-2', textClass: 'text-white font-black drop-shadow' },
+  { id: 'card-holo-prismatic', name: 'Prismatic', category: 'Holographic', bgClass: 'bg-gradient-to-br from-violet-200 via-pink-100 to-blue-200', borderClass: 'border-violet-300 border-2', textClass: 'text-violet-900 font-bold' },
+  { id: 'card-holo-oil-slick', name: 'Oil Slick', category: 'Holographic', bgClass: 'bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900', borderClass: 'border-purple-500/40 border-2', textClass: 'text-cyan-300 font-bold' },
+
+  // Outrun / Retrowave
+  { id: 'card-outrun', name: 'Outrun', category: 'Retro', bgClass: 'bg-gradient-to-b from-purple-900 to-pink-900', borderClass: 'border-pink-500 border-2 shadow-[0_0_10px_#ec4899]', textClass: 'text-cyan-300 font-bold' },
+  { id: 'card-vapor-wave', name: 'Vaporwave', category: 'Retro', bgClass: 'bg-gradient-to-r from-fuchsia-900 to-blue-900', borderClass: 'border-fuchsia-400 border-2', textClass: 'text-pink-200 font-bold italic' },
+  { id: 'card-dial-up', name: 'Dial-Up Era', category: 'Retro', bgClass: 'bg-[#008080]', borderClass: 'border-gray-400 border-4 shadow-[inset_2px_2px_0_#fff,inset_-2px_-2px_0_#555]', textClass: 'text-white font-bold' },
+  { id: 'card-floppy', name: 'Floppy Disk', category: 'Retro', bgClass: 'bg-gray-900', borderClass: 'border-gray-600 border-2', textClass: 'text-green-400 font-mono text-xs' },
+  { id: 'card-bbs', name: 'BBS Terminal', category: 'Retro', bgClass: 'bg-black', borderClass: 'border-yellow-500 border-2', textClass: 'text-yellow-400 font-mono' },
+  { id: 'card-windows-95', name: 'Windows 95', category: 'Retro', bgClass: 'bg-[#c0c0c0]', borderClass: 'border-4 border-r-[#555] border-b-[#555] border-l-white border-t-white', textClass: 'text-black font-bold text-xs' },
+
+  // Textured / Material
+  { id: 'card-carbon-fiber', name: 'Carbon Fiber', category: 'Material', bgClass: 'bg-zinc-900', borderClass: 'border-zinc-700 border-2', textClass: 'text-zinc-300 font-bold tracking-widest' },
+  { id: 'card-brushed-metal', name: 'Brushed Metal', category: 'Material', bgClass: 'bg-gradient-to-r from-slate-500 via-slate-300 to-slate-500', borderClass: 'border-slate-600 border-2', textClass: 'text-slate-900 font-black' },
+  { id: 'card-marble', name: 'Marble', category: 'Material', bgClass: 'bg-gradient-to-br from-gray-100 via-white to-gray-200', borderClass: 'border-gray-300 border-2', textClass: 'text-gray-800 font-serif italic' },
+  { id: 'card-wood-grain', name: 'Wood Grain', category: 'Material', bgClass: 'bg-amber-950', borderClass: 'border-amber-800 border-4', textClass: 'text-amber-200 font-bold' },
+  { id: 'card-leather', name: 'Leather Bound', category: 'Material', bgClass: 'bg-stone-800', borderClass: 'border-stone-600 border-4', textClass: 'text-stone-200 font-bold italic' },
+  { id: 'card-concrete', name: 'Raw Concrete', category: 'Material', bgClass: 'bg-stone-600', borderClass: 'border-stone-500 border-2', textClass: 'text-stone-100 font-bold' },
+  { id: 'card-velvet', name: 'Deep Velvet', category: 'Material', bgClass: 'bg-purple-950', borderClass: 'border-purple-800 border-2', textClass: 'text-purple-200 font-bold' },
+  { id: 'card-denim', name: 'Denim', category: 'Material', bgClass: 'bg-blue-800', borderClass: 'border-blue-600 border-4', textClass: 'text-blue-100 font-bold' },
+  { id: 'card-circuit-board', name: 'Circuit Board', category: 'Material', bgClass: 'bg-green-950', borderClass: 'border-green-600 border-2', textClass: 'text-green-400 font-mono text-xs' },
+
+  // Nature-Inspired
+  { id: 'card-lava', name: 'Lava Flow', category: 'Nature', bgClass: 'bg-gradient-to-t from-orange-900 to-red-800', borderClass: 'border-orange-500 border-2 shadow-[0_0_15px_rgba(249,115,22,0.5)]', textClass: 'text-orange-200 font-bold' },
+  { id: 'card-deep-ocean', name: 'Deep Ocean', category: 'Nature', bgClass: 'bg-gradient-to-b from-blue-900 to-blue-950', borderClass: 'border-blue-600 border-2', textClass: 'text-blue-200 font-bold' },
+  { id: 'card-jungle', name: 'Jungle Dense', category: 'Nature', bgClass: 'bg-green-950', borderClass: 'border-green-600 border-2', textClass: 'text-lime-300 font-bold' },
+  { id: 'card-ice-cave', name: 'Ice Cave', category: 'Nature', bgClass: 'bg-gradient-to-br from-cyan-900 to-blue-900', borderClass: 'border-cyan-500 border-2', textClass: 'text-cyan-200 font-bold' },
+  { id: 'card-volcanic-ash', name: 'Volcanic Ash', category: 'Nature', bgClass: 'bg-stone-900', borderClass: 'border-stone-600 border-2', textClass: 'text-orange-400 font-bold' },
+  { id: 'card-cherry-blossom', name: 'Cherry Blossom', category: 'Nature', bgClass: 'bg-pink-50', borderClass: 'border-pink-300 border-2', textClass: 'text-pink-700 font-bold' },
+
+  // RPG / Fantasy
+  { id: 'card-legendary', name: 'Legendary', category: 'RPG', bgClass: 'bg-gradient-to-br from-orange-900 to-amber-800', borderClass: 'border-orange-400 border-4 shadow-[0_0_20px_rgba(251,146,60,0.6)]', textClass: 'text-orange-200 font-black uppercase' },
+  { id: 'card-epic', name: 'Epic', category: 'RPG', bgClass: 'bg-gradient-to-br from-purple-900 to-violet-800', borderClass: 'border-purple-400 border-4 shadow-[0_0_20px_rgba(192,132,252,0.6)]', textClass: 'text-purple-200 font-black uppercase' },
+  { id: 'card-rare', name: 'Rare', category: 'RPG', bgClass: 'bg-gradient-to-br from-blue-900 to-indigo-800', borderClass: 'border-blue-400 border-3', textClass: 'text-blue-200 font-bold' },
+  { id: 'card-uncommon', name: 'Uncommon', category: 'RPG', bgClass: 'bg-gradient-to-br from-green-900 to-emerald-800', borderClass: 'border-green-400 border-2', textClass: 'text-green-200 font-bold' },
+  { id: 'card-mythic', name: 'Mythic', category: 'RPG', bgClass: 'bg-gradient-to-br from-red-900 to-rose-800', borderClass: 'border-red-400 border-4 shadow-[0_0_25px_rgba(248,113,113,0.7)] animate-pulse', textClass: 'text-red-200 font-black uppercase tracking-widest' },
+  { id: 'card-divine', name: 'Divine', category: 'RPG', bgClass: 'bg-gradient-to-br from-yellow-600 to-amber-500', borderClass: 'border-white border-4 shadow-[0_0_30px_rgba(255,255,255,0.8)]', textClass: 'text-white font-black uppercase tracking-widest' },
+  { id: 'card-corrupted', name: 'Corrupted', category: 'RPG', bgClass: 'bg-gradient-to-br from-purple-950 to-black', borderClass: 'border-purple-700 border-2 shadow-[0_0_15px_rgba(126,34,206,0.5)] skew-x-1', textClass: 'text-purple-400 font-mono' },
+  { id: 'card-cursed', name: 'Cursed', category: 'RPG', bgClass: 'bg-gradient-to-br from-green-950 to-black', borderClass: 'border-green-600 border-2 shadow-[0_0_15px_rgba(34,197,94,0.3)]', textClass: 'text-green-400 font-mono' },
+
+  // Social / Vibe Cards
+  { id: 'card-soft-life', name: 'Soft Life', category: 'Vibe', bgClass: 'bg-rose-50', borderClass: 'border-rose-200 border-2', textClass: 'text-rose-500 font-medium' },
+  { id: 'card-that-girl', name: 'That Girl', category: 'Vibe', bgClass: 'bg-stone-50', borderClass: 'border-stone-200 border-2', textClass: 'text-stone-600 font-medium tracking-wide' },
+  { id: 'card-dark-feminine', name: 'Dark Feminine', category: 'Vibe', bgClass: 'bg-rose-950', borderClass: 'border-rose-800 border-2', textClass: 'text-rose-300 font-bold italic' },
+  { id: 'card-mob-wife', name: 'Mob Wife', category: 'Vibe', bgClass: 'bg-gradient-to-br from-stone-900 to-amber-950', borderClass: 'border-amber-600 border-2', textClass: 'text-amber-300 font-black italic' },
+  { id: 'card-clean-girl', name: 'Clean Girl', category: 'Vibe', bgClass: 'bg-stone-100', borderClass: 'border-stone-300 border', textClass: 'text-stone-700 font-medium' },
+  { id: 'card-tomato-girl', name: 'Tomato Girl', category: 'Vibe', bgClass: 'bg-orange-50', borderClass: 'border-orange-300 border-2', textClass: 'text-red-700 font-bold' },
+  { id: 'card-coquette', name: 'Coquette', category: 'Vibe', bgClass: 'bg-pink-50', borderClass: 'border-pink-200 border-2', textClass: 'text-pink-500 font-medium italic' },
+  { id: 'card-regencycore', name: 'Regencycore', category: 'Vibe', bgClass: 'bg-amber-50', borderClass: 'border-amber-200 border-2', textClass: 'text-amber-900 font-serif italic' },
+
+  // Minimalist
+  { id: 'card-mono-white', name: 'Mono White', category: 'Minimal', bgClass: 'bg-white', borderClass: 'border-gray-100 border', textClass: 'text-gray-900 font-medium' },
+  { id: 'card-mono-black', name: 'Mono Black', category: 'Minimal', bgClass: 'bg-black', borderClass: 'border-gray-900 border', textClass: 'text-white font-medium' },
+  { id: 'card-paper', name: 'Paper', category: 'Minimal', bgClass: 'bg-stone-50', borderClass: 'border-stone-200 border', textClass: 'text-stone-800 font-medium' },
+  { id: 'card-ink', name: 'Ink', category: 'Minimal', bgClass: 'bg-stone-900', borderClass: 'border-stone-700 border', textClass: 'text-stone-100 font-medium' },
+  { id: 'card-wireframe', name: 'Wireframe', category: 'Minimal', bgClass: 'bg-transparent', borderClass: 'border-gray-400 border-dashed border-2', textClass: 'text-gray-400 font-mono' },
+  { id: 'card-ghost-white', name: 'Ghost White', category: 'Minimal', bgClass: 'bg-white/5', borderClass: 'border-white/20 border', textClass: 'text-white/60 font-light' },
+  { id: 'card-blueprint', name: 'Blueprint', category: 'Minimal', bgClass: 'bg-blue-900', borderClass: 'border-blue-400 border border-dashed', textClass: 'text-blue-100 font-mono text-xs' },
+
+  // Glam / Luxury
+  { id: 'card-champagne', name: 'Champagne', category: 'Luxury', bgClass: 'bg-gradient-to-br from-amber-100 to-yellow-200', borderClass: 'border-amber-300 border-2', textClass: 'text-amber-900 font-bold' },
+  { id: 'card-rose-gold', name: 'Rose Gold', category: 'Luxury', bgClass: 'bg-gradient-to-br from-rose-200 to-pink-300', borderClass: 'border-rose-400 border-2', textClass: 'text-rose-900 font-black' },
+  { id: 'card-black-pearl', name: 'Black Pearl', category: 'Luxury', bgClass: 'bg-gradient-to-br from-gray-900 to-black', borderClass: 'border-gray-600 border-2 shadow-[0_0_20px_rgba(255,255,255,0.1)]', textClass: 'text-gray-300 font-light tracking-widest' },
+  { id: 'card-mink', name: 'Mink', category: 'Luxury', bgClass: 'bg-stone-700', borderClass: 'border-stone-500 border-2', textClass: 'text-stone-200 font-medium tracking-wide' },
+  { id: 'card-obsidian', name: 'Obsidian', category: 'Luxury', bgClass: 'bg-gradient-to-br from-zinc-900 to-black', borderClass: 'border-zinc-700 border-2 shadow-[0_0_10px_rgba(0,0,0,0.8)]', textClass: 'text-zinc-300 font-light tracking-widest uppercase' },
+
+  // Kawaii / Cute
+  { id: 'card-pastel-pink', name: 'Pastel Pink', category: 'Kawaii', bgClass: 'bg-pink-200', borderClass: 'border-pink-300 border-4 rounded-3xl', textClass: 'text-pink-700 font-bold' },
+  { id: 'card-pastel-blue', name: 'Pastel Blue', category: 'Kawaii', bgClass: 'bg-sky-200', borderClass: 'border-sky-300 border-4 rounded-3xl', textClass: 'text-sky-700 font-bold' },
+  { id: 'card-pastel-purple', name: 'Pastel Purple', category: 'Kawaii', bgClass: 'bg-violet-200', borderClass: 'border-violet-300 border-4 rounded-3xl', textClass: 'text-violet-700 font-bold' },
+  { id: 'card-pastel-mint', name: 'Pastel Mint', category: 'Kawaii', bgClass: 'bg-teal-100', borderClass: 'border-teal-300 border-4 rounded-3xl', textClass: 'text-teal-700 font-bold' },
+  { id: 'card-pastel-yellow', name: 'Pastel Yellow', category: 'Kawaii', bgClass: 'bg-yellow-100', borderClass: 'border-yellow-300 border-4 rounded-3xl', textClass: 'text-yellow-700 font-bold' },
+  { id: 'card-sanrio', name: 'Sanrio Core', category: 'Kawaii', bgClass: 'bg-pink-100', borderClass: 'border-pink-400 border-2 rounded-3xl', textClass: 'text-pink-600 font-bold' },
+  { id: 'card-sticker-bomb', name: 'Sticker Bomb', category: 'Kawaii', bgClass: 'bg-white', borderClass: 'border-black border-4 rounded-2xl shadow-[3px_3px_0_0_rgba(0,0,0,1)]', textClass: 'text-black font-black' },
+  { id: 'card-plushie', name: 'Plushie', category: 'Kawaii', bgClass: 'bg-rose-200', borderClass: 'border-rose-300 border-4 rounded-full', textClass: 'text-rose-700 font-bold' },
+
+  // Gritty / Grunge
+  { id: 'card-torn-poster', name: 'Torn Poster', category: 'Grunge', bgClass: 'bg-stone-800', borderClass: 'border-stone-600 border-4 -rotate-1', textClass: 'text-stone-200 font-black italic uppercase' },
+  { id: 'card-spray-paint', name: 'Spray Paint', category: 'Grunge', bgClass: 'bg-black', borderClass: 'border-yellow-500 border-2 skew-x-2', textClass: 'text-yellow-500 font-black uppercase' },
+  { id: 'card-graffiti', name: 'Graffiti Tag', category: 'Grunge', bgClass: 'bg-zinc-800', borderClass: 'border-zinc-600 border-2 -rotate-2', textClass: 'text-orange-400 font-black italic' },
+  { id: 'card-duct-tape', name: 'Duct Tape', category: 'Grunge', bgClass: 'bg-zinc-500', borderClass: 'border-zinc-400 border-8', textClass: 'text-zinc-900 font-black uppercase' },
+  { id: 'card-industrial', name: 'Industrial', category: 'Grunge', bgClass: 'bg-zinc-900', borderClass: 'border-zinc-500 border-4', textClass: 'text-zinc-300 font-black uppercase tracking-widest' },
+  { id: 'card-rust', name: 'Rust Belt', category: 'Grunge', bgClass: 'bg-orange-950', borderClass: 'border-orange-800 border-4', textClass: 'text-orange-400 font-black' },
+
+  // Stadium / Sports
+  { id: 'card-football', name: 'Football', category: 'Sports', bgClass: 'bg-green-800', borderClass: 'border-white border-4', textClass: 'text-white font-black uppercase' },
+  { id: 'card-basketball', name: 'Basketball', category: 'Sports', bgClass: 'bg-orange-700', borderClass: 'border-black border-4', textClass: 'text-black font-black uppercase' },
+  { id: 'card-hockey', name: 'Hockey', category: 'Sports', bgClass: 'bg-blue-800', borderClass: 'border-white border-4', textClass: 'text-white font-black uppercase' },
+  { id: 'card-racing', name: 'Racing Stripes', category: 'Sports', bgClass: 'bg-red-600', borderClass: 'border-white border-4 border-l-8', textClass: 'text-white font-black italic uppercase' },
+  { id: 'card-boxing', name: 'Boxing Ring', category: 'Sports', bgClass: 'bg-red-700', borderClass: 'border-white border-8', textClass: 'text-white font-black uppercase' },
+
+  // Extra Extreme
+  { id: 'card-screaming', name: 'SCREAMING', category: 'Extreme', bgClass: 'bg-red-600', borderClass: 'border-yellow-400 border-8 animate-bounce', textClass: 'text-yellow-400 font-black uppercase text-xl' },
+  { id: 'card-upside-down', name: 'Upside Down', category: 'Extreme', bgClass: 'bg-zinc-800 rotate-180', borderClass: 'border-cyan-400 border-2', textClass: 'text-cyan-400 font-bold' },
+  { id: 'card-melting', name: 'Melting', category: 'Extreme', bgClass: 'bg-orange-600 skew-y-3', borderClass: 'border-orange-400 border-2', textClass: 'text-white font-black' },
+  { id: 'card-imploding', name: 'Imploding', category: 'Extreme', bgClass: 'bg-black scale-95', borderClass: 'border-white/10 border shadow-[0_0_40px_rgba(0,0,0,1)_inset]', textClass: 'text-white/30 font-thin tracking-[2em]' },
+  { id: 'card-404', name: '404 Not Found', category: 'Extreme', bgClass: 'bg-white', borderClass: 'border-red-500 border-2 border-dashed', textClass: 'text-red-500 font-mono text-xs' },
+  { id: 'card-error-screen', name: 'Error Screen', category: 'Extreme', bgClass: 'bg-blue-600', borderClass: 'border-white border-4', textClass: 'text-white font-mono text-xs uppercase' },
+  { id: 'card-buffering', name: 'Buffering...', category: 'Extreme', bgClass: 'bg-black', borderClass: 'border-gray-500 border-2 animate-pulse', textClass: 'text-gray-400 font-mono' },
 ];
 
 export const PROFILE_EFFECTS: ProfileEffect[] = [
   { id: 'effect-none', name: 'None', category: 'Basic', className: '' },
-  
-  // Weather
   { id: 'effect-snow', name: 'Snowfall', category: 'Weather', className: 'effect-snow' },
   { id: 'effect-rain', name: 'Rainstorm', category: 'Weather', className: 'effect-rain' },
   { id: 'effect-lightning', name: 'Lightning', category: 'Weather', className: 'effect-lightning' },
-  
-  // Cyber
   { id: 'effect-matrix', name: 'Matrix Rain', category: 'Cyber', className: 'effect-matrix' },
   { id: 'effect-glitch', name: 'Cyber Glitch', category: 'Cyber', className: 'effect-glitch' },
   { id: 'effect-scanline', name: 'Scanlines', category: 'Cyber', className: 'effect-scanline' },
-  
-  // Elements
   { id: 'effect-fireflies', name: 'Fireflies', category: 'Elements', className: 'effect-fireflies' },
   { id: 'effect-bubbles', name: 'Bubbles', category: 'Elements', className: 'effect-bubbles' },
   { id: 'effect-fire', name: 'Fire', category: 'Elements', className: 'effect-fire' },
   { id: 'effect-plasma', name: 'Plasma', category: 'Elements', className: 'effect-plasma' },
-  
-  // Space
   { id: 'effect-stars', name: 'Starfield', category: 'Space', className: 'effect-stars' },
   { id: 'effect-aurora', name: 'Aurora Borealis', category: 'Space', className: 'effect-aurora' },
   { id: 'effect-nebula', name: 'Nebula', category: 'Space', className: 'effect-nebula' },
-  
-  // Party
   { id: 'effect-confetti', name: 'Confetti', category: 'Party', className: 'effect-confetti' },
   { id: 'effect-disco', name: 'Disco', category: 'Party', className: 'effect-disco' },
   { id: 'effect-laser', name: 'Laser', category: 'Party', className: 'effect-laser' },
-  
-  // Funny & Fun
   { id: 'effect-triggered', name: 'Triggered', category: 'Funny', className: 'effect-triggered' },
   { id: 'effect-hypnotoad', name: 'Hypno', category: 'Funny', className: 'effect-hypnotoad' },
   { id: 'effect-stonks', name: 'Stonks', category: 'Funny', className: 'effect-stonks' },
@@ -309,7 +630,107 @@ export const PROFILE_EFFECTS: ProfileEffect[] = [
   { id: 'effect-sus', name: 'Sus Flash', category: 'Funny', className: 'effect-sus' },
   { id: 'effect-clown', name: 'Clown Mode', category: 'Funny', className: 'effect-clown' },
   { id: 'effect-wasted', name: 'Wasted', category: 'Funny', className: 'effect-wasted' },
-  { id: 'effect-nyan', name: 'Nyan Trail', category: 'Funny', className: 'effect-nyan' }
+  { id: 'effect-nyan', name: 'Nyan Trail', category: 'Funny', className: 'effect-nyan' },
+  // ====== 100+ NEW PROFILE EFFECTS ======
+  // Weather
+  { id: 'effect-hail', name: 'Hailstorm', category: 'Weather', className: 'effect-hail' },
+  { id: 'effect-tornado', name: 'Tornado', category: 'Weather', className: 'effect-tornado' },
+  { id: 'effect-fog', name: 'Dense Fog', category: 'Weather', className: 'effect-fog' },
+  { id: 'effect-hurricane', name: 'Hurricane', category: 'Weather', className: 'effect-hurricane' },
+  { id: 'effect-drizzle', name: 'Soft Drizzle', category: 'Weather', className: 'effect-drizzle' },
+  { id: 'effect-sandstorm', name: 'Sandstorm', category: 'Weather', className: 'effect-sandstorm' },
+  { id: 'effect-blizzard', name: 'Blizzard', category: 'Weather', className: 'effect-blizzard' },
+  // Cyber
+  { id: 'effect-pixel-rain', name: 'Pixel Rain', category: 'Cyber', className: 'effect-pixel-rain' },
+  { id: 'effect-binary', name: 'Binary Stream', category: 'Cyber', className: 'effect-binary' },
+  { id: 'effect-hologram', name: 'Hologram', category: 'Cyber', className: 'effect-hologram' },
+  { id: 'effect-static', name: 'TV Static', category: 'Cyber', className: 'effect-static' },
+  { id: 'effect-datamosh', name: 'Datamosh', category: 'Cyber', className: 'effect-datamosh' },
+  { id: 'effect-loading-bar', name: 'Loading Bar', category: 'Cyber', className: 'effect-loading-bar' },
+  { id: 'effect-shutdown', name: 'System Shutdown', category: 'Cyber', className: 'effect-shutdown' },
+  { id: 'effect-boot-up', name: 'Boot Up', category: 'Cyber', className: 'effect-boot-up' },
+  { id: 'effect-cursor-blink', name: 'Cursor Blink', category: 'Cyber', className: 'effect-cursor-blink' },
+  // Elements
+  { id: 'effect-lava', name: 'Lava Drip', category: 'Elements', className: 'effect-lava' },
+  { id: 'effect-ice', name: 'Ice Crystals', category: 'Elements', className: 'effect-ice' },
+  { id: 'effect-water-ripple', name: 'Water Ripple', category: 'Elements', className: 'effect-water-ripple' },
+  { id: 'effect-wind', name: 'Wind Gust', category: 'Elements', className: 'effect-wind' },
+  { id: 'effect-leaves', name: 'Falling Leaves', category: 'Elements', className: 'effect-leaves' },
+  { id: 'effect-petals', name: 'Cherry Petals', category: 'Elements', className: 'effect-petals' },
+  { id: 'effect-toxic-drip', name: 'Toxic Drip', category: 'Elements', className: 'effect-toxic-drip' },
+  { id: 'effect-oil-spill', name: 'Oil Slick', category: 'Elements', className: 'effect-oil-spill' },
+  { id: 'effect-acid-rain', name: 'Acid Rain', category: 'Elements', className: 'effect-acid-rain' },
+  { id: 'effect-electricity', name: 'Electric Sparks', category: 'Elements', className: 'effect-electricity' },
+  { id: 'effect-smoke', name: 'Smoke Trail', category: 'Elements', className: 'effect-smoke' },
+  { id: 'effect-ash', name: 'Falling Ash', category: 'Elements', className: 'effect-ash' },
+  { id: 'effect-pollen', name: 'Pollen Cloud', category: 'Elements', className: 'effect-pollen' },
+  { id: 'effect-sand', name: 'Sand Particles', category: 'Elements', className: 'effect-sand' },
+  { id: 'effect-sparkle', name: 'Sparkle Burst', category: 'Elements', className: 'effect-sparkle' },
+  // Space
+  { id: 'effect-meteor-shower', name: 'Meteor Shower', category: 'Space', className: 'effect-meteor-shower' },
+  { id: 'effect-shooting-stars', name: 'Shooting Stars', category: 'Space', className: 'effect-shooting-stars' },
+  { id: 'effect-black-hole', name: 'Black Hole Pull', category: 'Space', className: 'effect-black-hole' },
+  { id: 'effect-solar-wind', name: 'Solar Wind', category: 'Space', className: 'effect-solar-wind' },
+  { id: 'effect-warp', name: 'Warp Drive', category: 'Space', className: 'effect-warp' },
+  { id: 'effect-comet', name: 'Comet Trail', category: 'Space', className: 'effect-comet' },
+  { id: 'effect-supernova', name: 'Supernova', category: 'Space', className: 'effect-supernova' },
+  { id: 'effect-galaxy-spin', name: 'Galaxy Spin', category: 'Space', className: 'effect-galaxy-spin' },
+  { id: 'effect-planet-orbit', name: 'Planet Orbit', category: 'Space', className: 'effect-planet-orbit' },
+  { id: 'effect-moon-glow', name: 'Moon Glow', category: 'Space', className: 'effect-moon-glow' },
+  // Party
+  { id: 'effect-fireworks', name: 'Fireworks', category: 'Party', className: 'effect-fireworks' },
+  { id: 'effect-streamers', name: 'Streamers', category: 'Party', className: 'effect-streamers' },
+  { id: 'effect-balloons', name: 'Balloons', category: 'Party', className: 'effect-balloons' },
+  { id: 'effect-spotlight', name: 'Spotlight', category: 'Party', className: 'effect-spotlight' },
+  { id: 'effect-strobe', name: 'Strobe Light', category: 'Party', className: 'effect-strobe' },
+  { id: 'effect-smoke-machine', name: 'Smoke Machine', category: 'Party', className: 'effect-smoke-machine' },
+  { id: 'effect-crowd', name: 'Crowd Wave', category: 'Party', className: 'effect-crowd' },
+  { id: 'effect-glow-sticks', name: 'Glow Sticks', category: 'Party', className: 'effect-glow-sticks' },
+  // Funny / Meme
+  { id: 'effect-trollface', name: 'Trollface', category: 'Funny', className: 'effect-trollface' },
+  { id: 'effect-skull', name: 'Dead Mode', category: 'Funny', className: 'effect-skull' },
+  { id: 'effect-money-rain', name: 'Money Rain', category: 'Funny', className: 'effect-money-rain' },
+  { id: 'effect-crying-laugh', name: 'Crying Laughing', category: 'Funny', className: 'effect-crying-laugh' },
+  { id: 'effect-down-bad', name: 'Down Bad', category: 'Funny', className: 'effect-down-bad' },
+  { id: 'effect-npc', name: 'NPC Mode', category: 'Funny', className: 'effect-npc' },
+  { id: 'effect-w-rizz', name: 'W Rizz', category: 'Funny', className: 'effect-w-rizz' },
+  { id: 'effect-l-rizz', name: 'L Rizz', category: 'Funny', className: 'effect-l-rizz' },
+  { id: 'effect-cope', name: 'Coping', category: 'Funny', className: 'effect-cope' },
+  { id: 'effect-ratio', name: 'Getting Ratio\'d', category: 'Funny', className: 'effect-ratio' },
+  { id: 'effect-no-bitches', name: 'No Bitches?', category: 'Funny', className: 'effect-no-bitches' },
+  { id: 'effect-sussy', name: 'Sus Vibes', category: 'Funny', className: 'effect-sussy' },
+  { id: 'effect-vibing', name: 'Vibing', category: 'Funny', className: 'effect-vibing' },
+  { id: 'effect-certified', name: 'Certified Hood Classic', category: 'Funny', className: 'effect-certified' },
+  { id: 'effect-type-beat', name: 'Type Beat', category: 'Funny', className: 'effect-type-beat' },
+  { id: 'effect-lowkey', name: 'Lowkey', category: 'Funny', className: 'effect-lowkey' },
+  { id: 'effect-highkey', name: 'Highkey', category: 'Funny', className: 'effect-highkey' },
+  { id: 'effect-bussin', name: 'Bussin fr', category: 'Funny', className: 'effect-bussin' },
+  { id: 'effect-mid', name: 'Mid', category: 'Funny', className: 'effect-mid' },
+  { id: 'effect-goated', name: 'Goated', category: 'Funny', className: 'effect-goated' },
+  // Aesthetic
+  { id: 'effect-vhs', name: 'VHS Glitch', category: 'Aesthetic', className: 'effect-vhs' },
+  { id: 'effect-film-grain', name: 'Film Grain', category: 'Aesthetic', className: 'effect-film-grain' },
+  { id: 'effect-color-bleed', name: 'Color Bleed', category: 'Aesthetic', className: 'effect-color-bleed' },
+  { id: 'effect-chromatic', name: 'Chromatic Aberration', category: 'Aesthetic', className: 'effect-chromatic' },
+  { id: 'effect-vignette', name: 'Vignette', category: 'Aesthetic', className: 'effect-vignette' },
+  { id: 'effect-double-exposure', name: 'Double Exposure', category: 'Aesthetic', className: 'effect-double-exposure' },
+  { id: 'effect-lo-fi', name: 'Lo-Fi Grit', category: 'Aesthetic', className: 'effect-lo-fi' },
+  { id: 'effect-bloom', name: 'Bloom Glow', category: 'Aesthetic', className: 'effect-bloom' },
+  { id: 'effect-bokeh', name: 'Bokeh Lights', category: 'Aesthetic', className: 'effect-bokeh' },
+  { id: 'effect-lens-flare', name: 'Lens Flare', category: 'Aesthetic', className: 'effect-lens-flare' },
+  // RPG / Fantasy
+  { id: 'effect-magic-circle', name: 'Magic Circle', category: 'Fantasy', className: 'effect-magic-circle' },
+  { id: 'effect-runes', name: 'Rune Glow', category: 'Fantasy', className: 'effect-runes' },
+  { id: 'effect-dragon-breath', name: 'Dragon Breath', category: 'Fantasy', className: 'effect-dragon-breath' },
+  { id: 'effect-fairy-dust', name: 'Fairy Dust', category: 'Fantasy', className: 'effect-fairy-dust' },
+  { id: 'effect-cursed-aura', name: 'Cursed Aura', category: 'Fantasy', className: 'effect-cursed-aura' },
+  { id: 'effect-divine-light', name: 'Divine Light', category: 'Fantasy', className: 'effect-divine-light' },
+  { id: 'effect-shadow-tendrils', name: 'Shadow Tendrils', category: 'Fantasy', className: 'effect-shadow-tendrils' },
+  { id: 'effect-potion-bubbles', name: 'Potion Bubbles', category: 'Fantasy', className: 'effect-potion-bubbles' },
+  { id: 'effect-lightning-storm', name: 'Lightning Storm', category: 'Fantasy', className: 'effect-lightning-storm' },
+  { id: 'effect-angelic', name: 'Angelic Halo', category: 'Fantasy', className: 'effect-angelic' },
+  { id: 'effect-demonic', name: 'Demonic Horns', category: 'Fantasy', className: 'effect-demonic' },
+  { id: 'effect-void-rift', name: 'Void Rift', category: 'Fantasy', className: 'effect-void-rift' },
 ];
 
 export const BORDERS: Border[] = (() => {
@@ -332,6 +753,7 @@ export const BORDERS: Border[] = (() => {
       }
     }
   }
+  // original specials
   borders.push(
     { id: 'border-gold-glow', name: 'Gold Glow', category: 'Special', className: 'border-amber-400 border-4 shadow-[0_0_15px_rgba(251,191,36,0.8)]' },
     { id: 'border-neon-pink', name: 'Neon Pink', category: 'Special', className: 'border-pink-500 border-4 shadow-[0_0_20px_rgba(236,72,153,0.8)]' },
@@ -341,7 +763,6 @@ export const BORDERS: Border[] = (() => {
     { id: 'border-rainbow', name: 'Rainbow Flow', category: 'Special', className: 'border-transparent border-4 bg-clip-border bg-gradient-to-r from-red-500 via-yellow-500 via-green-500 via-blue-500 to-purple-500 animate-[gradient_3s_linear_infinite] bg-[length:200%_auto]' },
     { id: 'border-glitch', name: 'Glitch', category: 'Special', className: 'border-white border-4 skew-x-2 -rotate-1 shadow-[2px_2px_0_rgba(255,0,0,0.5),-2px_-2px_0_rgba(0,255,255,0.5)]' },
     { id: 'border-void', name: 'The Void', category: 'Special', className: 'border-black border-8 shadow-[0_0_50px_rgba(0,0,0,1)]' },
-    // More Special and Effect Borders
     { id: 'border-fire-glow', name: 'Fire Glow', category: 'Special', className: 'border-orange-500 border-4 shadow-[0_0_20px_rgba(249,115,22,0.8),inset_0_0_10px_rgba(249,115,22,0.5)] animate-pulse' },
     { id: 'border-ice-shards', name: 'Ice Shards', category: 'Special', className: 'border-sky-300 border-[6px] border-double shadow-[0_0_15px_rgba(186,230,253,0.6)]' },
     { id: 'border-toxic-leak', name: 'Toxic Leak', category: 'Special', className: 'border-lime-400 border-4 border-dashed shadow-[0_0_25px_rgba(163,230,53,0.7)] animate-bounce' },
@@ -349,7 +770,68 @@ export const BORDERS: Border[] = (() => {
     { id: 'border-neon-pulse-red', name: 'Neon Pulse Red', category: 'Special', className: 'border-red-500 border-4 animate-pulse shadow-[0_0_20px_rgba(239,68,68,0.8)]' },
     { id: 'border-snake-border', name: 'Snake Border', category: 'Special', className: 'border-emerald-500 border-4 border-double animate-[spin_10s_linear_infinite]' },
     { id: 'border-glitch-border', name: 'Glitch Border', category: 'Special', className: 'border-white border-4 skew-x-1 -rotate-1 shadow-[2px_2px_0_#f0f,-2px_-2px_0_#0ff]' },
-    { id: 'border-gold-leaf', name: 'Gold Leaf', category: 'Special', className: 'border-amber-400 border-[3px] shadow-[0_0_15px_rgba(251,191,36,0.5)] bg-gradient-to-br from-amber-200 via-amber-400 to-amber-600' }
+    { id: 'border-gold-leaf', name: 'Gold Leaf', category: 'Special', className: 'border-amber-400 border-[3px] shadow-[0_0_15px_rgba(251,191,36,0.5)] bg-gradient-to-br from-amber-200 via-amber-400 to-amber-600' },
+    // ====== 80+ NEW BORDER STYLES ======
+    // Animated Pulses
+    { id: 'border-pulse-green', name: 'Pulse Green', category: 'Animated', className: 'border-green-500 border-4 animate-pulse shadow-[0_0_20px_rgba(34,197,94,0.8)]' },
+    { id: 'border-pulse-purple', name: 'Pulse Purple', category: 'Animated', className: 'border-purple-500 border-4 animate-pulse shadow-[0_0_20px_rgba(168,85,247,0.8)]' },
+    { id: 'border-pulse-pink', name: 'Pulse Pink', category: 'Animated', className: 'border-pink-500 border-4 animate-pulse shadow-[0_0_20px_rgba(236,72,153,0.8)]' },
+    { id: 'border-pulse-cyan', name: 'Pulse Cyan', category: 'Animated', className: 'border-cyan-500 border-4 animate-pulse shadow-[0_0_20px_rgba(6,182,212,0.8)]' },
+    { id: 'border-pulse-amber', name: 'Pulse Amber', category: 'Animated', className: 'border-amber-500 border-4 animate-pulse shadow-[0_0_20px_rgba(245,158,11,0.8)]' },
+    { id: 'border-pulse-white', name: 'Pulse White', category: 'Animated', className: 'border-white border-4 animate-pulse shadow-[0_0_20px_rgba(255,255,255,0.8)]' },
+    { id: 'border-bounce-gold', name: 'Bouncing Gold', category: 'Animated', className: 'border-amber-400 border-4 animate-bounce shadow-[0_0_15px_rgba(251,191,36,0.6)]' },
+    { id: 'border-spin-rainbow', name: 'Spinning Rainbow', category: 'Animated', className: 'border-transparent border-4 animate-spin border-t-red-500 border-r-blue-500 border-b-green-500 border-l-yellow-500' },
+    { id: 'border-ping-blue', name: 'Ping Blue', category: 'Animated', className: 'border-blue-400 border-2 animate-ping' },
+    { id: 'border-ping-red', name: 'Ping Red', category: 'Animated', className: 'border-red-400 border-2 animate-ping' },
+    // Glow Effects
+    { id: 'border-glow-white', name: 'White Glow', category: 'Glow', className: 'border-white border-2 shadow-[0_0_20px_rgba(255,255,255,0.9),0_0_40px_rgba(255,255,255,0.4)]' },
+    { id: 'border-glow-red', name: 'Red Glow', category: 'Glow', className: 'border-red-500 border-2 shadow-[0_0_20px_rgba(239,68,68,0.9),0_0_40px_rgba(239,68,68,0.4)]' },
+    { id: 'border-glow-green', name: 'Green Glow', category: 'Glow', className: 'border-green-500 border-2 shadow-[0_0_20px_rgba(34,197,94,0.9),0_0_40px_rgba(34,197,94,0.4)]' },
+    { id: 'border-glow-blue', name: 'Blue Glow', category: 'Glow', className: 'border-blue-500 border-2 shadow-[0_0_20px_rgba(59,130,246,0.9),0_0_40px_rgba(59,130,246,0.4)]' },
+    { id: 'border-glow-purple', name: 'Purple Glow', category: 'Glow', className: 'border-purple-500 border-2 shadow-[0_0_20px_rgba(168,85,247,0.9),0_0_40px_rgba(168,85,247,0.4)]' },
+    { id: 'border-glow-orange', name: 'Orange Glow', category: 'Glow', className: 'border-orange-500 border-2 shadow-[0_0_20px_rgba(249,115,22,0.9),0_0_40px_rgba(249,115,22,0.4)]' },
+    { id: 'border-glow-cyan', name: 'Cyan Glow', category: 'Glow', className: 'border-cyan-400 border-2 shadow-[0_0_25px_rgba(34,211,238,0.9),0_0_50px_rgba(34,211,238,0.4)]' },
+    { id: 'border-glow-fuchsia', name: 'Fuchsia Glow', category: 'Glow', className: 'border-fuchsia-500 border-2 shadow-[0_0_20px_rgba(217,70,239,0.9),0_0_40px_rgba(217,70,239,0.4)]' },
+    { id: 'border-glow-teal', name: 'Teal Glow', category: 'Glow', className: 'border-teal-400 border-2 shadow-[0_0_20px_rgba(45,212,191,0.9)]' },
+    { id: 'border-glow-lime', name: 'Lime Glow', category: 'Glow', className: 'border-lime-400 border-2 shadow-[0_0_20px_rgba(163,230,53,0.9)]' },
+    // Double/Triple Colors
+    { id: 'border-duo-pink-blue', name: 'Pink & Blue', category: 'Duo', className: 'border-pink-500 border-4 shadow-[0_0_10px_#ec4899,0_0_20px_#3b82f6]' },
+    { id: 'border-duo-red-gold', name: 'Red & Gold', category: 'Duo', className: 'border-red-500 border-4 shadow-[0_0_10px_#ef4444,0_0_20px_#f59e0b]' },
+    { id: 'border-duo-green-purple', name: 'Green & Purple', category: 'Duo', className: 'border-green-500 border-4 shadow-[0_0_10px_#22c55e,0_0_20px_#a855f7]' },
+    { id: 'border-duo-cyan-magenta', name: 'Cyan & Magenta', category: 'Duo', className: 'border-cyan-500 border-4 shadow-[0_0_15px_#06b6d4,0_0_25px_#d946ef]' },
+    { id: 'border-duo-orange-teal', name: 'Orange & Teal', category: 'Duo', className: 'border-orange-500 border-4 shadow-[0_0_10px_#f97316,0_0_20px_#14b8a6]' },
+    // Thick decorative
+    { id: 'border-thick-amber', name: 'Thick Amber', category: 'Thick', className: 'border-amber-500 border-[12px]' },
+    { id: 'border-thick-red', name: 'Thick Red', category: 'Thick', className: 'border-red-500 border-[12px]' },
+    { id: 'border-thick-blue', name: 'Thick Blue', category: 'Thick', className: 'border-blue-500 border-[12px]' },
+    { id: 'border-thick-green', name: 'Thick Green', category: 'Thick', className: 'border-green-500 border-[12px]' },
+    { id: 'border-thick-purple', name: 'Thick Purple', category: 'Thick', className: 'border-purple-500 border-[12px]' },
+    { id: 'border-thick-pink', name: 'Thick Pink', category: 'Thick', className: 'border-pink-500 border-[12px]' },
+    { id: 'border-thick-white', name: 'Thick White', category: 'Thick', className: 'border-white border-[12px]' },
+    { id: 'border-thick-black', name: 'Thick Black', category: 'Thick', className: 'border-black border-[12px]' },
+    // Inset Shadows (no outer glow, glow goes inward)
+    { id: 'border-inset-gold', name: 'Inset Gold', category: 'Inset', className: 'border-amber-400 border-2 shadow-[inset_0_0_20px_rgba(251,191,36,0.5)]' },
+    { id: 'border-inset-red', name: 'Inset Red', category: 'Inset', className: 'border-red-500 border-2 shadow-[inset_0_0_20px_rgba(239,68,68,0.5)]' },
+    { id: 'border-inset-blue', name: 'Inset Blue', category: 'Inset', className: 'border-blue-500 border-2 shadow-[inset_0_0_20px_rgba(59,130,246,0.5)]' },
+    { id: 'border-inset-purple', name: 'Inset Purple', category: 'Inset', className: 'border-purple-500 border-2 shadow-[inset_0_0_20px_rgba(168,85,247,0.5)]' },
+    { id: 'border-inset-green', name: 'Inset Green', category: 'Inset', className: 'border-green-500 border-2 shadow-[inset_0_0_20px_rgba(34,197,94,0.5)]' },
+    { id: 'border-inset-cyan', name: 'Inset Cyan', category: 'Inset', className: 'border-cyan-400 border-2 shadow-[inset_0_0_20px_rgba(34,211,238,0.5)]' },
+    // Minimal / Clean
+    { id: 'border-hairline-white', name: 'Hairline White', category: 'Minimal', className: 'border-white/20 border' },
+    { id: 'border-hairline-black', name: 'Hairline Black', category: 'Minimal', className: 'border-black/20 border' },
+    { id: 'border-hairline-gold', name: 'Hairline Gold', category: 'Minimal', className: 'border-amber-400/40 border' },
+    { id: 'border-hairline-gray', name: 'Hairline Gray', category: 'Minimal', className: 'border-gray-500/30 border' },
+    // Specialty
+    { id: 'border-lightning', name: 'Lightning Strike', category: 'Special', className: 'border-yellow-400 border-4 border-double shadow-[0_0_10px_#facc15,0_0_30px_#facc15] -skew-x-3' },
+    { id: 'border-underwater', name: 'Underwater', category: 'Special', className: 'border-cyan-500 border-4 border-dotted shadow-[0_0_30px_rgba(6,182,212,0.6),inset_0_0_20px_rgba(6,182,212,0.2)]' },
+    { id: 'border-radioactive', name: 'Radioactive', category: 'Special', className: 'border-lime-500 border-4 shadow-[0_0_10px_#84cc16,0_0_30px_#84cc16,0_0_60px_#84cc16]' },
+    { id: 'border-neon-green-glow', name: 'Neon Green Glow', category: 'Special', className: 'border-green-400 border-2 shadow-[0_0_5px_#4ade80,0_0_15px_#4ade80,0_0_35px_#4ade80]' },
+    { id: 'border-lava-glow', name: 'Lava Glow', category: 'Special', className: 'border-orange-600 border-4 shadow-[0_0_10px_#ea580c,0_0_25px_#dc2626,inset_0_0_15px_rgba(234,88,12,0.3)]' },
+    { id: 'border-crystal', name: 'Crystal Clear', category: 'Special', className: 'border-white/60 border-2 shadow-[0_0_10px_rgba(255,255,255,0.3),inset_0_0_15px_rgba(255,255,255,0.1)]' },
+    { id: 'border-diamond-cut', name: 'Diamond Cut', category: 'Special', className: 'border-sky-300 border-4 border-double shadow-[0_0_20px_rgba(186,230,253,0.7)]' },
+    { id: 'border-holographic', name: 'Holographic', category: 'Special', className: 'border-4 border-transparent shadow-[0_0_15px_#f0f,0_0_15px_#0ff,0_0_15px_#ff0]' },
+    { id: 'border-galaxy-edge', name: 'Galaxy Edge', category: 'Special', className: 'border-purple-500 border-4 shadow-[0_0_20px_#8b5cf6,0_0_40px_#1e1b4b]' },
+    { id: 'border-cursed', name: 'Cursed', category: 'Special', className: 'border-purple-800 border-4 skew-x-2 -skew-y-1 shadow-[0_0_15px_rgba(88,28,135,0.8),inset_0_0_10px_rgba(88,28,135,0.5)]' }
   );
   return borders;
 })();
@@ -372,6 +854,52 @@ export const PETS = [
   { id: 'pet-snake', name: 'Snake', icon: '🐍' },
   { id: 'pet-spider', name: 'Spider', icon: '🕷️' },
   { id: 'pet-dinosaur', name: 'T-Rex', icon: '🦖' },
+  // NEW PETS
+  { id: 'pet-shark', name: 'Shark', icon: '🦈' },
+  { id: 'pet-wolf', name: 'Wolf', icon: '🐺' },
+  { id: 'pet-lion', name: 'Lion', icon: '🦁' },
+  { id: 'pet-tiger', name: 'Tiger', icon: '🐯' },
+  { id: 'pet-bear', name: 'Bear', icon: '🐻' },
+  { id: 'pet-panda', name: 'Panda', icon: '🐼' },
+  { id: 'pet-koala', name: 'Koala', icon: '🐨' },
+  { id: 'pet-elephant', name: 'Elephant', icon: '🐘' },
+  { id: 'pet-gorilla', name: 'Gorilla', icon: '🦍' },
+  { id: 'pet-crocodile', name: 'Crocodile', icon: '🐊' },
+  { id: 'pet-octopus', name: 'Octopus', icon: '🐙' },
+  { id: 'pet-jellyfish', name: 'Jellyfish', icon: '🪼' },
+  { id: 'pet-lobster', name: 'Lobster', icon: '🦞' },
+  { id: 'pet-scorpion', name: 'Scorpion', icon: '🦂' },
+  { id: 'pet-mosquito', name: 'Mosquito', icon: '🦟' },
+  { id: 'pet-bee', name: 'Bee', icon: '🐝' },
+  { id: 'pet-butterfly', name: 'Butterfly', icon: '🦋' },
+  { id: 'pet-parrot', name: 'Parrot', icon: '🦜' },
+  { id: 'pet-flamingo', name: 'Flamingo', icon: '🦩' },
+  { id: 'pet-peacock', name: 'Peacock', icon: '🦚' },
+  { id: 'pet-eagle', name: 'Eagle', icon: '🦅' },
+  { id: 'pet-duck', name: 'Duck', icon: '🦆' },
+  { id: 'pet-frog', name: 'Frog', icon: '🐸' },
+  { id: 'pet-axolotl', name: 'Axolotl', icon: '🦎' },
+  { id: 'pet-chameleon', name: 'Chameleon', icon: '🦎' },
+  { id: 'pet-narwhal', name: 'Narwhal', icon: '🐬' },
+  { id: 'pet-whale', name: 'Whale', icon: '🐋' },
+  { id: 'pet-crab', name: 'Crab', icon: '🦀' },
+  { id: 'pet-snail', name: 'Snail', icon: '🐌' },
+  { id: 'pet-sloth', name: 'Sloth', icon: '🦥' },
+  { id: 'pet-hedgehog', name: 'Hedgehog', icon: '🦔' },
+  { id: 'pet-raccoon', name: 'Raccoon', icon: '🦝' },
+  { id: 'pet-deer', name: 'Deer', icon: '🦌' },
+  { id: 'pet-camel', name: 'Camel', icon: '🐪' },
+  { id: 'pet-mammoth', name: 'Mammoth', icon: '🦣' },
+  { id: 'pet-phoenix', name: 'Phoenix', icon: '🐦‍🔥' },
+  { id: 'pet-mushroom', name: 'Mushroom Buddy', icon: '🍄' },
+  { id: 'pet-cactus', name: 'Cactus', icon: '🌵' },
+  { id: 'pet-skull', name: 'Skull', icon: '💀' },
+  { id: 'pet-demon', name: 'Demon', icon: '😈' },
+  { id: 'pet-angel', name: 'Angel', icon: '😇' },
+  { id: 'pet-clown', name: 'Clown', icon: '🤡' },
+  { id: 'pet-space-invader', name: 'Space Invader', icon: '👾' },
+  { id: 'pet-imp', name: 'Imp', icon: '👺' },
+  { id: 'pet-tengu', name: 'Tengu', icon: '👹' },
 ];
 
 export const CURSORS = [
@@ -385,19 +913,157 @@ export const CURSORS = [
   { id: 'cursor-not-allowed', name: 'Not Allowed', css: 'not-allowed' },
   { id: 'cursor-zoom-in', name: 'Zoom In', css: 'zoom-in' },
   { id: 'cursor-grab', name: 'Grab', css: 'grab' },
-  { 
-    id: 'cursor-custom-sword', 
-    name: 'Sword (SVG)', 
-    css: 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'white\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'><path d=\'M14.5 17.5L3 6V3h3l11.5 11.5\'/><path d=\'M13 19l6-6\'/><path d=\'M16 16l4 4\'/><path d=\'M19 21l2-2\'/></svg>") 0 0, auto' 
+  { id: 'cursor-zoom-out', name: 'Zoom Out', css: 'zoom-out' },
+  { id: 'cursor-cell', name: 'Cell', css: 'cell' },
+  { id: 'cursor-copy', name: 'Copy', css: 'copy' },
+  { id: 'cursor-context-menu', name: 'Context Menu', css: 'context-menu' },
+  { id: 'cursor-progress', name: 'Progress', css: 'progress' },
+  { id: 'cursor-all-scroll', name: 'All Scroll', css: 'all-scroll' },
+  { id: 'cursor-col-resize', name: 'Col Resize', css: 'col-resize' },
+  { id: 'cursor-row-resize', name: 'Row Resize', css: 'row-resize' },
+  { id: 'cursor-n-resize', name: 'N Resize', css: 'n-resize' },
+  { id: 'cursor-ne-resize', name: 'NE Resize', css: 'ne-resize' },
+  { id: 'cursor-vertical-text', name: 'Vertical Text', css: 'vertical-text' },
+  { id: 'cursor-alias', name: 'Alias', css: 'alias' },
+  { id: 'cursor-no-drop', name: 'No Drop', css: 'no-drop' },
+  {
+    id: 'cursor-custom-sword',
+    name: 'Sword (SVG)',
+    css: 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'white\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'><path d=\'M14.5 17.5L3 6V3h3l11.5 11.5\'/><path d=\'M13 19l6-6\'/><path d=\'M16 16l4 4\'/><path d=\'M19 21l2-2\'/></svg>") 0 0, auto'
   },
-  { 
-    id: 'cursor-custom-wand', 
-    name: 'Magic Wand', 
-    css: 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'gold\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'><path d=\'M15 4V2\'/><path d=\'M15 16v-2\'/><path d=\'M8 9h2\'/><path d=\'M20 9h2\'/><path d=\'M17.8 11.8L19 13\'/><path d=\'M15 9h0\'/><path d=\'M17.8 6.2L19 5\'/><path d=\'M3 21l9-9\'/><path d=\'M12.2 6.2L11 5\'/></svg>") 0 0, auto' 
+  {
+    id: 'cursor-custom-wand',
+    name: 'Magic Wand',
+    css: 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'gold\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'><path d=\'M15 4V2\'/><path d=\'M15 16v-2\'/><path d=\'M8 9h2\'/><path d=\'M20 9h2\'/><path d=\'M17.8 11.8L19 13\'/><path d=\'M15 9h0\'/><path d=\'M17.8 6.2L19 5\'/><path d=\'M3 21l9-9\'/><path d=\'M12.2 6.2L11 5\'/></svg>") 0 0, auto'
   },
-  { 
-    id: 'cursor-cartoon-sword', 
-    name: 'Cartoon Sword', 
-    css: 'url("https://www.pngmart.com/files/23/Cartoon-Sword-PNG-Isolated-Pic.png") 0 0, auto' 
+  {
+    id: 'cursor-star',
+    name: 'Star',
+    css: 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' fill=\'gold\' stroke=\'orange\' stroke-width=\'1\'><polygon points=\'12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26\'/></svg>") 12 12, auto'
   },
+  {
+    id: 'cursor-heart',
+    name: 'Heart',
+    css: 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' fill=\'hotpink\' stroke=\'deeppink\' stroke-width=\'1\'><path d=\'M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z\'/></svg>") 12 12, auto'
+  },
+  {
+    id: 'cursor-skull',
+    name: 'Skull',
+    css: 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' fill=\'white\' stroke=\'gray\' stroke-width=\'1\'><circle cx=\'12\' cy=\'10\' r=\'7\'/><path d=\'M9 17v2M15 17v2M9 13h.01M15 13h.01\'/></svg>") 12 12, auto'
+  },
+  {
+    id: 'cursor-fire',
+    name: 'Fire',
+    css: 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' fill=\'orangered\' stroke=\'orange\' stroke-width=\'1\'><path d=\'M12 2C8 7 6 10 6 14a6 6 0 0 0 12 0c0-4-2-7-6-12z\'/></svg>") 12 22, auto'
+  },
+  {
+    id: 'cursor-lightning',
+    name: 'Lightning',
+    css: 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' fill=\'yellow\' stroke=\'gold\' stroke-width=\'1\'><polygon points=\'13,2 4,13 11,13 11,22 20,11 13,11\'/></svg>") 12 12, auto'
+  },
+  {
+    id: 'cursor-crown',
+    name: 'Crown',
+    css: 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' fill=\'gold\' stroke=\'goldenrod\' stroke-width=\'1\'><path d=\'M2 19h20L20 9l-4 5-4-8-4 8-4-5z\'/><rect x=\'2\' y=\'19\' width=\'20\' height=\'2\'/></svg>") 12 0, auto'
+  },
+  {
+    id: 'cursor-crosshair-red',
+    name: 'Red Crosshair',
+    css: 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'32\' height=\'32\' viewBox=\'0 0 32 32\'><circle cx=\'16\' cy=\'16\' r=\'6\' fill=\'none\' stroke=\'red\' stroke-width=\'2\'/><line x1=\'16\' y1=\'2\' x2=\'16\' y2=\'10\' stroke=\'red\' stroke-width=\'2\'/><line x1=\'16\' y1=\'22\' x2=\'16\' y2=\'30\' stroke=\'red\' stroke-width=\'2\'/><line x1=\'2\' y1=\'16\' x2=\'10\' y2=\'16\' stroke=\'red\' stroke-width=\'2\'/><line x1=\'22\' y1=\'16\' x2=\'30\' y2=\'16\' stroke=\'red\' stroke-width=\'2\'/></svg>") 16 16, crosshair'
+  },
+  {
+    id: 'cursor-crosshair-green',
+    name: 'Green Crosshair',
+    css: 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'32\' height=\'32\' viewBox=\'0 0 32 32\'><circle cx=\'16\' cy=\'16\' r=\'6\' fill=\'none\' stroke=\'lime\' stroke-width=\'2\'/><line x1=\'16\' y1=\'2\' x2=\'16\' y2=\'10\' stroke=\'lime\' stroke-width=\'2\'/><line x1=\'16\' y1=\'22\' x2=\'16\' y2=\'30\' stroke=\'lime\' stroke-width=\'2\'/><line x1=\'2\' y1=\'16\' x2=\'10\' y2=\'16\' stroke=\'lime\' stroke-width=\'2\'/><line x1=\'22\' y1=\'16\' x2=\'30\' y2=\'16\' stroke=\'lime\' stroke-width=\'2\'/></svg>") 16 16, crosshair'
+  },
+  {
+    id: 'cursor-diamond',
+    name: 'Diamond',
+    css: 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' fill=\'cyan\' stroke=\'deepskyblue\' stroke-width=\'1\'><polygon points=\'12,2 22,12 12,22 2,12\'/></svg>") 12 12, auto'
+  },
+  { id: 'cursor-cartoon-sword', name: 'Cartoon Sword', css: 'url("https://www.pngmart.com/files/23/Cartoon-Sword-PNG-Isolated-Pic.png") 0 0, auto' },
+];
+
+// ====== NEW EXPORTS ======
+
+export const BADGES = [
+  { id: 'badge-none', name: 'None', icon: '' },
+  { id: 'badge-verified', name: 'Verified', icon: '✓', color: 'bg-blue-500' },
+  { id: 'badge-og', name: 'OG', icon: 'OG', color: 'bg-amber-600' },
+  { id: 'badge-goat', name: 'GOAT', icon: '🐐', color: 'bg-amber-500' },
+  { id: 'badge-toxic', name: 'Toxic', icon: '☠', color: 'bg-lime-600' },
+  { id: 'badge-sigma', name: 'Sigma', icon: 'Σ', color: 'bg-gray-800' },
+  { id: 'badge-king', name: 'King', icon: '♔', color: 'bg-amber-600' },
+  { id: 'badge-queen', name: 'Queen', icon: '♛', color: 'bg-pink-600' },
+  { id: 'badge-demon', name: 'Demon', icon: '👿', color: 'bg-red-700' },
+  { id: 'badge-angel', name: 'Angel', icon: '👼', color: 'bg-sky-400' },
+  { id: 'badge-noob', name: 'Noob', icon: 'N00B', color: 'bg-gray-500' },
+  { id: 'badge-pro', name: 'PRO', icon: 'PRO', color: 'bg-purple-600' },
+  { id: 'badge-legend', name: 'Legend', icon: '★', color: 'bg-gradient-to-r from-amber-500 to-orange-500' },
+  { id: 'badge-ghost', name: 'Ghost', icon: '👻', color: 'bg-slate-600' },
+  { id: 'badge-fire', name: 'On Fire', icon: '🔥', color: 'bg-orange-600' },
+  { id: 'badge-skull', name: 'Skull', icon: '💀', color: 'bg-gray-900' },
+  { id: 'badge-100', name: '100', icon: '💯', color: 'bg-red-600' },
+  { id: 'badge-clown', name: 'Clown', icon: '🤡', color: 'bg-yellow-500' },
+  { id: 'badge-alien', name: 'Alien', icon: '👽', color: 'bg-green-600' },
+  { id: 'badge-robot', name: 'Robot', icon: '🤖', color: 'bg-blue-600' },
+];
+
+export const STATUS_MESSAGES = [
+  { id: 'status-online', label: 'Online', indicator: 'bg-green-500' },
+  { id: 'status-away', label: 'Away', indicator: 'bg-yellow-500' },
+  { id: 'status-busy', label: 'Busy', indicator: 'bg-red-500' },
+  { id: 'status-invisible', label: 'Invisible', indicator: 'bg-gray-400' },
+  { id: 'status-grinding', label: 'Grinding', indicator: 'bg-amber-500' },
+  { id: 'status-gaming', label: 'Gaming', indicator: 'bg-purple-500' },
+  { id: 'status-cooking', label: 'Cooking', indicator: 'bg-orange-500' },
+  { id: 'status-in-the-lab', label: 'In The Lab', indicator: 'bg-cyan-500' },
+  { id: 'status-in-a-meeting', label: 'In A Meeting', indicator: 'bg-blue-500' },
+  { id: 'status-touch-grass', label: 'Touching Grass', indicator: 'bg-green-600' },
+  { id: 'status-napping', label: 'Napping', indicator: 'bg-indigo-400' },
+  { id: 'status-lowkey', label: 'Lowkey', indicator: 'bg-zinc-500' },
+  { id: 'status-sigma', label: 'Sigma Mode', indicator: 'bg-zinc-900' },
+  { id: 'status-brb', label: 'BRB', indicator: 'bg-yellow-400' },
+  { id: 'status-watching', label: 'Watching Something', indicator: 'bg-red-400' },
+];
+
+export const FONTS = [
+  { id: 'font-default', name: 'Default', className: 'font-sans' },
+  { id: 'font-mono', name: 'Monospace', className: 'font-mono' },
+  { id: 'font-serif', name: 'Serif', className: 'font-serif' },
+  { id: 'font-bold', name: 'Ultra Bold', className: 'font-black' },
+  { id: 'font-thin', name: 'Ultra Thin', className: 'font-thin' },
+  { id: 'font-wide', name: 'Wide Track', className: 'tracking-widest' },
+  { id: 'font-tight', name: 'Tight Track', className: 'tracking-tighter' },
+  { id: 'font-italic', name: 'Italic', className: 'italic' },
+  { id: 'font-uppercase', name: 'ALL CAPS', className: 'uppercase' },
+  { id: 'font-lowercase', name: 'all lowercase', className: 'lowercase' },
+  { id: 'font-small', name: 'Small Text', className: 'text-sm' },
+  { id: 'font-xl', name: 'XL Text', className: 'text-xl' },
+];
+
+export const LAYOUT_STYLES = [
+  { id: 'layout-default', name: 'Default', description: 'Standard centered layout' },
+  { id: 'layout-wide', name: 'Wide', description: 'Full-width stretched layout' },
+  { id: 'layout-compact', name: 'Compact', description: 'Condensed minimal layout' },
+  { id: 'layout-sidebar-left', name: 'Left Sidebar', description: 'Info on the left' },
+  { id: 'layout-sidebar-right', name: 'Right Sidebar', description: 'Info on the right' },
+  { id: 'layout-grid', name: 'Grid', description: 'Card grid layout' },
+  { id: 'layout-magazine', name: 'Magazine', description: 'Editorial split layout' },
+  { id: 'layout-terminal', name: 'Terminal', description: 'CLI-style layout' },
+  { id: 'layout-minimal', name: 'Minimal', description: 'Name and avatar only' },
+  { id: 'layout-banner-focus', name: 'Banner Focus', description: 'Oversized banner hero' },
+];
+
+export const BACKGROUND_PATTERNS = [
+  { id: 'pattern-none', name: 'None', className: '' },
+  { id: 'pattern-dots', name: 'Dots', className: 'bg-[radial-gradient(circle,currentColor_1px,transparent_1px)] bg-[size:20px_20px]' },
+  { id: 'pattern-grid', name: 'Grid', className: 'bg-[linear-gradient(to_right,currentColor_1px,transparent_1px),linear-gradient(to_bottom,currentColor_1px,transparent_1px)] bg-[size:20px_20px]' },
+  { id: 'pattern-diagonal', name: 'Diagonal Lines', className: 'bg-[repeating-linear-gradient(45deg,currentColor,currentColor_1px,transparent_0,transparent_50%)] bg-[size:10px_10px]' },
+  { id: 'pattern-zigzag', name: 'Zigzag', className: 'bg-[linear-gradient(135deg,currentColor_25%,transparent_25%)_-10px_0,linear-gradient(225deg,currentColor_25%,transparent_25%)_-10px_0] bg-[size:20px_20px]' },
+  { id: 'pattern-waves', name: 'Waves', className: 'bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,currentColor,transparent)] bg-[size:100%_40px]' },
+  { id: 'pattern-circuit', name: 'Circuit', className: 'bg-[linear-gradient(to_right,transparent_calc(50%-1px),currentColor_50%,currentColor_calc(50%+1px),transparent_calc(50%+1px))] bg-[size:40px_40px]' },
+  { id: 'pattern-stars', name: 'Stars', className: 'bg-[radial-gradient(1px_1px_at_20%_30%,currentColor,transparent),radial-gradient(1px_1px_at_80%_60%,currentColor,transparent),radial-gradient(1px_1px_at_60%_10%,currentColor,transparent)] bg-[size:200px_200px]' },
+  { id: 'pattern-hexagon', name: 'Hexagons', className: 'bg-[radial-gradient(circle_farthest-side_at_0%_50%,transparent_calc(100%-2px),currentColor_calc(100%-2px)_100%,transparent_100%)] bg-[size:30px_50px]' },
+  { id: 'pattern-noise', name: 'Noise', className: 'bg-[url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.65\' numOctaves=\'3\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")] opacity-10' },
 ];

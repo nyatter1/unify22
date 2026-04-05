@@ -1,4 +1,6 @@
 import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth"; // Added this
+import { getFirestore } from "firebase/firestore"; // Added this
 import { getAnalytics } from "firebase/analytics";
 
 const firebaseConfig = {
@@ -12,5 +14,12 @@ const firebaseConfig = {
   measurementId: "G-J35JN3V7X3"
 };
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+
+// Initialize and Export services
+export const auth = getAuth(app);      // This fixes the "auth" export error
+export const db = getFirestore(app);   // This fixes the "db" export error
+export const analytics = getAnalytics(app);
+
+export default app;

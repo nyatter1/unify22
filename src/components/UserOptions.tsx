@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Star, Eye, MessageSquare, Mic, VolumeX, UserMinus, UserX, X } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { User } from '../types';
+import { UserProfile } from '../types';
 
 interface UserOptionsProps {
-  targetUser: User;
-  currentUser: User;
+  targetUser: UserProfile;
+  currentUser: UserProfile;
   onClose: () => void;
   onViewProfile: (uid: string) => void;
   onRateProfile: (uid: string) => void;

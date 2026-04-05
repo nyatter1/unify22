@@ -85,7 +85,33 @@ export const THEMES: Theme[] = [
   { id: 'zen-garden', name: 'Zen Garden', category: 'Niche', background: '#f8fafc', textColor: 'text-slate-400', accentColor: 'slate-300' },
   { id: 'ink-blot', name: 'Ink Blot', category: 'Niche', background: '#0a0a0a', textColor: 'text-zinc-500', accentColor: 'zinc-800' },
   { id: 'ash-tray', name: 'Ash Tray', category: 'Niche', background: '#18181b', textColor: 'text-zinc-400', accentColor: 'zinc-600' },
-  { id: 'storm-cloud', name: 'Storm Cloud', category: 'Niche', background: '#0f172a', textColor: 'text-slate-400', accentColor: 'slate-500' }
+  { id: 'storm-cloud', name: 'Storm Cloud', category: 'Niche', background: '#0f172a', textColor: 'text-slate-400', accentColor: 'slate-500' },
+  
+  // Pop Culture
+  { id: 'cartoon-vibe', name: 'Cartoon', category: 'Pop Culture', background: '#fef08a', textColor: 'text-zinc-900', accentColor: 'blue-500', customStyles: { borderStyle: '4px solid #000', bubbleStyle: 'sharp' } },
+  { id: 'avengers-hq', name: 'Avengers HQ', category: 'Pop Culture', background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', textColor: 'text-white', accentColor: 'red-600', customStyles: { borderStyle: '1px solid #ef4444', glassEffect: true } },
+  { id: 'matrix-code', name: 'The Matrix', category: 'Pop Culture', background: '#000000', textColor: 'text-green-500', accentColor: 'green-600', customStyles: { borderStyle: '1px solid #22c55e', fontFamily: 'mono' } },
+  { id: 'barbie-world', name: 'Barbie World', category: 'Pop Culture', background: 'linear-gradient(to bottom, #fdf2f8, #fbcfe8)', textColor: 'text-pink-600', accentColor: 'pink-500', customStyles: { borderStyle: '2px solid #ec4899' } },
+  { id: 'minecraft-dirt', name: 'Minecraft', category: 'Pop Culture', background: '#4b3621', textColor: 'text-green-400', accentColor: 'green-600', customStyles: { borderStyle: '4px solid #3f2e1d', bubbleStyle: 'sharp' } },
+  { id: 'star-wars-dark', name: 'Sith Lord', category: 'Pop Culture', background: '#0a0a0a', textColor: 'text-red-600', accentColor: 'red-700', customStyles: { borderStyle: '1px solid #dc2626', glassEffect: true } },
+  { id: 'star-wars-light', name: 'Jedi Master', category: 'Pop Culture', background: '#f8fafc', textColor: 'text-blue-600', accentColor: 'blue-500', customStyles: { borderStyle: '1px solid #3b82f6' } },
+  { id: 'spider-verse', name: 'Spider-Verse', category: 'Pop Culture', background: 'linear-gradient(45deg, #0f172a 0%, #1e1b4b 100%)', textColor: 'text-red-500', accentColor: 'blue-600', customStyles: { borderStyle: '2px solid #ef4444', glassEffect: true } },
+  { id: 'batman-dark', name: 'The Bat', category: 'Pop Culture', background: '#000000', textColor: 'text-zinc-400', accentColor: 'zinc-700', customStyles: { borderStyle: '1px solid #3f3f46' } },
+  { id: 'pokemon-red', name: 'Pokedex', category: 'Pop Culture', background: '#dc2626', textColor: 'text-white', accentColor: 'white', customStyles: { borderStyle: '4px solid #000', bubbleStyle: 'sharp' } },
+  
+  // Special
+  { id: 'royal-gold', name: 'Royal Gold', category: 'Special', background: 'linear-gradient(135deg, #000000 0%, #1a1a1a 100%)', textColor: 'text-amber-400', accentColor: 'amber-500', customStyles: { borderStyle: '2px solid #f59e0b', glassEffect: true } },
+  { id: 'frozen-tundra', name: 'Frozen', category: 'Special', background: 'linear-gradient(to bottom, #e0f2fe, #bae6fd)', textColor: 'text-sky-600', accentColor: 'sky-400', customStyles: { borderStyle: '1px solid #38bdf8' } },
+  { id: 'neon-night', name: 'Neon Night', category: 'Special', background: '#020617', textColor: 'text-fuchsia-400', accentColor: 'fuchsia-500', customStyles: { borderStyle: '2px solid #d946ef', glassEffect: true } },
+  { id: 'ocean-deep', name: 'Deep Ocean', category: 'Special', background: 'linear-gradient(to bottom, #0c4a6e, #082f49)', textColor: 'text-sky-100', accentColor: 'sky-400', customStyles: { borderStyle: '1px solid #0ea5e9' } },
+  { id: 'lava-cave', name: 'Lava Cave', category: 'Special', background: 'linear-gradient(45deg, #450a0a 0%, #7f1d1d 100%)', textColor: 'text-orange-500', accentColor: 'orange-600', customStyles: { borderStyle: '2px solid #ea580c' } },
+  { id: 'forest-spirit', name: 'Forest Spirit', category: 'Special', background: '#064e3b', textColor: 'text-emerald-100', accentColor: 'emerald-500', customStyles: { borderStyle: '1px solid #10b981' } },
+  { id: 'galaxy-far', name: 'Galaxy', category: 'Special', background: 'radial-gradient(circle at center, #1e1b4b 0%, #000000 100%)', textColor: 'text-purple-100', accentColor: 'purple-500', customStyles: { borderStyle: '1px solid #8b5cf6', glassEffect: true } },
+  { id: 'sunset-strip', name: 'Sunset', category: 'Special', background: 'linear-gradient(to top, #7c2d12, #ea580c)', textColor: 'text-orange-100', accentColor: 'orange-500', customStyles: { borderStyle: '1px solid #f97316' } },
+  { id: 'midnight-oil', name: 'Midnight', category: 'Special', background: '#000000', textColor: 'text-zinc-500', accentColor: 'zinc-800', customStyles: { borderStyle: '1px solid #27272a' } },
+  { id: 'ghost-town', name: 'Ghost Town', category: 'Special', background: '#18181b', textColor: 'text-zinc-400', accentColor: 'zinc-600', customStyles: { borderStyle: '1px solid #52525b' } },
+  { id: 'candy-land', name: 'Candy Land', category: 'Special', background: 'linear-gradient(135deg, #fdf2f8 0%, #fbcfe8 100%)', textColor: 'text-pink-500', accentColor: 'pink-400', customStyles: { borderStyle: '2px solid #f472b6' } },
+  { id: 'toxic-zone', name: 'Toxic Zone', category: 'Special', background: '#052e16', textColor: 'text-lime-400', accentColor: 'lime-500', customStyles: { borderStyle: '2px solid #84cc16' } }
 ];
 
 export const CARD_STYLES: CardStyle[] = [

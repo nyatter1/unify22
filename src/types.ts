@@ -12,6 +12,8 @@ export interface Theme {
     fontFamily?: 'sans' | 'serif' | 'mono' | 'display';
     glassmorphism?: number; // 0 to 100 blur
     bubbleStyle?: 'rounded' | 'sharp' | 'minimal' | 'bordered';
+    borderStyle?: string; // CSS border style
+    glassEffect?: boolean;
   };
 }
 
@@ -101,7 +103,6 @@ export interface UserProfile {
   lastDailyReward?: any;
   badges?: string[];
   status?: string;
-  profileMusicUrl?: string;
   profileVideoUrl?: string;
 }
 
@@ -113,7 +114,7 @@ export interface Message {
   senderRank?: string;
   text: string;
   timestamp: any;
-  type?: 'text' | 'gamble_allin' | 'gamble_dice';
+  type?: 'text' | 'gamble_allin' | 'gamble_dice' | 'poll';
   gambleData?: {
     currency: 'gold' | 'rubies';
     amount: number;

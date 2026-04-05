@@ -49,7 +49,10 @@ import {
   Terminal,
   Trash2,
   BarChart2,
-  Youtube
+  Youtube,
+  Menu,
+  Pin,
+  PinOff
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
@@ -71,6 +74,57 @@ interface ChatProps {
 }
 
 const DiceIcons = [Dice1, Dice2, Dice3, Dice4, Dice5, Dice6];
+
+const SidebarItem = ({ 
+  icon, 
+  label, 
+  onClick, 
+  expanded, 
+  badge, 
+  variant = 'default' 
+}: { 
+  icon: React.ReactNode; 
+  label: string; 
+  onClick: () => void; 
+  expanded: boolean; 
+  badge?: number; 
+  variant?: 'default' | 'danger' 
+}) => (
+  <button 
+    onClick={onClick}
+    className={cn(
+      "w-full flex items-center gap-4 p-3 rounded-xl transition-all group relative",
+      expanded ? "px-4" : "justify-center",
+      variant === 'danger' 
+        ? "text-red-400 hover:bg-red-500/10 hover:text-red-500" 
+        : "text-white/60 hover:bg-white/5 hover:text-white"
+    )}
+  >
+    <div className="flex-shrink-0">{icon}</div>
+    {expanded && (
+      <motion.span 
+        initial={{ opacity: 0, x: -10 }}
+        animate={{ opacity: 1, x: 0 }}
+        className="text-xs font-bold uppercase tracking-widest whitespace-nowrap"
+      >
+        {label}
+      </motion.span>
+    )}
+    {badge !== undefined && badge > 0 && (
+      <div className={cn(
+        "absolute bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-black",
+        expanded ? "right-4 w-5 h-5" : "top-2 right-2 w-4 h-4"
+      )}>
+        {badge}
+      </div>
+    )}
+    {!expanded && (
+      <div className="absolute left-full ml-4 px-3 py-2 bg-zinc-900 border border-white/10 rounded-lg text-[10px] font-bold uppercase tracking-widest text-white opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 whitespace-nowrap">
+        {label}
+      </div>
+    )}
+  </button>
+);
 
 const getYouTubeId = (url: string) => {
   const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
@@ -94,14 +148,16 @@ export default function Chat({ user }: ChatProps) {
   const [showStatusEditor, setShowStatusEditor] = useState(false);
   const [newStatus, setNewStatus] = useState(user.status || '');
   const [showRatingsList, setShowRatingsList] = useState(false);
-  const [selectedUserForOptions, setSelectedUserForOptions] = useState<User | null>(null);
-  const [selectedUserForRating, setSelectedUserForRating] = useState<User | null>(null);
-  const [selectedUserForForceSpeak, setSelectedUserForForceSpeak] = useState<User | null>(null);
-  const [selectedUserForAdmin, setSelectedUserForAdmin] = useState<User | null>(null);
-  const [selectedUserForRatingsList, setSelectedUserForRatingsList] = useState<User | null>(null);
+  const [selectedUserForOptions, setSelectedUserForOptions] = useState<UserProfile | null>(null);
+  const [selectedUserForRating, setSelectedUserForRating] = useState<UserProfile | null>(null);
+  const [selectedUserForForceSpeak, setSelectedUserForForceSpeak] = useState<UserProfile | null>(null);
+  const [selectedUserForAdmin, setSelectedUserForAdmin] = useState<UserProfile | null>(null);
+  const [selectedUserForRatingsList, setSelectedUserForRatingsList] = useState<UserProfile | null>(null);
   const [adminAction, setAdminAction] = useState<'mute' | 'kick' | 'ban'>('mute');
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
+  const [showLeftSidebar, setShowLeftSidebar] = useState(false);
+  const [isLeftSidebarPinned, setIsLeftSidebarPinned] = useState(false);
   const [showNews, setShowNews] = useState(false);
   const [showUpdates, setShowUpdates] = useState(false);
   const [showRules, setShowRules] = useState(false);
@@ -407,7 +463,7 @@ export default function Chat({ user }: ChatProps) {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const updateCustomization = async (field: 'theme' | 'cardStyle' | 'border' | 'profileEffect' | 'username' | 'age' | 'gender' | 'bio' | 'pfp' | 'banner', value: any) => {
+  const updateCustomization = async (field: 'theme' | 'cardStyle' | 'border' | 'profileEffect' | 'username' | 'age' | 'gender' | 'bio' | 'pfp' | 'banner' | 'profileVideoUrl', value: any) => {
     try {
       await updateDoc(doc(db, 'users', user.uid), { [field]: value });
       if (selectedProfile?.uid === user.uid) {
@@ -448,7 +504,19 @@ export default function Chat({ user }: ChatProps) {
   const handleProfileClick = (uid: string) => {
     const targetUser = allUsers.find(u => u.uid === uid);
     if (targetUser) {
-      setSelectedUserForOptions(targetUser as unknown as User);
+      setSelectedUserForOptions(targetUser);
+    }
+  };
+
+  const handleOpenNotifications = async () => {
+    setShowNotifications(true);
+    const unreadNotifs = notifications.filter(n => !n.read);
+    if (unreadNotifs.length > 0) {
+      const batch = writeBatch(db);
+      unreadNotifs.forEach(n => {
+        batch.update(doc(db, 'notifications', n.id), { read: true });
+      });
+      await batch.commit();
     }
   };
 
@@ -694,9 +762,11 @@ export default function Chat({ user }: ChatProps) {
         }
 
         // Gamble logic
-        const multiplier = Math.floor(Math.random() * 101); // 0 to 100
+        const winChance = Math.random();
+        const isWin = winChance > 0.7; // 30% win chance (70% loss)
+        const multiplier = isWin ? Math.floor(Math.random() * 100) + 1 : 0; // 1 to 100 if win
         const winAmount = balance * multiplier;
-        const result = multiplier > 0 ? 'won' : 'lost';
+        const result = isWin ? 'won' : 'lost';
 
         // Update balance
         const userRef = doc(db, 'users', user.uid);
@@ -742,8 +812,16 @@ export default function Chat({ user }: ChatProps) {
 
         // Dice logic
         const diceRoll = Math.floor(Math.random() * 6) + 1;
-        const multiplier = Math.floor(Math.random() * 50) + 1; // 1 to 50
-        const result = diceRoll === 6 ? 'won' : 'lost';
+        const isWin = diceRoll === 6;
+        let multiplier = Math.floor(Math.random() * 50) + 1; // 1 to 50
+        
+        // Jackpot logic (1% chance for x1000 if win)
+        const isJackpot = isWin && Math.random() < 0.01;
+        if (isJackpot) {
+          multiplier = 1000;
+        }
+
+        const result = isWin ? 'won' : 'lost';
         const winAmount = result === 'won' ? amount * multiplier : amount;
 
         // Update balance
@@ -973,9 +1051,10 @@ export default function Chat({ user }: ChatProps) {
       className={cn("h-screen flex flex-col overflow-hidden font-sans relative transition-all duration-500", currentTheme.textColor)}
       style={{ 
         backgroundColor: currentTheme.background.startsWith('#') || currentTheme.background.startsWith('hsl') ? currentTheme.background : undefined,
-        backgroundImage: currentTheme.background.startsWith('http') ? `url(${currentTheme.background})` : undefined,
+        backgroundImage: currentTheme.background.startsWith('http') || currentTheme.background.includes('gradient') ? currentTheme.background : undefined,
         backgroundSize: 'cover',
-        backgroundPosition: 'center'
+        backgroundPosition: 'center',
+        border: currentTheme.customStyles?.borderStyle || 'none'
       }}
     >
       {/* Theme Overlay */}
@@ -997,155 +1076,45 @@ export default function Chat({ user }: ChatProps) {
       </AnimatePresence>
 
       {/* Header */}
-      <header className="h-20 border-b border-white/10 flex items-center justify-between px-8 backdrop-blur-2xl z-20 bg-black/40">
+      <header 
+        className={cn(
+          "h-20 border-b flex items-center justify-between px-4 sm:px-8 z-20",
+          currentTheme.customStyles?.glassEffect ? "backdrop-blur-2xl bg-black/20" : "bg-black/40",
+          currentTheme.customStyles?.borderStyle ? "" : "border-white/10"
+        )}
+        style={{ borderBottom: currentTheme.customStyles?.borderStyle || undefined }}
+      >
         <div className="flex items-center gap-4">
-          <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center shadow-2xl", `bg-${currentTheme.accentColor}`)}>
-            <Infinity className="w-8 h-8 text-black" strokeWidth={2.5} />
-          </div>
-          <div>
-            <h1 className="text-2xl font-serif italic bg-gradient-to-r from-white via-amber-200 to-white bg-clip-text text-transparent leading-none">Uni-Fy</h1>
-            <p className="text-[10px] text-white/40 uppercase tracking-[0.3em] mt-1">The Unified Universe</p>
-          </div>
+          <h1 className="text-2xl sm:text-3xl font-serif italic bg-gradient-to-b from-amber-50 to-amber-200 bg-clip-text text-transparent tracking-tight drop-shadow-xl">
+            Uni-Fy
+          </h1>
         </div>
 
-        <div className="flex items-center gap-4">
-          {/* Sidebar Toggle */}
-          <button 
-            onClick={() => setShowSidebar(!showSidebar)}
-            className="lg:hidden p-2 rounded-xl bg-white/5 border border-white/10 text-white/80"
-          >
-            <Users className="w-5 h-5" />
-          </button>
-
-          {/* Admin Panel Toggle */}
-          {user.rank === 'DEVELOPER' && (
-            <button 
-              onClick={() => setShowAdminPanel(true)}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500/20 border border-red-500/50 text-red-400 hover:bg-red-500/30 transition-all"
-            >
-              <Terminal className="w-5 h-5" />
-              <span className="text-xs font-bold uppercase tracking-widest hidden sm:inline">Admin</span>
-            </button>
-          )}
-
-          {/* Daily Reward Toggle */}
-          <button 
-            onClick={() => setShowDailyReward(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/20 border border-amber-500/50 text-amber-400 hover:bg-amber-500/30 transition-all"
-          >
-            <Gift className="w-5 h-5" />
-            <span className="text-xs font-bold uppercase tracking-widest hidden sm:inline">Daily</span>
-          </button>
-
-          {/* Rules Toggle */}
-          <button 
-            onClick={() => setShowRules(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white/80 hover:bg-white/10 hover:border-white/20 transition-all"
-          >
-            <BookOpen className="w-5 h-5" />
-            <span className="text-xs font-bold uppercase tracking-widest hidden sm:inline">Rules</span>
-          </button>
-
-          {/* Updates Toggle */}
-          <button 
-            onClick={() => setShowUpdates(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white/80 hover:bg-white/10 hover:border-white/20 transition-all"
-          >
-            <RefreshCw className="w-5 h-5" />
-            <span className="text-xs font-bold uppercase tracking-widest hidden sm:inline">Updates</span>
-          </button>
-
-          {/* News Toggle */}
-          <button 
-            onClick={() => setShowNews(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white/80 hover:bg-white/10 hover:border-white/20 transition-all"
-          >
-            <Newspaper className="w-5 h-5" />
-            <span className="text-xs font-bold uppercase tracking-widest hidden sm:inline">News</span>
-          </button>
-
-          {/* Notifications Toggle */}
-          <button 
-            onClick={() => {
-              setShowNotifications(true);
-              // Mark all as read
-              notifications.filter(n => !n.read).forEach(n => {
-                updateDoc(doc(db, 'notifications', n.id), { read: true });
-              });
-            }}
-            className="relative flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white/80 hover:bg-white/10 hover:border-white/20 transition-all"
-          >
-            <Bell className="w-5 h-5" />
-            <span className="text-xs font-bold uppercase tracking-widest hidden sm:inline">Notifs</span>
-            {unreadNotifications > 0 && (
-              <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-black"></span>
-            )}
-          </button>
-
-          {/* Customizer Toggle */}
-          <button 
-            onClick={() => setShowCustomizer(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white/80 hover:bg-white/10 hover:border-white/20 transition-all"
-          >
-            <Palette className="w-5 h-5" />
-            <span className="text-xs font-bold uppercase tracking-widest hidden sm:inline">Customise</span>
-          </button>
-
-          {/* Wallet Toggle */}
-          <div className="relative">
-            <button 
-              onClick={() => setShowWallet(!showWallet)}
-              className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-xl border transition-all",
-                showWallet ? "bg-amber-500 text-black border-amber-400" : "bg-black/40 border-white/10 text-amber-500 hover:border-amber-500/50"
-              )}
-            >
-              <Wallet className="w-5 h-5" />
-              <span className="text-xs font-bold uppercase tracking-widest hidden sm:inline">Wallet</span>
-            </button>
-
-            <AnimatePresence>
-              {showWallet && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 10 }}
-                  className="absolute top-full right-0 mt-4 w-64 bg-black/90 backdrop-blur-3xl border border-white/10 rounded-2xl p-6 shadow-2xl z-50"
-                >
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10">
-                      <div className="flex items-center gap-3">
-                        <Coins className="w-5 h-5 text-amber-500" />
-                        <span className="text-xs font-bold text-amber-500/60 uppercase tracking-widest">Gold</span>
-                      </div>
-                      <span className="text-lg font-serif italic text-white">{(user.gold ?? 0).toLocaleString()}</span>
-                    </div>
-                    <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10">
-                      <div className="flex items-center gap-3">
-                        <Gem className="w-5 h-5 text-amber-500" />
-                        <span className="text-xs font-bold text-amber-500/60 uppercase tracking-widest">Rubies</span>
-                      </div>
-                      <span className="text-lg font-serif italic text-white">{(user.rubies ?? 0).toLocaleString()}</span>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+        <div className="flex items-center gap-2 sm:gap-4">
+          {/* Wallet Display - Always Visible */}
+          <div className="flex items-center gap-2 sm:gap-4 px-3 sm:px-4 py-2 rounded-2xl bg-white/5 border border-white/10">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <Coins className="w-4 h-4 text-amber-500" />
+              <span className="text-[10px] sm:text-xs font-bold text-white">{(user.gold ?? 0).toLocaleString()}</span>
+            </div>
+            <div className="w-px h-4 bg-white/10" />
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <Gem className="w-4 h-4 text-amber-500" />
+              <span className="text-[10px] sm:text-xs font-bold text-white">{(user.rubies ?? 0).toLocaleString()}</span>
+            </div>
           </div>
 
-          <div className="flex items-center gap-4 pl-6 border-l border-white/10">
-            <div className="text-right hidden sm:block">
+          <div className="flex items-center gap-3 pl-2 sm:pl-4 border-l border-white/10">
+            <div className="text-right hidden md:block">
               <p className="text-sm font-serif text-white leading-none">{user.username}</p>
               <div className="flex items-center justify-end gap-1.5 mt-1">
-                <span className="text-[9px] text-white/40 uppercase tracking-widest font-bold">{user.age}Y</span>
-                <span className="w-1 h-1 rounded-full bg-white/20" />
-                <span className="text-[9px] text-white/40 uppercase tracking-widest font-bold">{user.gender}</span>
+                <span className="text-[9px] text-white/40 uppercase tracking-widest font-bold">{user.rank}</span>
               </div>
             </div>
-            <img src={user.pfp} className="w-11 h-11 rounded-full border-2 border-white/20 object-cover shadow-xl" />
+            <img src={user.pfp} className="w-9 h-9 sm:w-11 sm:h-11 rounded-full border-2 border-white/20 object-cover shadow-xl" />
             <button 
               onClick={() => auth.signOut()}
-              className="p-2.5 rounded-full hover:bg-red-500/10 text-white/20 hover:text-red-500 transition-all"
+              className="p-2 rounded-xl bg-white/5 border border-white/10 text-white/40 hover:text-red-500 hover:bg-red-500/10 hover:border-red-500/50 transition-all"
             >
               <LogOut className="w-5 h-5" />
             </button>
@@ -1153,9 +1122,63 @@ export default function Chat({ user }: ChatProps) {
         </div>
       </header>
 
-      <main className="flex-1 flex overflow-hidden relative z-10">
-        {/* Chat Area */}
-        <div className="flex-1 flex flex-col min-w-0 border-r border-white/10">
+      <main className="flex-1 flex flex-col lg:flex-row overflow-hidden relative z-10">
+        {/* Desktop Sidebar - Navigation */}
+        <aside 
+          onMouseEnter={() => !isLeftSidebarPinned && setShowLeftSidebar(true)}
+          onMouseLeave={() => !isLeftSidebarPinned && setShowLeftSidebar(false)}
+          className={cn(
+            "hidden lg:flex flex-col transition-all duration-300",
+            currentTheme.customStyles?.glassEffect ? "backdrop-blur-xl bg-black/20" : "bg-black/40",
+            currentTheme.customStyles?.borderStyle ? "border-r" : "border-r border-white/10",
+            (isLeftSidebarPinned || showLeftSidebar) ? "w-64" : "w-20"
+          )}
+          style={{ borderRight: currentTheme.customStyles?.borderStyle || undefined }}
+        >
+          <div className="p-6 border-b border-white/10 flex items-center justify-between overflow-hidden">
+            <AnimatePresence>
+              {(isLeftSidebarPinned || showLeftSidebar) && (
+                <motion.h2 
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  className="font-serif italic text-white text-lg whitespace-nowrap"
+                >
+                  Navigation
+                </motion.h2>
+              )}
+            </AnimatePresence>
+            <button 
+              onClick={() => setIsLeftSidebarPinned(!isLeftSidebarPinned)}
+              className={cn(
+                "p-2 rounded-lg transition-colors",
+                isLeftSidebarPinned ? "text-amber-500 bg-amber-500/10" : "text-white/40 hover:text-white hover:bg-white/5"
+              )}
+            >
+              <Pin className={cn("w-4 h-4", isLeftSidebarPinned ? "fill-current" : "")} />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
+            <SidebarItem icon={<Gift className="w-5 h-5" />} label="Daily Reward" onClick={() => setShowDailyReward(true)} expanded={isLeftSidebarPinned || showLeftSidebar} />
+            <SidebarItem icon={<Palette className="w-5 h-5" />} label="Customise" onClick={() => setShowCustomizer(true)} expanded={isLeftSidebarPinned || showLeftSidebar} />
+            <SidebarItem 
+              icon={<Bell className="w-5 h-5" />} 
+              label="Notifications" 
+              onClick={handleOpenNotifications} 
+              expanded={isLeftSidebarPinned || showLeftSidebar}
+              badge={unreadNotifications > 0 ? unreadNotifications : undefined}
+            />
+            <SidebarItem icon={<Newspaper className="w-5 h-5" />} label="News" onClick={() => setShowNews(true)} expanded={isLeftSidebarPinned || showLeftSidebar} />
+            <SidebarItem icon={<RefreshCw className="w-5 h-5" />} label="Updates" onClick={() => setShowUpdates(true)} expanded={isLeftSidebarPinned || showLeftSidebar} />
+            <SidebarItem icon={<BookOpen className="w-5 h-5" />} label="Rules" onClick={() => setShowRules(true)} expanded={isLeftSidebarPinned || showLeftSidebar} />
+            {user.rank === 'DEVELOPER' && (
+              <SidebarItem icon={<Terminal className="w-5 h-5" />} label="Admin Panel" onClick={() => setShowAdminPanel(true)} expanded={isLeftSidebarPinned || showLeftSidebar} variant="danger" />
+            )}
+          </div>
+        </aside>
+
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col min-w-0 pb-20 lg:pb-0">
           <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-8 custom-scrollbar">
             {messages.map((msg, i) => {
               const isMe = msg.senderId === user.uid;
@@ -1169,7 +1192,13 @@ export default function Chat({ user }: ChatProps) {
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     key={msg.id || i}
-                    className="flex flex-col items-center justify-center py-8 px-6 bg-zinc-900/80 backdrop-blur-md rounded-3xl border border-white/10 max-w-md mx-auto w-full text-center space-y-6 shadow-2xl"
+                    className={cn(
+                      "flex flex-col items-center justify-center py-8 px-6 max-w-md mx-auto w-full text-center space-y-6 shadow-2xl transition-all",
+                      currentTheme.customStyles?.glassEffect ? "backdrop-blur-2xl bg-black/20" : "bg-zinc-900/80 backdrop-blur-md",
+                      currentTheme.customStyles?.bubbleStyle === 'sharp' ? "rounded-none" : "rounded-3xl",
+                      currentTheme.customStyles?.borderStyle ? "" : "border border-white/10"
+                    )}
+                    style={{ border: currentTheme.customStyles?.borderStyle || undefined }}
                   >
                     <div className="flex flex-col items-center gap-2">
                       <BarChart2 className="w-8 h-8 text-amber-500" />
@@ -1216,7 +1245,13 @@ export default function Chat({ user }: ChatProps) {
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     key={msg.id || i}
-                    className="flex flex-col items-center justify-center py-8 px-4 bg-black/40 backdrop-blur-md rounded-3xl border border-white/10 max-w-2xl mx-auto w-full text-center space-y-4"
+                    className={cn(
+                      "flex flex-col items-center justify-center py-8 px-4 max-w-2xl mx-auto w-full text-center space-y-4 transition-all",
+                      currentTheme.customStyles?.glassEffect ? "backdrop-blur-2xl bg-black/20" : "bg-black/40 backdrop-blur-md",
+                      currentTheme.customStyles?.bubbleStyle === 'sharp' ? "rounded-none" : "rounded-3xl",
+                      currentTheme.customStyles?.borderStyle ? "" : "border border-white/10"
+                    )}
+                    style={{ border: currentTheme.customStyles?.borderStyle || undefined }}
                   >
                     <p className="text-xs font-bold text-amber-500 uppercase tracking-[0.3em]">{msg.senderUsername} did {msg.type === 'gamble_allin' ? '/allin' : '/dice'}</p>
                     <img 
@@ -1292,9 +1327,16 @@ export default function Chat({ user }: ChatProps) {
                     </div>
                     <div 
                       className={cn(
-                        "px-5 py-3 rounded-2xl shadow-2xl relative overflow-hidden",
-                        isMe ? "rounded-tr-none bg-white text-black font-medium" : "rounded-tl-none bg-black/60 border border-white/10 text-white/80 backdrop-blur-md"
+                        "px-5 py-3 shadow-2xl relative overflow-hidden transition-all",
+                        isMe ? "rounded-tr-none bg-white text-black font-medium" : "rounded-tl-none bg-black/60 border border-white/10 text-white/80 backdrop-blur-md",
+                        currentTheme.customStyles?.bubbleStyle === 'sharp' ? "rounded-none" : "rounded-2xl",
+                        !isMe && currentTheme.customStyles?.glassEffect && "backdrop-blur-2xl bg-black/20",
+                        !isMe && currentTheme.customStyles?.borderStyle && "border-none"
                       )}
+                      style={{ 
+                        border: !isMe && currentTheme.customStyles?.borderStyle ? currentTheme.customStyles.borderStyle : undefined,
+                        fontFamily: currentTheme.customStyles?.fontFamily === 'serif' ? 'serif' : currentTheme.customStyles?.fontFamily === 'mono' ? 'monospace' : 'inherit'
+                      }}
                     >
                       <div className="text-sm leading-relaxed prose prose-invert max-w-none [&_p]:m-0 [&_pre]:bg-black/20 [&_pre]:p-2 [&_pre]:rounded-lg [&_code]:bg-black/20 [&_code]:px-1 [&_code]:rounded">
                         <Markdown>{msg.text}</Markdown>
@@ -1340,110 +1382,116 @@ export default function Chat({ user }: ChatProps) {
           </div>
         </div>
 
-        {/* Sidebar - Online Users (Pinned) */}
-        <aside className={cn(
-          "fixed inset-y-0 right-0 z-40 w-80 bg-black/90 backdrop-blur-md flex flex-col transition-transform lg:static lg:transform-none",
-          showSidebar ? "translate-x-0" : "translate-x-full lg:translate-x-0"
-        )}>
-          <div className="p-8 border-b border-white/10 flex items-center justify-between">
-            <h2 className="font-serif italic text-white text-lg flex items-center gap-3">
+        {/* Sidebar - Online Users */}
+        <aside 
+          className={cn(
+            "fixed inset-y-0 right-0 z-50 w-80 flex flex-col transition-transform lg:static lg:transform-none",
+            currentTheme.customStyles?.glassEffect ? "backdrop-blur-2xl bg-black/20" : "bg-black/95 lg:bg-black/40 lg:backdrop-blur-xl",
+            currentTheme.customStyles?.borderStyle ? "border-l" : "border-l border-white/10",
+            showSidebar ? "translate-x-0" : "translate-x-full lg:translate-x-0"
+          )}
+          style={{ borderLeft: currentTheme.customStyles?.borderStyle || undefined }}
+        >
+          <div className="p-6 border-b border-white/10 flex items-center justify-between">
+            <div className="flex items-center gap-3">
               <Users className="w-5 h-5 text-amber-500" />
-              Online Now
-            </h2>
-            <button onClick={() => setShowSidebar(false)} className="lg:hidden text-white/60">
-              <X className="w-5 h-5" />
+              <h2 className="font-serif italic text-white text-lg">Universe</h2>
+            </div>
+            <button onClick={() => setShowSidebar(false)} className="p-2 text-white/40 hover:text-white lg:hidden">
+              <X className="w-6 h-6" />
             </button>
           </div>
-          <div className="px-8 py-4 border-b border-white/10">
-            <div className="px-3 py-1 rounded-full text-[10px] font-bold bg-white/5 text-white/60 border border-white/10 inline-block">
-              {onlineUsers.length} Online
-            </div>
-          </div>
           
-          <div className="flex-1 overflow-y-auto p-6 space-y-5 custom-scrollbar">
-            {[{
-              uid: 'unibot',
-              username: 'UniBot',
-              pfp: 'https://api.dicebear.com/7.x/bottts/svg?seed=unibot&backgroundColor=10b981',
-              rank: 'DEVELOPER',
-              email: 'bot@unify.com',
-              gold: 999999,
-              rubies: 999999,
-              level: 100,
-              createdAt: new Date(),
-              age: 0,
-              gender: 'other',
-              banner: '',
-              onboardingStep: 4,
-              isOnline: true,
-              lastSeen: new Date()
-            } as UserProfile, ...onlineUsers].map((u) => {
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+            {onlineUsers.map((u) => {
               const { className, style, textClass } = getCardStyles(u);
               return (
                 <motion.div 
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   key={u.uid} 
-                  className={className}
+                  className={cn(className, "cursor-pointer")}
                   style={style}
+                  onClick={() => {
+                    handleProfileClick(u.uid);
+                    if (window.innerWidth < 1024) setShowSidebar(false);
+                  }}
                 >
                   <div className="relative">
                     <img 
                       src={u.pfp} 
-                      onClick={() => handleProfileClick(u.uid)}
-                      className="relative w-12 h-12 rounded-full border border-white/20 object-cover transition-transform group-hover:scale-105 cursor-pointer" 
+                      className="w-10 h-10 rounded-full border border-white/20 object-cover" 
                     />
-                    <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 border-[3px] border-black rounded-full shadow-lg" />
+                    <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-black rounded-full" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <p className={cn("text-sm font-serif truncate transition-colors", textClass)}>{u.username}</p>
+                      <p className={cn("text-sm font-serif truncate", textClass)}>{u.username}</p>
                       <img 
                         src={u.customRank?.icon || RANKS.find(r => r.id === (u.rank || 'VIP'))?.icon} 
                         className="w-3.5 h-3.5 object-contain"
                         alt="rank"
                       />
-                      {u.age > 100 && <Crown className="w-3 h-3 text-amber-500" />}
                     </div>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-[9px] opacity-60 uppercase tracking-widest font-bold">{u.age}Y</span>
-                      <span className="w-1 h-1 rounded-full bg-white/10" />
-                      <span className="text-[9px] opacity-60 uppercase tracking-widest font-bold">{u.gender}</span>
-                    </div>
+                    <p className="text-[10px] opacity-40 uppercase tracking-widest mt-0.5">{u.rank}</p>
                   </div>
                 </motion.div>
               );
             })}
           </div>
 
-          {/* User Mini Profile at bottom of sidebar */}
+          {/* User Mini Profile */}
           <div className="p-6 border-t border-white/10 bg-black/60">
             <div className="relative h-24 rounded-xl overflow-hidden border border-white/10 mb-3">
               <img src={user.banner} className="w-full h-full object-cover opacity-40" />
               <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent" />
-                <div className="absolute bottom-2 left-3 flex items-center gap-2">
-                  <img src={user.pfp} className="w-8 h-8 rounded-full border border-white/20" />
-                  <div className="flex flex-col">
-                    <div className="flex items-center gap-1.5">
-                      <p className="text-xs font-serif text-white">{user.username}</p>
-                      <img 
-                        src={user.customRank?.icon || RANKS.find(r => r.id === (user.rank || 'VIP'))?.icon} 
-                        className="w-3.5 h-3.5 object-contain"
-                        alt="rank"
-                      />
-                    </div>
-                    <button 
-                      onClick={() => setShowStatusEditor(true)}
-                      className="text-[10px] text-white/40 hover:text-white/60 text-left truncate max-w-[120px]"
-                    >
-                      {user.status || 'Set status...'}
-                    </button>
+              <div className="absolute bottom-2 left-3 flex items-center gap-2">
+                <img src={user.pfp} className="w-8 h-8 rounded-full border border-white/20" />
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-xs font-serif text-white">{user.username}</p>
+                    <img 
+                      src={user.customRank?.icon || RANKS.find(r => r.id === (user.rank || 'VIP'))?.icon} 
+                      className="w-3.5 h-3.5 object-contain"
+                      alt="rank"
+                    />
                   </div>
+                  <button 
+                    onClick={() => setShowStatusEditor(true)}
+                    className="text-[10px] text-white/40 hover:text-white/60 text-left truncate max-w-[120px]"
+                  >
+                    {user.status || 'Set status...'}
+                  </button>
                 </div>
+              </div>
             </div>
-            {/* Quick Wallet Stats */}
           </div>
         </aside>
+
+        {/* Mobile Bottom Navigation */}
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 h-20 bg-black/80 backdrop-blur-2xl border-t border-white/10 flex items-center justify-around px-4 z-40">
+          <button onClick={() => setShowDailyReward(true)} className="flex flex-col items-center gap-1 text-white/60 hover:text-amber-500 transition-all">
+            <Gift className="w-6 h-6" />
+            <span className="text-[10px] font-bold uppercase tracking-widest">Daily</span>
+          </button>
+          <button onClick={() => setShowCustomizer(true)} className="flex flex-col items-center gap-1 text-white/60 hover:text-amber-500 transition-all">
+            <Palette className="w-6 h-6" />
+            <span className="text-[10px] font-bold uppercase tracking-widest">Style</span>
+          </button>
+          <button onClick={handleOpenNotifications} className="relative flex flex-col items-center gap-1 text-white/60 hover:text-amber-500 transition-all">
+            <Bell className="w-6 h-6" />
+            <span className="text-[10px] font-bold uppercase tracking-widest">Notifs</span>
+            {unreadNotifications > 0 && <span className="absolute top-0 right-1 w-2 h-2 bg-red-500 rounded-full" />}
+          </button>
+          <button onClick={() => setShowNews(true)} className="flex flex-col items-center gap-1 text-white/60 hover:text-amber-500 transition-all">
+            <Newspaper className="w-6 h-6" />
+            <span className="text-[10px] font-bold uppercase tracking-widest">News</span>
+          </button>
+          <button onClick={() => setShowSidebar(true)} className="flex flex-col items-center gap-1 text-white/60 hover:text-amber-500 transition-all">
+            <Users className="w-6 h-6" />
+            <span className="text-[10px] font-bold uppercase tracking-widest">Users</span>
+          </button>
+        </nav>
       </main>
 
       {/* Customization Modal */}
@@ -1461,7 +1509,13 @@ export default function Chat({ user }: ChatProps) {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-5xl h-[80vh] bg-[#0a0a0a] border border-white/10 rounded-[2.5rem] overflow-hidden flex flex-col shadow-[0_0_100px_rgba(0,0,0,0.5)]"
+              className={cn(
+                "relative w-full max-w-5xl h-[80vh] overflow-hidden flex flex-col shadow-[0_0_100px_rgba(0,0,0,0.5)] transition-all",
+                currentTheme.customStyles?.glassEffect ? "backdrop-blur-3xl bg-black/40" : "bg-[#0a0a0a]",
+                currentTheme.customStyles?.bubbleStyle === 'sharp' ? "rounded-none" : "rounded-[2.5rem]",
+                currentTheme.customStyles?.borderStyle ? "" : "border border-white/10"
+              )}
+              style={{ border: currentTheme.customStyles?.borderStyle || undefined }}
             >
               {/* Modal Header */}
               <div className="h-24 border-b border-white/5 flex items-center justify-between px-10 bg-black/20">
@@ -1532,7 +1586,7 @@ export default function Chat({ user }: ChatProps) {
                       </div>
                     </button>
 
-                    {['Custom', 'Essentials', 'Aesthetic', 'Street', 'Brain Rot', 'Niche'].map(category => {
+                    {['Custom', 'Essentials', 'Aesthetic', 'Street', 'Brain Rot', 'Niche', 'Pop Culture', 'Special'].map(category => {
                       const categoryThemes = allThemes.filter(t => t.category === category);
                       if (categoryThemes.length === 0) return null;
                       
@@ -2059,36 +2113,31 @@ export default function Chat({ user }: ChatProps) {
               onClick={() => setShowProfileModal(false)}
               className="absolute inset-0 bg-black/90 backdrop-blur-2xl"
             />
+
+            {/* YouTube Background Video (Full Screen Behind Card) */}
+            {selectedProfile.profileVideoUrl && (
+              <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+                <iframe
+                  className="absolute top-1/2 left-1/2 w-[300%] h-[300%] -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+                  src={`https://www.youtube.com/embed/${getYouTubeId(selectedProfile.profileVideoUrl)}?autoplay=1&mute=0&loop=1&playlist=${getYouTubeId(selectedProfile.profileVideoUrl)}&controls=0&showinfo=0&rel=0&enablejsapi=1&playsinline=1`}
+                  allow="autoplay; encrypted-media"
+                />
+                <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
+              </div>
+            )}
+
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               className={cn(
-                "relative w-full max-w-xl bg-zinc-900 rounded-[3rem] overflow-hidden shadow-2xl flex flex-col",
-                BORDERS.find(b => b.id === selectedProfile.border)?.className || "border border-white/10"
+                "relative w-full max-w-xl overflow-hidden shadow-2xl flex flex-col transition-all",
+                currentTheme.customStyles?.glassEffect ? "backdrop-blur-3xl bg-black/40" : "bg-zinc-900",
+                currentTheme.customStyles?.bubbleStyle === 'sharp' ? "rounded-none" : "rounded-[3rem]",
+                selectedProfile.border ? BORDERS.find(b => b.id === selectedProfile.border)?.className : (currentTheme.customStyles?.borderStyle ? "" : "border border-white/10")
               )}
+              style={{ border: !selectedProfile.border && currentTheme.customStyles?.borderStyle ? currentTheme.customStyles.borderStyle : undefined }}
             >
-              {/* YouTube Background Video */}
-              {selectedProfile.profileVideoUrl && (
-                <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden rounded-[3rem]">
-                  <iframe
-                    className="absolute top-1/2 left-1/2 w-[300%] h-[300%] -translate-x-1/2 -translate-y-1/2 pointer-events-none"
-                    src={`https://www.youtube.com/embed/${getYouTubeId(selectedProfile.profileVideoUrl)}?autoplay=1&mute=0&loop=1&playlist=${getYouTubeId(selectedProfile.profileVideoUrl)}&controls=0&showinfo=0&rel=0&enablejsapi=1`}
-                    allow="autoplay; encrypted-media"
-                  />
-                  <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
-                </div>
-              )}
-
-              {/* YouTube Music (Hidden) */}
-              {selectedProfile.profileMusicUrl && !selectedProfile.profileVideoUrl && (
-                <iframe
-                  className="hidden"
-                  src={`https://www.youtube.com/embed/${getYouTubeId(selectedProfile.profileMusicUrl)}?autoplay=1&mute=0&loop=1&playlist=${getYouTubeId(selectedProfile.profileMusicUrl)}&enablejsapi=1`}
-                  allow="autoplay"
-                />
-              )}
-
               {/* Banner */}
               <div 
                 className={cn(
@@ -2526,37 +2575,6 @@ export default function Chat({ user }: ChatProps) {
                   <div className="space-y-6">
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Profile Music (YouTube URL)</label>
-                        <div className="flex gap-2">
-                          <input 
-                            type="text"
-                            placeholder="https://www.youtube.com/watch?v=..."
-                            defaultValue={user.profileMusicUrl}
-                            onBlur={(e) => {
-                              const url = e.target.value;
-                              updateCustomization('profileMusicUrl', url);
-                              if (url) updateCustomization('profileVideoUrl', ''); // Clear other
-                            }}
-                            className="flex-1 bg-white/5 border border-white/10 rounded-xl p-4 text-white focus:outline-none focus:border-amber-500/50"
-                          />
-                          {user.profileMusicUrl && (
-                            <button 
-                              onClick={() => updateCustomization('profileMusicUrl', '')}
-                              className="p-4 rounded-xl bg-red-500/10 text-red-500 border border-red-500/20"
-                            >
-                              <Trash2 className="w-5 h-5" />
-                            </button>
-                          )}
-                        </div>
-                        <p className="text-[10px] text-white/20 italic">Plays audio only when someone views your profile.</p>
-                      </div>
-
-                      <div className="relative py-4">
-                        <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/5"></div></div>
-                        <div className="relative flex justify-center text-[10px] font-bold uppercase tracking-widest text-white/20 bg-zinc-900 px-4">OR</div>
-                      </div>
-
-                      <div className="space-y-2">
                         <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Video Background (YouTube URL)</label>
                         <div className="flex gap-2">
                           <input 
@@ -2566,7 +2584,6 @@ export default function Chat({ user }: ChatProps) {
                             onBlur={(e) => {
                               const url = e.target.value;
                               updateCustomization('profileVideoUrl', url);
-                              if (url) updateCustomization('profileMusicUrl', ''); // Clear other
                             }}
                             className="flex-1 bg-white/5 border border-white/10 rounded-xl p-4 text-white focus:outline-none focus:border-amber-500/50"
                           />
@@ -2695,7 +2712,13 @@ export default function Chat({ user }: ChatProps) {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-md bg-zinc-900 border border-white/10 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[80vh]"
+              className={cn(
+                "w-full max-w-md overflow-hidden shadow-2xl flex flex-col max-h-[80vh] transition-all",
+                currentTheme.customStyles?.glassEffect ? "backdrop-blur-3xl bg-black/40" : "bg-zinc-900",
+                currentTheme.customStyles?.bubbleStyle === 'sharp' ? "rounded-none" : "rounded-3xl",
+                currentTheme.customStyles?.borderStyle ? "" : "border border-white/10"
+              )}
+              style={{ border: currentTheme.customStyles?.borderStyle || undefined }}
             >
               <div className="p-6 border-b border-white/10 flex items-center justify-between">
                 <h2 className="text-xl font-serif italic text-white">Notifications</h2>
@@ -2715,7 +2738,8 @@ export default function Chat({ user }: ChatProps) {
                           <span className="font-bold text-white">{notif.senderUsername}</span>
                           {notif.type === 'profile_view' && ' viewed your profile'}
                           {notif.type === 'profile_like' && ' liked your profile'}
-                          {notif.type === 'news_post' && ` posted: "${notif.content}"`}
+                          {notif.type === 'news_post' && ` posted: "${notif.content || 'News'}"`}
+                          {notif.type === 'global_notification' && `: ${notif.content || 'Notification'}`}
                           {notif.type === 'mention' && ' mentioned you in chat'}
                         </p>
                         <p className="text-xs text-white/40 mt-1">
@@ -2738,7 +2762,13 @@ export default function Chat({ user }: ChatProps) {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-2xl bg-zinc-900 border border-white/10 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[80vh]"
+              className={cn(
+                "w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[80vh] transition-all",
+                currentTheme.customStyles?.glassEffect ? "backdrop-blur-3xl bg-black/40" : "bg-zinc-900",
+                currentTheme.customStyles?.bubbleStyle === 'sharp' ? "rounded-none" : "rounded-3xl",
+                currentTheme.customStyles?.borderStyle ? "" : "border border-white/10"
+              )}
+              style={{ border: currentTheme.customStyles?.borderStyle || undefined }}
             >
               <div className="p-6 border-b border-white/10 flex items-center justify-between">
                 <h2 className="text-xl font-serif italic text-white">Rules</h2>
@@ -2778,7 +2808,13 @@ export default function Chat({ user }: ChatProps) {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-2xl bg-zinc-900 border border-white/10 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[80vh]"
+              className={cn(
+                "w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[80vh] transition-all",
+                currentTheme.customStyles?.glassEffect ? "backdrop-blur-3xl bg-black/40" : "bg-zinc-900",
+                currentTheme.customStyles?.bubbleStyle === 'sharp' ? "rounded-none" : "rounded-3xl",
+                currentTheme.customStyles?.borderStyle ? "" : "border border-white/10"
+              )}
+              style={{ border: currentTheme.customStyles?.borderStyle || undefined }}
             >
               <div className="p-6 border-b border-white/10 flex items-center justify-between">
                 <h2 className="text-xl font-serif italic text-white">Updates</h2>
@@ -2840,7 +2876,13 @@ export default function Chat({ user }: ChatProps) {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-3xl bg-zinc-900 border border-white/10 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+              className={cn(
+                "w-full max-w-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh] transition-all",
+                currentTheme.customStyles?.glassEffect ? "backdrop-blur-3xl bg-black/40" : "bg-zinc-900",
+                currentTheme.customStyles?.bubbleStyle === 'sharp' ? "rounded-none" : "rounded-3xl",
+                currentTheme.customStyles?.borderStyle ? "" : "border border-white/10"
+              )}
+              style={{ border: currentTheme.customStyles?.borderStyle || undefined }}
             >
               <div className="p-6 border-b border-white/10 flex items-center justify-between">
                 <h2 className="text-xl font-serif italic text-white">News</h2>
@@ -2883,6 +2925,7 @@ export default function Chat({ user }: ChatProps) {
                               senderUsername: user.username,
                               senderPfp: user.pfp,
                               type: 'news_post',
+                              content: content.substring(0, 50) + (content.length > 50 ? '...' : ''),
                               read: false,
                               timestamp: serverTimestamp()
                             });
@@ -3030,7 +3073,13 @@ export default function Chat({ user }: ChatProps) {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-4xl bg-zinc-900 border border-red-500/30 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+              className={cn(
+                "w-full max-w-4xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh] transition-all",
+                currentTheme.customStyles?.glassEffect ? "backdrop-blur-3xl bg-black/40" : "bg-zinc-900",
+                currentTheme.customStyles?.bubbleStyle === 'sharp' ? "rounded-none" : "rounded-3xl",
+                currentTheme.customStyles?.borderStyle ? "" : "border border-red-500/30"
+              )}
+              style={{ border: currentTheme.customStyles?.borderStyle || undefined }}
             >
               <div className="p-6 border-b border-red-500/20 flex items-center justify-between bg-red-500/5">
                 <div className="flex items-center gap-3">
@@ -3061,9 +3110,9 @@ export default function Chat({ user }: ChatProps) {
                           batch.set(notifRef, {
                             userId: u.uid,
                             senderId: user.uid,
-                            senderUsername: user.username,
+                            senderUsername: user.username || 'Admin',
                             senderPfp: user.pfp,
-                            type: 'news_post',
+                            type: 'global_notification',
                             content: input.value,
                             read: false,
                             timestamp: serverTimestamp()
@@ -3193,7 +3242,13 @@ export default function Chat({ user }: ChatProps) {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-sm bg-zinc-900 border border-amber-500/30 rounded-3xl overflow-hidden shadow-2xl flex flex-col"
+              className={cn(
+                "w-full max-w-sm overflow-hidden shadow-2xl flex flex-col transition-all",
+                currentTheme.customStyles?.glassEffect ? "backdrop-blur-3xl bg-black/40" : "bg-zinc-900",
+                currentTheme.customStyles?.bubbleStyle === 'sharp' ? "rounded-none" : "rounded-3xl",
+                currentTheme.customStyles?.borderStyle ? "" : "border border-amber-500/30"
+              )}
+              style={{ border: currentTheme.customStyles?.borderStyle || undefined }}
             >
               <div className="p-6 text-center space-y-6">
                 <div className="w-20 h-20 mx-auto bg-amber-500/20 rounded-full flex items-center justify-center border border-amber-500/50">
@@ -3267,7 +3322,7 @@ export default function Chat({ user }: ChatProps) {
           onRateProfile={(uid) => {
             const targetUser = allUsers.find(u => u.uid === uid);
             if (targetUser) {
-              setSelectedUserForRating(targetUser as unknown as User);
+              setSelectedUserForRating(targetUser);
               setShowRatingModal(true);
             }
             setSelectedUserForOptions(null);
@@ -3275,7 +3330,7 @@ export default function Chat({ user }: ChatProps) {
           onForceSpeak={(uid) => {
             const targetUser = allUsers.find(u => u.uid === uid);
             if (targetUser) {
-              setSelectedUserForForceSpeak(targetUser as unknown as User);
+              setSelectedUserForForceSpeak(targetUser);
               setShowForceSpeakModal(true);
             }
             setSelectedUserForOptions(null);
@@ -3283,7 +3338,7 @@ export default function Chat({ user }: ChatProps) {
           onMute={(uid) => {
             const targetUser = allUsers.find(u => u.uid === uid);
             if (targetUser) {
-              setSelectedUserForAdmin(targetUser as unknown as User);
+              setSelectedUserForAdmin(targetUser);
               setAdminAction('mute');
               setShowAdminModal(true);
             }
@@ -3292,7 +3347,7 @@ export default function Chat({ user }: ChatProps) {
           onKick={(uid) => {
             const targetUser = allUsers.find(u => u.uid === uid);
             if (targetUser) {
-              setSelectedUserForAdmin(targetUser as unknown as User);
+              setSelectedUserForAdmin(targetUser);
               setAdminAction('kick');
               setShowAdminModal(true);
             }
@@ -3301,7 +3356,7 @@ export default function Chat({ user }: ChatProps) {
           onBan={(uid) => {
             const targetUser = allUsers.find(u => u.uid === uid);
             if (targetUser) {
-              setSelectedUserForAdmin(targetUser as unknown as User);
+              setSelectedUserForAdmin(targetUser);
               setAdminAction('ban');
               setShowAdminModal(true);
             }
@@ -3310,7 +3365,7 @@ export default function Chat({ user }: ChatProps) {
           onViewRatings={(uid) => {
             const targetUser = allUsers.find(u => u.uid === uid);
             if (targetUser) {
-              setSelectedUserForRatingsList(targetUser as unknown as User);
+              setSelectedUserForRatingsList(targetUser);
               setShowRatingsList(true);
             }
             setSelectedUserForOptions(null);

@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
-import { auth, db } from '../firebase';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { UserProfile, UserRank } from '../types';
+import { supabase } from '../supabase';
+import { UserRank } from '../types';
 import { Infinity, Mail, Lock, User, Calendar, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
@@ -30,17 +28,29 @@ export default function Auth({ onAuthSuccess }: AuthProps) {
 
     try {
       if (isLogin) {
-        await signInWithEmailAndPassword(auth, email, password);
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (signInError) throw signInError;
       } else {
         if (!username || !age || !gender) throw new Error('Please fill all fields');
         if (Number(age) < 7) throw new Error('You must be at least 7 years old to join');
         
-        // Check if email is banned (this is tricky without a separate ban list, 
-        // but we can check if a user with this email was previously banned if we had a list.
-        // For now, we'll just handle the login ban check).
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              username,
+              age: Number(age),
+              gender,
+            }
+          }
+        });
 
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
+        if (signUpError) throw signUpError;
+        if (!signUpData.user) throw new Error('Sign up failed');
 
         let rank: UserRank = 'VIP';
         const devEmails = ['test@gmail.com', 'dev@gmail.com', 'developer@gmail.com', 'haydensixseven@gmail.com'];
@@ -48,25 +58,23 @@ export default function Auth({ onAuthSuccess }: AuthProps) {
           rank = 'DEVELOPER';
         }
 
-        await setDoc(doc(db, 'users', user.uid), {
-          uid: user.uid,
-          username,
-          email,
-          age: Number(age),
-          gender,
-          pfp: `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`,
-          banner: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809',
-          onboardingStep: 1,
-          isOnline: true,
-          lastSeen: new Date(),
-          gold: 1000,
-          rubies: 10,
-          hasReceivedReset: false,
-          theme: 'luxury-black',
-          cardStyle: 'default',
-          rank,
-          createdAt: new Date(),
-        });
+        // The trigger handle_new_user should handle profile creation, 
+        // but we can also update it here if needed for extra fields.
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({
+            age: Number(age),
+            gender,
+            gold: 1000,
+            rubies: 10,
+            rank,
+            theme: 'luxury-black',
+            card_style: 'default',
+            onboarding_step: 1,
+          })
+          .eq('id', signUpData.user.id);
+
+        if (profileError) console.error('Error updating profile:', profileError);
       }
       onAuthSuccess();
     } catch (err: any) {

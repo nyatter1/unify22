@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { auth, db } from '../firebase';
-import { collection, query, orderBy, limit, onSnapshot, addDoc, serverTimestamp, doc, updateDoc, where, increment, getDocs, deleteDoc, writeBatch, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { collection, query, orderBy, limit, onSnapshot, addDoc, serverTimestamp, doc, updateDoc, where, increment, getDocs, deleteDoc, writeBatch, arrayUnion, arrayRemove, deleteField } from 'firebase/firestore';
 import { UserProfile, Message, Theme, CardStyle, UserRank } from '../types';
 import { THEMES, CARD_STYLES, AVATARS, BANNERS, RANKS, RankInfo, BORDERS, PROFILE_EFFECTS, PETS, CURSORS } from '../constants';
 import { 
@@ -240,8 +240,9 @@ export default function Chat({ user }: ChatProps) {
   const filteredUsers = allUsers
     .filter(u => {
       const matchesSearch = u.username.toLowerCase().includes(userSearch.toLowerCase());
-      const matchesFriends = !showFriendsOnly || user.friends?.includes(u.uid);
-      return matchesSearch && matchesFriends;
+      const matchesFriends = sidebarView !== 'friends' || user.friends?.includes(u.uid);
+      const matchesStaff = sidebarView !== 'staff' || ['DEVELOPER', 'ADMINISTRATION', 'STAR', 'FOUNDER', 'MODERATOR'].includes(u.rank as string);
+      return matchesSearch && matchesFriends && matchesStaff;
     })
     .sort((a, b) => {
       // Current user always first
@@ -635,7 +636,7 @@ export default function Chat({ user }: ChatProps) {
     }
   };
 
-  const updateCustomization = async (field: 'theme' | 'cardStyle' | 'border' | 'profileEffect' | 'username' | 'age' | 'gender' | 'bio' | 'pfp' | 'banner' | 'profileVideoUrl', value: any) => {
+  const updateCustomization = async (field: 'theme' | 'cardStyle' | 'border' | 'profileEffect' | 'username' | 'age' | 'gender' | 'bio' | 'pfp' | 'banner' | 'profileVideoUrl' | 'pet' | 'cursor', value: any) => {
     try {
       await updateDoc(doc(db, 'users', user.uid), { [field]: value });
       if (selectedProfile?.uid === user.uid) {
@@ -2025,7 +2026,7 @@ export default function Chat({ user }: ChatProps) {
           </div>
           
           <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
-            {(sidebarView === 'friends' ? allUsers.filter(u => user.friends?.includes(u.uid)) : filteredUsers).map((u) => {
+            {filteredUsers.map((u) => {
               const { className, style, textClass } = getCardStyles(u);
               return (
                 <div 

@@ -1,25 +1,23 @@
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth"; // Added this
-import { getFirestore } from "firebase/firestore"; // Added this
 import { getAnalytics } from "firebase/analytics";
+import { getAuth } from "firebase/auth"; 
+// 1. Import Firestore
+import { getFirestore } from "firebase/firestore"; 
 
 const firebaseConfig = {
-  apiKey: "AIzaSyB2ozwEYKEXO8o4RrZLB187rJ1PQjO9OTc",
-  authDomain: "unify2-2c34f.firebaseapp.com",
-  databaseURL: "https://unify2-2c34f-default-rtdb.firebaseio.com",
-  projectId: "unify2-2c34f",
-  storageBucket: "unify2-2c34f.firebasestorage.app",
-  messagingSenderId: "883586717972",
-  appId: "1:883586717972:web:ce44e368a91b315dfdca01",
-  measurementId: "G-J35JN3V7X3"
+  apiKey: "AIzaSyD_qz-rzZq-_c_JTYHw494AeAxE-1vPBmA",
+  authDomain: "unify-3.firebaseapp.com",
+  projectId: "unify-3",
+  storageBucket: "unify-3.firebasestorage.app",
+  messagingSenderId: "34667720065",
+  appId: "1:34667720065:web:fb37a2709ece6503130c80",
+  measurementId: "G-NP7FM48CJ9"
 };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 
-// Initialize and Export services
-export const auth = getAuth(app);      // This fixes the "auth" export error
-export const db = getFirestore(app);   // This fixes the "db" export error
-export const analytics = getAnalytics(app);
-
-export default app;
+// 2. Export the services you need
+export const auth = getAuth(app);
+export const db = getFirestore(app); // This fixes the 'db' export error

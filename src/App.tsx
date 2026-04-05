@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { auth, db } from './firebase';
-import { onAuthStateChanged } from 'firebase/auth';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { supabase } from './supabase';
 import { UserProfile } from './types';
 import Auth from './components/Auth';
 import Onboarding from './components/Onboarding';
@@ -14,28 +12,62 @@ export default function App() {
   const [authReady, setAuthReady] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    // Check current session
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setAuthReady(true);
-      if (firebaseUser) {
-        // Listen to user profile
-        const userDoc = doc(db, 'users', firebaseUser.uid);
-        const unsubProfile = onSnapshot(userDoc, (docSnap) => {
-          if (docSnap.exists()) {
-            setUser(docSnap.data() as UserProfile);
-          } else {
-            setUser(null);
-          }
-          setLoading(false);
-        });
-        return () => unsubProfile();
+      if (session?.user) {
+        fetchProfile(session.user.id);
+      } else {
+        setLoading(false);
+      }
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setAuthReady(true);
+      if (session?.user) {
+        fetchProfile(session.user.id);
       } else {
         setUser(null);
         setLoading(false);
       }
     });
 
-    return () => unsubscribe();
+    return () => subscription.unsubscribe();
   }, []);
+
+  const fetchProfile = async (uid: string) => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', uid)
+      .single();
+
+    if (error) {
+      console.error('Error fetching profile:', error);
+      setUser(null);
+    } else {
+      setUser(data as UserProfile);
+    }
+    setLoading(false);
+
+    // Real-time subscription for profile updates
+    const channel = supabase
+      .channel(`profile:${uid}`)
+      .on('postgres_changes', { 
+        event: 'UPDATE', 
+        schema: 'public', 
+        table: 'profiles', 
+        filter: `id=eq.${uid}` 
+      }, (payload) => {
+        setUser(payload.new as UserProfile);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  };
 
   if (!authReady || loading) {
     return (

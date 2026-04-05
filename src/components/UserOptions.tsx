@@ -109,7 +109,7 @@ export const UserOptions: React.FC<UserOptionsProps> = ({
               <div className="pt-4 border-t border-white/5 mt-4 space-y-2">
                 <h3 className="text-xs font-bold text-white/40 uppercase tracking-wider px-3 mb-2">Moderation</h3>
                 
-                {targetUser.isMuted ? (
+                {targetUser.mutedUntil?.toDate && targetUser.mutedUntil.toDate() > new Date() ? (
                   <button onClick={() => onUnmute(targetUser.uid)} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-green-500/10 text-green-400 transition-all"><Volume2 className="w-4 h-4" /> Unmute User</button>
                 ) : (
                   <button onClick={() => onMute(targetUser.uid)} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-red-500/10 text-red-400 transition-all"><VolumeX className="w-4 h-4" /> Mute User</button>
@@ -117,13 +117,13 @@ export const UserOptions: React.FC<UserOptionsProps> = ({
 
                 {isAdmin && (
                   <>
-                    {targetUser.isKicked ? (
+                    {targetUser.kickedUntil?.toDate && targetUser.kickedUntil.toDate() > new Date() ? (
                       <button onClick={() => onUnkick(targetUser.uid)} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-green-500/10 text-green-500 transition-all"><UserPlus className="w-4 h-4" /> Unkick User</button>
                     ) : (
                       <button onClick={() => onKick(targetUser.uid)} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-red-500/10 text-red-500 transition-all"><UserMinus className="w-4 h-4" /> Kick User</button>
                     )}
 
-                    {targetUser.isBanned ? (
+                    {targetUser.bannedUntil?.toDate && targetUser.bannedUntil.toDate() > new Date() ? (
                       <button onClick={() => onUnban(targetUser.uid)} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-green-500/10 text-green-600 transition-all"><UserCheck className="w-4 h-4" /> Unban User</button>
                     ) : (
                       <button onClick={() => onBan(targetUser.uid)} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-red-500/10 text-red-600 transition-all"><UserX className="w-4 h-4" /> Ban User</button>

@@ -1,6 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { db } from '../firebase';
-import { doc, updateDoc } from 'firebase/firestore';
+import { supabase } from '../supabase';
 import { UserProfile } from '../types';
 import { AVATARS, BANNERS } from '../constants';
 import { motion, AnimatePresence } from 'motion/react';
@@ -27,7 +26,7 @@ export default function Onboarding({ user, onComplete }: OnboardingProps) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check file size (Firestore limit is 1MB per document, so we should keep it small)
+    // Check file size (Supabase/Postgres limit is usually larger, but we should keep it small for performance)
     if (file.size > 500000) { // 500KB limit for safety
       setError('File is too large. Please choose an image under 500KB.');
       setTimeout(() => setError(null), 3000);
@@ -49,11 +48,16 @@ export default function Onboarding({ user, onComplete }: OnboardingProps) {
     } else {
       setLoading(true);
       try {
-        await updateDoc(doc(db, 'users', user.uid), {
-          pfp: selectedPfp,
-          banner: selectedBanner,
-          onboardingStep: 0,
-        });
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({
+            pfp: selectedPfp,
+            banner: selectedBanner,
+            onboarding_step: 0,
+          })
+          .eq('id', user.id);
+
+        if (updateError) throw updateError;
         onComplete();
       } catch (err) {
         console.error(err);

@@ -1,7 +1,7 @@
+// PollModal.tsx — replace src/components/PollModal.tsx
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
-import { db } from '../firebase';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { supabase } from '../supabase';
 
 interface PollModalProps {
   onClose: () => void;
@@ -13,19 +13,19 @@ export const PollModal: React.FC<PollModalProps> = ({ onClose, currentUser }) =>
   const [options, setOptions] = useState(['', '']);
 
   const handleCreatePoll = async () => {
-    if (!question || options.some(o => !o)) return;
+    if (!question || options.some((o) => !o)) return;
     try {
-      await addDoc(collection(db, 'messages'), {
-        senderId: currentUser.uid,
-        senderUsername: currentUser.username,
-        senderPfp: currentUser.pfp,
+      await supabase.from('messages').insert({
+        sender_id: currentUser.uid,
+        sender_username: currentUser.username,
+        sender_pfp: currentUser.pfp,
         text: `Poll: ${question}`,
         type: 'poll',
-        pollData: {
+        poll_data: {
           question,
-          options: options.map(o => ({ text: o, votes: 0 }))
+          options: options.map((o) => ({ text: o, votes: 0 })),
         },
-        timestamp: serverTimestamp()
+        timestamp: new Date().toISOString(),
       });
       onClose();
     } catch (err) {
@@ -40,16 +40,14 @@ export const PollModal: React.FC<PollModalProps> = ({ onClose, currentUser }) =>
           <h2 className="text-lg font-bold text-white">Create Poll</h2>
           <button onClick={onClose} className="text-white/60 hover:text-white"><X className="w-5 h-5" /></button>
         </div>
-        
-        <input 
+        <input
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
           placeholder="Poll question..."
           className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white mb-4"
         />
-        
         {options.map((o, i) => (
-          <input 
+          <input
             key={i}
             value={o}
             onChange={(e) => {
@@ -61,8 +59,10 @@ export const PollModal: React.FC<PollModalProps> = ({ onClose, currentUser }) =>
             className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white mb-2"
           />
         ))}
-        
-        <button onClick={handleCreatePoll} className="w-full py-3 rounded-xl bg-amber-500 text-black font-bold uppercase tracking-widest hover:bg-amber-400 transition-colors">
+        <button
+          onClick={handleCreatePoll}
+          className="w-full py-3 rounded-xl bg-amber-500 text-black font-bold uppercase tracking-widest hover:bg-amber-400 transition-colors"
+        >
           Create Poll
         </button>
       </div>

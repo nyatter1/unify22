@@ -314,11 +314,13 @@ export default function Chat({ user }: ChatProps) {
       };
     }
 
+    const userBorder = BORDERS.find(b => b.id === u.border);
+
     return {
       className: cn(
         "flex items-center gap-4 group cursor-pointer p-3 rounded-2xl border transition-all",
         style.bgClass,
-        style.borderClass
+        userBorder && userBorder.id !== 'border-none' ? userBorder.className : style.borderClass
       ),
       style: {},
       textClass: style.textClass,
@@ -1489,6 +1491,9 @@ export default function Chat({ user }: ChatProps) {
                 );
               }
 
+              const msgUser = allUsers.find(u => u.uid === msg.senderId);
+              const userBorder = msgUser?.border ? BORDERS.find(b => b.id === msgUser.border) : null;
+
               return (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
@@ -1500,7 +1505,10 @@ export default function Chat({ user }: ChatProps) {
                     <img 
                       src={msg.senderPfp} 
                       onClick={() => handleProfileClick(msg.senderId)}
-                      className="w-10 h-10 rounded-full border border-white/20 object-cover shadow-lg cursor-pointer hover:scale-105 transition-transform" 
+                      className={cn(
+                        "w-10 h-10 rounded-full object-cover shadow-lg cursor-pointer hover:scale-105 transition-transform",
+                        userBorder && userBorder.id !== 'border-none' ? userBorder.className : "border border-white/20"
+                      )}
                     />
                     {msg.senderId === 'admin' && <Shield className="w-3 h-3 text-amber-400 absolute -top-1 -right-1" />}
                   </div>
@@ -1837,6 +1845,8 @@ export default function Chat({ user }: ChatProps) {
                     tab={customizerTab} 
                     selectedTheme={allThemes.find(t => t.id === user.theme)}
                     selectedCard={allCardStyles.find(s => s.id === user.cardStyle)}
+                    selectedBorder={BORDERS.find(b => b.id === user.border)}
+                    selectedEffect={PROFILE_EFFECTS.find(e => e.id === user.profileEffect)}
                   />
                 </div>
 
@@ -1987,7 +1997,7 @@ export default function Chat({ user }: ChatProps) {
                   </div>
                 ) : customizerTab === 'effects' ? (
                   <div className="space-y-12">
-                    {['Basic', 'Weather', 'Cyber', 'Material', 'Elements', 'Space', 'Party'].map(category => {
+                    {['Basic', 'Weather', 'Cyber', 'Elements', 'Space', 'Party', 'Funny'].map(category => {
                       const categoryEffects = PROFILE_EFFECTS.filter(e => e.category === category);
                       if (categoryEffects.length === 0) return null;
 

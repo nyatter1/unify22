@@ -36,11 +36,11 @@ export const CustomizerPreview: React.FC<CustomizerPreviewProps> = ({
           </div>
         )}
         
-        {(tab === 'cards' || tab === 'borders') && selectedCard && (
+        {tab !== 'themes' && selectedCard && (
           <div className={cn(
             "p-6 rounded-2xl border-2 flex items-center gap-4",
             selectedCard.bgClass,
-            selectedBorder ? selectedBorder.className : selectedCard.borderClass
+            selectedBorder && selectedBorder.id !== 'border-none' ? selectedBorder.className : selectedCard.borderClass
           )}>
             <img src={user.pfp} className="w-12 h-12 rounded-full" alt="pfp" />
             <div>

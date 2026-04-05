@@ -268,127 +268,57 @@ export const CARD_STYLES: CardStyle[] = [
 
 export const PROFILE_EFFECTS: ProfileEffect[] = [
   { id: 'effect-none', name: 'None', category: 'Basic', className: '' },
+  
+  // Weather
   { id: 'effect-snow', name: 'Snowfall', category: 'Weather', className: 'effect-snow' },
   { id: 'effect-rain', name: 'Rainstorm', category: 'Weather', className: 'effect-rain' },
-  { id: 'effect-matrix', name: 'Matrix Rain', category: 'Cyber', className: 'effect-matrix' },
-  { id: 'effect-scanline', name: 'Scanlines', category: 'Cyber', className: 'effect-scanline' },
-  { id: 'effect-glitch', name: 'Cyber Glitch', category: 'Cyber', className: 'effect-glitch' },
-  { id: 'effect-fireflies', name: 'Fireflies', category: 'Elements', className: 'effect-fireflies' },
-  { id: 'effect-stars', name: 'Starfield', category: 'Space', className: 'effect-stars' },
-  { id: 'effect-pulse', name: 'Neon Pulse', category: 'Cyber', className: 'effect-pulse' },
-  { id: 'effect-confetti', name: 'Confetti', category: 'Party', className: 'effect-confetti' },
-  { id: 'effect-floating-orbs', name: 'Floating Orbs', category: 'Elements', className: 'effect-floating-orbs' },
   { id: 'effect-lightning', name: 'Lightning', category: 'Weather', className: 'effect-lightning' },
-  { id: 'effect-aurora', name: 'Aurora Borealis', category: 'Space', className: 'effect-aurora' },
-  { id: 'effect-blood-rain', name: 'Blood Rain', category: 'Weather', className: 'effect-blood-rain' },
+  
+  // Cyber
+  { id: 'effect-matrix', name: 'Matrix Rain', category: 'Cyber', className: 'effect-matrix' },
+  { id: 'effect-glitch', name: 'Cyber Glitch', category: 'Cyber', className: 'effect-glitch' },
+  { id: 'effect-scanline', name: 'Scanlines', category: 'Cyber', className: 'effect-scanline' },
+  
+  // Elements
+  { id: 'effect-fireflies', name: 'Fireflies', category: 'Elements', className: 'effect-fireflies' },
   { id: 'effect-bubbles', name: 'Bubbles', category: 'Elements', className: 'effect-bubbles' },
-  // New Effects
-  { id: 'effect-wind', name: 'Wind', category: 'Weather', className: 'effect-wind' },
-  { id: 'effect-fog', name: 'Fog', category: 'Weather', className: 'effect-fog' },
-  { id: 'effect-data', name: 'Data Stream', category: 'Cyber', className: 'effect-data' },
-  { id: 'effect-circuit', name: 'Circuit Board', category: 'Cyber', className: 'effect-circuit' },
-  { id: 'effect-neon-grid', name: 'Neon Grid', category: 'Cyber', className: 'effect-neon-grid' },
   { id: 'effect-fire', name: 'Fire', category: 'Elements', className: 'effect-fire' },
-  { id: 'effect-water', name: 'Water', category: 'Elements', className: 'effect-water' },
   { id: 'effect-plasma', name: 'Plasma', category: 'Elements', className: 'effect-plasma' },
+  
+  // Space
+  { id: 'effect-stars', name: 'Starfield', category: 'Space', className: 'effect-stars' },
+  { id: 'effect-aurora', name: 'Aurora Borealis', category: 'Space', className: 'effect-aurora' },
   { id: 'effect-nebula', name: 'Nebula', category: 'Space', className: 'effect-nebula' },
-  { id: 'effect-comet', name: 'Comet', category: 'Space', className: 'effect-comet' },
-  { id: 'effect-noise', name: 'Noise', category: 'Texture', className: 'effect-noise' },
-  { id: 'effect-grain', name: 'Grain', category: 'Texture', className: 'effect-grain' },
-  { id: 'effect-paper', name: 'Paper', category: 'Texture', className: 'effect-paper' },
-  { id: 'effect-canvas', name: 'Canvas', category: 'Texture', className: 'effect-canvas' },
-  { id: 'effect-grid', name: 'Grid', category: 'Texture', className: 'effect-grid' },
-  { id: 'effect-dots', name: 'Dots', category: 'Texture', className: 'effect-dots' },
-  { id: 'effect-stripes', name: 'Stripes', category: 'Texture', className: 'effect-stripes' },
+  
+  // Party
+  { id: 'effect-confetti', name: 'Confetti', category: 'Party', className: 'effect-confetti' },
   { id: 'effect-disco', name: 'Disco', category: 'Party', className: 'effect-disco' },
-  { id: 'effect-fireworks', name: 'Fireworks', category: 'Party', className: 'effect-fireworks' },
   { id: 'effect-laser', name: 'Laser', category: 'Party', className: 'effect-laser' },
-  { id: 'effect-wave', name: 'Wave', category: 'Abstract', className: 'effect-wave' },
-  { id: 'effect-flow', name: 'Flow', category: 'Abstract', className: 'effect-flow' },
-  { id: 'effect-warp', name: 'Warp', category: 'Abstract', className: 'effect-warp' },
-  { id: 'effect-tunnel', name: 'Tunnel', category: 'Abstract', className: 'effect-tunnel' },
-  { id: 'effect-vortex', name: 'Vortex', category: 'Abstract', className: 'effect-vortex' },
-  { id: 'effect-sparkles', name: 'Sparkles', category: 'Elements', className: 'effect-sparkles' },
-  { id: 'effect-smoke', name: 'Smoke', category: 'Weather', className: 'effect-smoke' },
-  { id: 'effect-sand', name: 'Sandstorm', category: 'Weather', className: 'effect-sand' },
-  { id: 'effect-lava', name: 'Lava', category: 'Elements', className: 'effect-lava' },
-  { id: 'effect-ice', name: 'Ice', category: 'Elements', className: 'effect-ice' },
-  { id: 'effect-shadow', name: 'Shadow', category: 'Abstract', className: 'effect-shadow' },
-  { id: 'effect-light', name: 'Light', category: 'Abstract', className: 'effect-light' },
-  { id: 'effect-bloom', name: 'Bloom', category: 'Abstract', className: 'effect-bloom' },
-  { id: 'effect-blur', name: 'Blur', category: 'Abstract', className: 'effect-blur' },
-  { id: 'effect-invert', name: 'Invert', category: 'Abstract', className: 'effect-invert' },
-  { id: 'effect-sepia', name: 'Sepia', category: 'Texture', className: 'effect-sepia' },
-  { id: 'effect-grayscale', name: 'Grayscale', category: 'Texture', className: 'effect-grayscale' },
-  // 50+ More Effects
-  { id: 'effect-vibrant', name: 'Vibrant', category: 'Abstract', className: 'effect-vibrant' },
-  { id: 'effect-cool', name: 'Cool', category: 'Abstract', className: 'effect-cool' },
-  { id: 'effect-warm', name: 'Warm', category: 'Abstract', className: 'effect-warm' },
-  { id: 'effect-pastel', name: 'Pastel', category: 'Abstract', className: 'effect-pastel' },
-  { id: 'effect-dark', name: 'Dark', category: 'Abstract', className: 'effect-dark' },
-  { id: 'effect-light-glow', name: 'Light Glow', category: 'Abstract', className: 'effect-light-glow' },
-  { id: 'effect-shadow-deep', name: 'Deep Shadow', category: 'Abstract', className: 'effect-shadow-deep' },
-  { id: 'effect-outline', name: 'Outline', category: 'Abstract', className: 'effect-outline' },
-  { id: 'effect-double-outline', name: 'Double Outline', category: 'Abstract', className: 'effect-double-outline' },
-  { id: 'effect-triple-outline', name: 'Triple Outline', category: 'Abstract', className: 'effect-triple-outline' },
-  { id: 'effect-glow-red', name: 'Glow Red', category: 'Cyber', className: 'effect-glow-red' },
-  { id: 'effect-glow-blue', name: 'Glow Blue', category: 'Cyber', className: 'effect-glow-blue' },
-  { id: 'effect-glow-green', name: 'Glow Green', category: 'Cyber', className: 'effect-glow-green' },
-  { id: 'effect-glow-yellow', name: 'Glow Yellow', category: 'Cyber', className: 'effect-glow-yellow' },
-  { id: 'effect-glow-purple', name: 'Glow Purple', category: 'Cyber', className: 'effect-glow-purple' },
-  { id: 'effect-glow-pink', name: 'Glow Pink', category: 'Cyber', className: 'effect-glow-pink' },
-  { id: 'effect-glow-orange', name: 'Glow Orange', category: 'Cyber', className: 'effect-glow-orange' },
-  { id: 'effect-glow-cyan', name: 'Glow Cyan', category: 'Cyber', className: 'effect-glow-cyan' },
-  { id: 'effect-glow-lime', name: 'Glow Lime', category: 'Cyber', className: 'effect-glow-lime' },
-  { id: 'effect-glow-teal', name: 'Glow Teal', category: 'Cyber', className: 'effect-glow-teal' },
-  { id: 'effect-glow-indigo', name: 'Glow Indigo', category: 'Cyber', className: 'effect-glow-indigo' },
-  { id: 'effect-glow-violet', name: 'Glow Violet', category: 'Cyber', className: 'effect-glow-violet' },
-  { id: 'effect-glow-fuchsia', name: 'Glow Fuchsia', category: 'Cyber', className: 'effect-glow-fuchsia' },
-  { id: 'effect-glow-rose', name: 'Glow Rose', category: 'Cyber', className: 'effect-glow-rose' },
-  { id: 'effect-glow-sky', name: 'Glow Sky', category: 'Cyber', className: 'effect-glow-sky' },
-  { id: 'effect-glow-emerald', name: 'Glow Emerald', category: 'Cyber', className: 'effect-glow-emerald' },
-  { id: 'effect-glow-amber', name: 'Glow Amber', category: 'Cyber', className: 'effect-glow-amber' },
-  { id: 'effect-glow-slate', name: 'Glow Slate', category: 'Cyber', className: 'effect-glow-slate' },
-  { id: 'effect-glow-zinc', name: 'Glow Zinc', category: 'Cyber', className: 'effect-glow-zinc' },
-  { id: 'effect-glow-stone', name: 'Glow Stone', category: 'Cyber', className: 'effect-glow-stone' },
-  { id: 'effect-float-up', name: 'Float Up', category: 'Elements', className: 'effect-float-up' },
-  { id: 'effect-float-down', name: 'Float Down', category: 'Elements', className: 'effect-float-down' },
-  { id: 'effect-float-left', name: 'Float Left', category: 'Elements', className: 'effect-float-left' },
-  { id: 'effect-float-right', name: 'Float Right', category: 'Elements', className: 'effect-float-right' },
-  { id: 'effect-spin-slow', name: 'Slow Spin', category: 'Elements', className: 'effect-spin-slow' },
-  { id: 'effect-spin-fast', name: 'Fast Spin', category: 'Elements', className: 'effect-spin-fast' },
-  { id: 'effect-bounce-slow', name: 'Slow Bounce', category: 'Elements', className: 'effect-bounce-slow' },
-  { id: 'effect-bounce-fast', name: 'Fast Bounce', category: 'Elements', className: 'effect-bounce-fast' },
-  { id: 'effect-shake-slow', name: 'Slow Shake', category: 'Elements', className: 'effect-shake-slow' },
-  { id: 'effect-shake-fast', name: 'Fast Shake', category: 'Elements', className: 'effect-shake-fast' },
-  { id: 'effect-pulse-slow', name: 'Slow Pulse', category: 'Elements', className: 'effect-pulse-slow' },
-  { id: 'effect-pulse-fast', name: 'Fast Pulse', category: 'Elements', className: 'effect-pulse-fast' },
-  { id: 'effect-blink-slow', name: 'Slow Blink', category: 'Elements', className: 'effect-blink-slow' },
-  { id: 'effect-blink-fast', name: 'Fast Blink', category: 'Elements', className: 'effect-blink-fast' },
-  { id: 'effect-fade-in', name: 'Fade In', category: 'Elements', className: 'effect-fade-in' },
-  { id: 'effect-fade-out', name: 'Fade Out', category: 'Elements', className: 'effect-fade-out' },
-  { id: 'effect-zoom-in', name: 'Zoom In', category: 'Elements', className: 'effect-zoom-in' },
-  { id: 'effect-zoom-out', name: 'Zoom Out', category: 'Elements', className: 'effect-zoom-out' },
-  { id: 'effect-slide-in', name: 'Slide In', category: 'Elements', className: 'effect-slide-in' },
-  { id: 'effect-slide-out', name: 'Slide Out', category: 'Elements', className: 'effect-slide-out' },
-  // More Textures and Abstract Effects
-  { id: 'effect-carbon-fiber', name: 'Carbon Fiber', category: 'Texture', className: 'effect-carbon-fiber' },
-  { id: 'effect-brushed-metal', name: 'Brushed Metal', category: 'Texture', className: 'effect-brushed-metal' },
-  { id: 'effect-leather', name: 'Leather', category: 'Texture', className: 'effect-leather' },
-  { id: 'effect-wood', name: 'Wood Grain', category: 'Texture', className: 'effect-wood' },
-  { id: 'effect-marble', name: 'Marble', category: 'Texture', className: 'effect-marble' },
-  { id: 'effect-liquid-gold', name: 'Liquid Gold', category: 'Abstract', className: 'effect-liquid-gold' },
-  { id: 'effect-cosmic-dust', name: 'Cosmic Dust', category: 'Abstract', className: 'effect-cosmic-dust' },
-  { id: 'effect-digital-rain', name: 'Digital Rain', category: 'Abstract', className: 'effect-digital-rain' },
-  { id: 'effect-holographic', name: 'Holographic', category: 'Abstract', className: 'effect-holographic' },
-  { id: 'effect-static', name: 'TV Static', category: 'Abstract', className: 'effect-static' }
+  
+  // Funny & Fun
+  { id: 'effect-triggered', name: 'Triggered', category: 'Funny', className: 'effect-triggered' },
+  { id: 'effect-hypnotoad', name: 'Hypno', category: 'Funny', className: 'effect-hypnotoad' },
+  { id: 'effect-stonks', name: 'Stonks', category: 'Funny', className: 'effect-stonks' },
+  { id: 'effect-not-stonks', name: 'Not Stonks', category: 'Funny', className: 'effect-not-stonks' },
+  { id: 'effect-uwu', name: 'UwU Hearts', category: 'Funny', className: 'effect-uwu' },
+  { id: 'effect-dvd', name: 'DVD Bounce', category: 'Funny', className: 'effect-dvd' },
+  { id: 'effect-jello', name: 'Jello Wiggle', category: 'Funny', className: 'effect-jello' },
+  { id: 'effect-rainbow-puke', name: 'Rainbow Puke', category: 'Funny', className: 'effect-rainbow-puke' },
+  { id: 'effect-brain-empty', name: 'Brain Empty', category: 'Funny', className: 'effect-brain-empty' },
+  { id: 'effect-sweat', name: 'Sweating', category: 'Funny', className: 'effect-sweat' },
+  { id: 'effect-sus', name: 'Sus Flash', category: 'Funny', className: 'effect-sus' },
+  { id: 'effect-clown', name: 'Clown Mode', category: 'Funny', className: 'effect-clown' },
+  { id: 'effect-wasted', name: 'Wasted', category: 'Funny', className: 'effect-wasted' },
+  { id: 'effect-nyan', name: 'Nyan Trail', category: 'Funny', className: 'effect-nyan' }
 ];
 
 export const BORDERS: Border[] = (() => {
   const colors = ['red', 'orange', 'amber', 'yellow', 'lime', 'green', 'emerald', 'teal', 'cyan', 'sky', 'blue', 'indigo', 'violet', 'purple', 'fuchsia', 'pink', 'rose', 'slate', 'gray', 'zinc', 'neutral', 'stone'];
   const styles = ['solid', 'dashed', 'dotted', 'double'];
   const widths = ['2', '4', '8'];
-  const borders: Border[] = [];
+  const borders: Border[] = [
+    { id: 'border-none', name: 'None', category: 'Basic', className: '' }
+  ];
   let id = 1;
   for (const color of colors) {
     for (const style of styles) {

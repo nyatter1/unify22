@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { supabase } from '../supabase';
+import { auth } from '../firebase';
 import { UserProfile } from '../types';
 import { AVATARS, BANNERS } from '../constants';
 import { motion, AnimatePresence } from 'motion/react';

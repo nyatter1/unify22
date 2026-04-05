@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { db } from './firebase';
+// 1. Updated Imports
+import { auth, db } from './firebase'; 
+import { onAuthStateChanged } from 'firebase/auth';
+import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { UserProfile } from './types';
 import Auth from './components/Auth';
 import Onboarding from './components/Onboarding';
@@ -12,71 +15,54 @@ export default function App() {
   const [authReady, setAuthReady] = useState(false);
 
   useEffect(() => {
-    // Check current session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // 2. Firebase Auth Listener (Replaces supabase.auth.onAuthStateChange)
+    const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
       setAuthReady(true);
-      if (session?.user) {
-        fetchProfile(session.user.id);
-      } else {
-        setLoading(false);
-      }
-    });
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setAuthReady(true);
-      if (session?.user) {
-        fetchProfile(session.user.id);
+      if (firebaseUser) {
+        fetchProfile(firebaseUser.uid);
       } else {
         setUser(null);
         setLoading(false);
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => unsubscribeAuth();
   }, []);
 
   const fetchProfile = async (uid: string) => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', uid)
-      .single();
+    try {
+      // 3. Real-time Firestore Subscription (Replaces fetch + channel)
+      const docRef = doc(db, 'profiles', uid);
+      
+      // onSnapshot handles both the initial fetch and real-time updates
+      const unsubscribeProfile = onSnapshot(docRef, (docSnap) => {
+        if (docSnap.exists()) {
+          setUser(docSnap.data() as UserProfile);
+        } else {
+          console.error('No such profile!');
+          setUser(null);
+        }
+        setLoading(false);
+      }, (error) => {
+        console.error('Error fetching profile:', error);
+        setLoading(false);
+      });
 
-    if (error) {
-      console.error('Error fetching profile:', error);
-      setUser(null);
-    } else {
-      setUser(data as UserProfile);
+      return () => unsubscribeProfile();
+    } catch (error) {
+      console.error('Error in fetchProfile:', error);
+      setLoading(false);
     }
-    setLoading(false);
-
-    // Real-time subscription for profile updates
-    const channel = supabase
-      .channel(`profile:${uid}`)
-      .on('postgres_changes', { 
-        event: 'UPDATE', 
-        schema: 'public', 
-        table: 'profiles', 
-        filter: `id=eq.${uid}` 
-      }, (payload) => {
-        setUser(payload.new as UserProfile);
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   };
+
+  // --- UI RENDER LOGIC (Stayed mostly the same) ---
 
   if (!authReady || loading) {
     return (
       <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center relative overflow-hidden">
-        {/* Luxury Background Accents */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-amber-500/5 rounded-full blur-[120px]" />
         </div>
-        
         <div className="relative z-10 flex flex-col items-center">
           <div className="w-20 h-20 bg-gradient-to-br from-amber-200 via-amber-500 to-amber-700 rounded-3xl flex items-center justify-center shadow-[0_0_30px_rgba(245,158,11,0.2)] mb-8 animate-pulse">
             <Infinity className="w-12 h-12 text-black" strokeWidth={2.5} />
@@ -94,9 +80,9 @@ export default function App() {
     return <Auth onAuthSuccess={() => {}} />;
   }
 
-  // Ban Check
+  // Ban Check (Firebase Timestamps use .toDate())
   const now = new Date();
-  if (user.bannedUntil?.toDate && user.bannedUntil.toDate() > now) {
+  if (user.bannedUntil && user.bannedUntil.toDate() > now) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center text-white p-8">
         <div className="text-center space-y-4">

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Star, X, Trash2, Edit3, Check } from 'lucide-react';
-import { db } from '../firebase';
-import { collection, query, where, onSnapshot, doc, updateDoc, deleteDoc, orderBy } from 'firebase/firestore';
+import { supabase } from '../supabase';
 import { ProfileRating } from '../types';
 import { cn } from '../lib/utils';
 
@@ -18,36 +17,49 @@ export const RatingsList: React.FC<RatingsListProps> = ({ targetUid, currentUser
   const [editComment, setEditComment] = useState('');
 
   useEffect(() => {
-    const q = query(
-      collection(db, 'ratings'),
-      where('targetUid', '==', targetUid)
-    );
+    // Initial fetch
+    const fetchRatings = async () => {
+      const { data, error } = await supabase
+        .from('ratings')
+        .select('*')
+        .eq('target_uid', targetUid)
+        .order('timestamp', { ascending: false });
+      if (!error && data) setRatings(data.map(mapRating));
+    };
+    fetchRatings();
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as ProfileRating[];
-      
-      // Sort client-side to avoid index error
-      data.sort((a, b) => {
-        const timeA = a.timestamp?.toMillis?.() || 0;
-        const timeB = b.timestamp?.toMillis?.() || 0;
-        return timeB - timeA;
-      });
-      
-      setRatings(data);
-    });
+    // Realtime subscription
+    const channel = supabase
+      .channel(`ratings-${targetUid}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'ratings', filter: `target_uid=eq.${targetUid}` },
+        () => fetchRatings() // re-fetch on any change
+      )
+      .subscribe();
 
-    return () => unsubscribe();
+    return () => { supabase.removeChannel(channel); };
   }, [targetUid]);
+
+  function mapRating(row: any): ProfileRating {
+    return {
+      id: row.id,
+      targetUid: row.target_uid,
+      authorUid: row.author_uid,
+      authorUsername: row.author_username,
+      authorPfp: row.author_pfp,
+      rating: row.rating,
+      comment: row.comment,
+      timestamp: row.timestamp,
+    };
+  }
 
   const handleUpdate = async (id: string) => {
     try {
-      await updateDoc(doc(db, 'ratings', id), {
-        rating: editRating,
-        comment: editComment
-      });
+      await supabase
+        .from('ratings')
+        .update({ rating: editRating, comment: editComment })
+        .eq('id', id);
       setEditingId(null);
     } catch (err) {
       console.error(err);
@@ -56,7 +68,7 @@ export const RatingsList: React.FC<RatingsListProps> = ({ targetUid, currentUser
 
   const handleDelete = async (id: string) => {
     try {
-      await deleteDoc(doc(db, 'ratings', id));
+      await supabase.from('ratings').delete().eq('id', id);
     } catch (err) {
       console.error(err);
     }
@@ -69,7 +81,7 @@ export const RatingsList: React.FC<RatingsListProps> = ({ targetUid, currentUser
           <h2 className="text-lg font-bold text-white">Profile Ratings</h2>
           <button onClick={onClose} className="text-white/60 hover:text-white"><X className="w-5 h-5" /></button>
         </div>
-        
+
         <div className="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar">
           {ratings.length === 0 ? (
             <p className="text-center text-white/40 py-8 italic">No ratings yet.</p>
@@ -83,8 +95,8 @@ export const RatingsList: React.FC<RatingsListProps> = ({ targetUid, currentUser
                       <p className="text-sm font-bold text-white">{r.authorUsername}</p>
                       <div className="flex gap-0.5">
                         {[1, 2, 3, 4, 5].map((s) => (
-                          <Star 
-                            key={s} 
+                          <Star
+                            key={s}
                             className={cn("w-3 h-3", s <= (editingId === r.id ? editRating : r.rating) ? "text-amber-500 fill-amber-500" : "text-white/20")}
                             onClick={() => editingId === r.id && setEditRating(s)}
                           />
@@ -92,7 +104,7 @@ export const RatingsList: React.FC<RatingsListProps> = ({ targetUid, currentUser
                       </div>
                     </div>
                   </div>
-                  
+
                   {r.authorUid === currentUserUid && (
                     <div className="flex gap-2">
                       {editingId === r.id ? (
@@ -108,9 +120,9 @@ export const RatingsList: React.FC<RatingsListProps> = ({ targetUid, currentUser
                     </div>
                   )}
                 </div>
-                
+
                 {editingId === r.id ? (
-                  <textarea 
+                  <textarea
                     value={editComment}
                     onChange={(e) => setEditComment(e.target.value)}
                     className="w-full bg-black/60 border border-white/10 rounded-lg p-2 text-sm text-white mt-2 h-20"

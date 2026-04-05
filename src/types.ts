@@ -109,6 +109,12 @@ export interface UserProfile {
   mutedUntil?: any;
   kickedUntil?: any;
   bannedUntil?: any;
+  isMuted?: boolean;
+  isBanned?: boolean;
+  isKicked?: boolean;
+  pet?: string;
+  cursor?: string;
+  profileSong?: string;
 }
 
 export interface Message {
@@ -119,7 +125,8 @@ export interface Message {
   senderRank?: string;
   text: string;
   timestamp: any;
-  type?: 'text' | 'gamble_allin' | 'gamble_dice' | 'poll';
+  type?: 'text' | 'gamble_allin' | 'gamble_dice' | 'poll' | 'rps' | 'trivia' | 'nudge' | 'system';
+  reactions?: Record<string, string[]>; // emoji -> array of userIds
   gambleData?: {
     currency: 'gold' | 'rubies';
     amount: number;

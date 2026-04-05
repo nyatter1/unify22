@@ -6,7 +6,7 @@ import { doc, updateDoc } from 'firebase/firestore';
 interface AdminModalProps {
   targetUid: string;
   targetUsername: string;
-  action: 'mute' | 'kick' | 'ban';
+  action: 'mute' | 'kick' | 'ban' | 'unmute' | 'unkick' | 'unban';
   onClose: () => void;
 }
 
@@ -15,18 +15,26 @@ export const AdminModal: React.FC<AdminModalProps> = ({ targetUid, targetUsernam
     try {
       const userRef = doc(db, 'users', targetUid);
       if (action === 'mute') {
-        await updateDoc(userRef, { muted: true });
+        await updateDoc(userRef, { isMuted: true });
+      } else if (action === 'unmute') {
+        await updateDoc(userRef, { isMuted: false });
       } else if (action === 'kick') {
-        // Kick logic (e.g., set a flag that forces logout)
-        await updateDoc(userRef, { kicked: true });
+        await updateDoc(userRef, { isKicked: true });
+      } else if (action === 'unkick') {
+        await updateDoc(userRef, { isKicked: false });
       } else if (action === 'ban') {
-        await updateDoc(userRef, { banned: true });
+        await updateDoc(userRef, { isBanned: true });
+      } else if (action === 'unban') {
+        await updateDoc(userRef, { isBanned: false });
       }
       onClose();
     } catch (err) {
       console.error(err);
     }
   };
+
+  const isUnAction = action.startsWith('un');
+  const actionColor = isUnAction ? 'bg-green-600 hover:bg-green-500' : 'bg-red-600 hover:bg-red-500';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
@@ -38,7 +46,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ targetUid, targetUsernam
         
         <p className="text-white/60 mb-6">Are you sure you want to {action} {targetUsername}?</p>
         
-        <button onClick={handleAction} className="w-full py-3 rounded-xl bg-red-600 text-white font-bold uppercase tracking-widest hover:bg-red-500 transition-colors">
+        <button onClick={handleAction} className={`w-full py-3 rounded-xl text-white font-bold uppercase tracking-widest transition-colors ${actionColor}`}>
           Confirm {action}
         </button>
       </div>

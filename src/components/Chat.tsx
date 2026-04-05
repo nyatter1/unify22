@@ -53,7 +53,9 @@ import {
   Youtube,
   Menu,
   Pin,
-  PinOff
+  PinOff,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
@@ -156,7 +158,7 @@ export default function Chat({ user }: ChatProps) {
   const [selectedUserForForceSpeak, setSelectedUserForForceSpeak] = useState<UserProfile | null>(null);
   const [selectedUserForAdmin, setSelectedUserForAdmin] = useState<UserProfile | null>(null);
   const [selectedUserForRatingsList, setSelectedUserForRatingsList] = useState<UserProfile | null>(null);
-  const [adminAction, setAdminAction] = useState<'mute' | 'kick' | 'ban'>('mute');
+  const [adminAction, setAdminAction] = useState<'mute' | 'kick' | 'ban' | 'unmute' | 'unkick' | 'unban'>('mute');
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const [sidebarView, setSidebarView] = useState<'default' | 'search' | 'friends'>('default');
@@ -182,6 +184,9 @@ export default function Chat({ user }: ChatProps) {
   const [userSearch, setUserSearch] = useState('');
   const [userSort, setUserSort] = useState<'lastOnline' | 'highestRank' | 'lastOffline' | 'newest' | 'lastSeen'>('highestRank');
   const [showFriendsOnly, setShowFriendsOnly] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [triviaActive, setTriviaActive] = useState(false);
+  const [triviaQuestion, setTriviaQuestion] = useState<{q: string, a: string} | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const pfpInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
@@ -517,7 +522,19 @@ export default function Chat({ user }: ChatProps) {
     const q = query(collection(db, 'messages'), orderBy('timestamp', 'desc'), limit(50));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Message));
-      setMessages(msgs.reverse());
+      const newMsgs = msgs.reverse();
+      
+      // Check if there's a new message that isn't from the current user
+      if (messages.length > 0 && newMsgs.length > messages.length) {
+        const lastMsg = newMsgs[newMsgs.length - 1];
+        if (lastMsg.senderId !== user.uid && soundEnabled) {
+          const receiveAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3');
+          receiveAudio.volume = 0.5;
+          receiveAudio.play().catch(() => {});
+        }
+      }
+      
+      setMessages(newMsgs);
       setTimeout(() => scrollRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
     });
 
@@ -1038,8 +1055,9 @@ export default function Chat({ user }: ChatProps) {
       }
 
       if (command === '/clear' || command === '/clearchat') {
-        if (user.rank !== 'DEVELOPER') {
-          showToast('Only developers can use this command.');
+        const isAdmin = user.rank === 'DEVELOPER' || user.rank === 'ADMINISTRATION' || user.rank === 'STAR' || user.rank === 'FOUNDER';
+        if (!isAdmin) {
+          showToast('Only admins can use this command.');
           return;
         }
         try {
@@ -1051,7 +1069,7 @@ export default function Chat({ user }: ChatProps) {
           showToast('Chat cleared!');
         } catch (err) {
           console.error(err);
-          showToast('Failed to clear chat');
+          showToast('Failed to clear chat.');
         }
         return;
       }
@@ -1179,6 +1197,22 @@ export default function Chat({ user }: ChatProps) {
         xp: newLevel > currentLevel ? newXp - xpNeeded : newXp,
         level: newLevel
       });
+
+      // Easter Eggs
+      const lowerText = text.toLowerCase();
+      if (lowerText.includes('congrats') || lowerText.includes('congratulations')) {
+         // Could trigger a local confetti state here, for now just a toast
+         showToast('🎉 CONGRATULATIONS! 🎉');
+      } else if (lowerText.includes('happy birthday')) {
+         showToast('🎂 HAPPY BIRTHDAY! 🎈');
+      } else if (lowerText.includes('stonks')) {
+         showToast('📈 STONKS GO UP! 🚀');
+      }
+
+      // Play send sound
+      const sendAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3');
+      sendAudio.volume = 0.5;
+      sendAudio.play().catch(() => {});
 
       await addDoc(collection(db, 'messages'), {
         senderId: user.uid,
@@ -1431,6 +1465,21 @@ export default function Chat({ user }: ChatProps) {
                 );
               }
 
+              if (msg.type === 'system') {
+                return (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    key={msg.id || i}
+                    className="flex justify-center my-4"
+                  >
+                    <div className="bg-white/10 text-white/60 px-4 py-2 rounded-full text-xs font-medium backdrop-blur-md border border-white/5">
+                      {msg.text}
+                    </div>
+                  </motion.div>
+                );
+              }
+
               if (msg.type === 'gamble_allin' || msg.type === 'gamble_dice') {
                 const data = msg.gambleData!;
                 const DiceIcon = data.diceRoll ? DiceIcons[data.diceRoll - 1] : null;
@@ -1491,6 +1540,21 @@ export default function Chat({ user }: ChatProps) {
                 );
               }
 
+              if (msg.type === 'nudge') {
+                return (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    key={msg.id || i}
+                    className="flex justify-center my-4"
+                  >
+                    <div className="bg-amber-500/20 text-amber-500 px-4 py-2 rounded-full text-sm font-bold animate-bounce shadow-[0_0_15px_rgba(245,158,11,0.3)]">
+                      {msg.text}
+                    </div>
+                  </motion.div>
+                );
+              }
+
               const msgUser = allUsers.find(u => u.uid === msg.senderId);
               const userBorder = msgUser?.border ? BORDERS.find(b => b.id === msgUser.border) : null;
 
@@ -1499,7 +1563,7 @@ export default function Chat({ user }: ChatProps) {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   key={msg.id || i}
-                  className={cn("flex gap-4 max-w-[85%]", isMe ? "ml-auto flex-row-reverse" : "mr-auto")}
+                  className={cn("flex gap-4 max-w-[85%] group", isMe ? "ml-auto flex-row-reverse" : "mr-auto")}
                 >
                   <div className="relative flex-shrink-0">
                     <img 
@@ -1542,6 +1606,70 @@ export default function Chat({ user }: ChatProps) {
                       <div className="text-sm leading-relaxed prose prose-invert max-w-none [&_p]:m-0 [&_pre]:bg-black/20 [&_pre]:p-2 [&_pre]:rounded-lg [&_code]:bg-black/20 [&_code]:px-1 [&_code]:rounded">
                         <Markdown>{msg.text}</Markdown>
                       </div>
+                      
+                      {/* Reactions */}
+                      {msg.reactions && Object.keys(msg.reactions).length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {Object.entries(msg.reactions).map(([emoji, users]) => (
+                            <button
+                              key={emoji}
+                              onClick={async () => {
+                                const msgRef = doc(db, 'messages', msg.id);
+                                const currentReactions = msg.reactions || {};
+                                const userList = currentReactions[emoji] || [];
+                                
+                                let newUserList;
+                                if (userList.includes(user.uid)) {
+                                  newUserList = userList.filter(id => id !== user.uid);
+                                } else {
+                                  newUserList = [...userList, user.uid];
+                                }
+                                
+                                const newReactions = { ...currentReactions };
+                                if (newUserList.length === 0) {
+                                  delete newReactions[emoji];
+                                } else {
+                                  newReactions[emoji] = newUserList;
+                                }
+                                
+                                await updateDoc(msgRef, { reactions: newReactions });
+                              }}
+                              className={cn(
+                                "px-2 py-0.5 rounded-full text-xs flex items-center gap-1 transition-colors",
+                                users.includes(user.uid) ? "bg-white/20 text-white" : "bg-black/20 text-white/60 hover:bg-white/10"
+                              )}
+                            >
+                              <span>{emoji}</span>
+                              <span className="text-[10px]">{users.length}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Reaction Picker (Simple implementation) */}
+                    <div className={cn("opacity-0 group-hover:opacity-100 transition-opacity flex gap-1", isMe ? "flex-row-reverse" : "flex-row")}>
+                      {['👍', '❤️', '😂', '😮', '😢', '🔥'].map(emoji => (
+                        <button
+                          key={emoji}
+                          onClick={async () => {
+                            const msgRef = doc(db, 'messages', msg.id);
+                            const currentReactions = msg.reactions || {};
+                            const userList = currentReactions[emoji] || [];
+                            if (!userList.includes(user.uid)) {
+                              await updateDoc(msgRef, {
+                                reactions: {
+                                  ...currentReactions,
+                                  [emoji]: [...userList, user.uid]
+                                }
+                              });
+                            }
+                          }}
+                          className="w-6 h-6 rounded-full bg-black/40 hover:bg-white/20 flex items-center justify-center text-xs transition-colors"
+                        >
+                          {emoji}
+                        </button>
+                      ))}
                     </div>
                   </div>
                 </motion.div>
@@ -1560,9 +1688,20 @@ export default function Chat({ user }: ChatProps) {
                 type="text"
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Share your thoughts or try /allin gold..."
+                placeholder="Share your thoughts or try /roll..."
                 className="flex-1 bg-transparent px-6 py-3 focus:outline-none text-white placeholder:text-white/20 text-sm"
               />
+              <button
+                type="button"
+                onClick={() => setSoundEnabled(!soundEnabled)}
+                className={cn(
+                  "px-4 transition-colors",
+                  soundEnabled ? "text-amber-500 hover:text-amber-400" : "text-white/40 hover:text-white"
+                )}
+                title={soundEnabled ? "Mute sounds" : "Enable sounds"}
+              >
+                {soundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+              </button>
               <button
                 type="button"
                 onClick={() => setShowPollModal(true)}
@@ -3612,11 +3751,29 @@ export default function Chat({ user }: ChatProps) {
             }
             setSelectedUserForOptions(null);
           }}
+          onUnmute={(uid) => {
+            const targetUser = allUsers.find(u => u.uid === uid);
+            if (targetUser) {
+              setSelectedUserForAdmin(targetUser);
+              setAdminAction('unmute');
+              setShowAdminModal(true);
+            }
+            setSelectedUserForOptions(null);
+          }}
           onKick={(uid) => {
             const targetUser = allUsers.find(u => u.uid === uid);
             if (targetUser) {
               setSelectedUserForAdmin(targetUser);
               setAdminAction('kick');
+              setShowAdminModal(true);
+            }
+            setSelectedUserForOptions(null);
+          }}
+          onUnkick={(uid) => {
+            const targetUser = allUsers.find(u => u.uid === uid);
+            if (targetUser) {
+              setSelectedUserForAdmin(targetUser);
+              setAdminAction('unkick');
               setShowAdminModal(true);
             }
             setSelectedUserForOptions(null);
@@ -3627,6 +3784,32 @@ export default function Chat({ user }: ChatProps) {
               setSelectedUserForAdmin(targetUser);
               setAdminAction('ban');
               setShowAdminModal(true);
+            }
+            setSelectedUserForOptions(null);
+          }}
+          onUnban={(uid) => {
+            const targetUser = allUsers.find(u => u.uid === uid);
+            if (targetUser) {
+              setSelectedUserForAdmin(targetUser);
+              setAdminAction('unban');
+              setShowAdminModal(true);
+            }
+            setSelectedUserForOptions(null);
+          }}
+          onChangeRank={async (uid, rankId, isCustom) => {
+            try {
+              const userRef = doc(db, 'users', uid);
+              if (isCustom) {
+                const rankDoc = await getDocs(collection(db, 'ranks'));
+                const customRank = rankDoc.docs.find(d => d.id === rankId)?.data();
+                if (customRank) {
+                  await updateDoc(userRef, { rank: rankId, customRank: { name: customRank.name, icon: customRank.icon } });
+                }
+              } else {
+                await updateDoc(userRef, { rank: rankId, customRank: deleteField() });
+              }
+            } catch (e) {
+              console.error(e);
             }
             setSelectedUserForOptions(null);
           }}

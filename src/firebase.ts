@@ -1,18 +1,21 @@
+// Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
 
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyB2ozwEYKEXO8o4RrZLB187rJ1PQjO9OTc",
-  authDomain: "unify2-2c34f.firebaseapp.com",
-  databaseURL: "https://unify2-2c34f-default-rtdb.firebaseio.com",
-  projectId: "unify2-2c34f",
-  storageBucket: "unify2-2c34f.firebasestorage.app",
-  messagingSenderId: "883586717972",
-  appId: "1:883586717972:web:ce44e368a91b315dfdca01",
-  measurementId: "G-J35JN3V7X3"
+  apiKey: "AIzaSyD_qz-rzZq-_c_JTYHw494AeAxE-1vPBmA",
+  authDomain: "unify-3.firebaseapp.com",
+  projectId: "unify-3",
+  storageBucket: "unify-3.firebasestorage.app",
+  messagingSenderId: "34667720065",
+  appId: "1:34667720065:web:fb37a2709ece6503130c80",
+  measurementId: "G-NP7FM48CJ9"
 };
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+const analytics = getAnalytics(app);

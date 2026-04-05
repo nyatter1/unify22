@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
-import { auth } from '../firebase';
+// 1. Firebase Imports
+import { auth, db } from '../firebase';
+import { 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword,
+  updateProfile 
+} from 'firebase/auth';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { UserRank } from '../types';
 import { Infinity, Mail, Lock, User, Calendar, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -28,57 +35,57 @@ export default function Auth({ onAuthSuccess }: AuthProps) {
 
     try {
       if (isLogin) {
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (signInError) throw signInError;
+        // --- FIREBASE LOGIN ---
+        await signInWithEmailAndPassword(auth, email, password);
       } else {
+        // --- FIREBASE SIGN UP ---
         if (!username || !age || !gender) throw new Error('Please fill all fields');
         if (Number(age) < 7) throw new Error('You must be at least 7 years old to join');
         
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              username,
-              age: Number(age),
-              gender,
-            }
-          }
-        });
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
 
-        if (signUpError) throw signUpError;
-        if (!signUpData.user) throw new Error('Sign up failed');
+        // Update Firebase Auth Profile (Display Name)
+        await updateProfile(user, { displayName: username });
 
+        // Determine Rank
         let rank: UserRank = 'VIP';
         const devEmails = ['test@gmail.com', 'dev@gmail.com', 'developer@gmail.com', 'haydensixseven@gmail.com'];
         if (devEmails.includes(email.toLowerCase())) {
           rank = 'DEVELOPER';
         }
 
-        // The trigger handle_new_user should handle profile creation, 
-        // but we can also update it here if needed for extra fields.
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({
-            age: Number(age),
-            gender,
-            gold: 1000,
-            rubies: 10,
-            rank,
-            theme: 'luxury-black',
-            card_style: 'default',
-            onboarding_step: 1,
-          })
-          .eq('id', signUpData.user.id);
-
-        if (profileError) console.error('Error updating profile:', profileError);
+        // Create Firestore Profile Document
+        // This replaces the Supabase 'profiles' table logic
+        await setDoc(doc(db, 'profiles', user.uid), {
+          id: user.uid,
+          username,
+          email,
+          age: Number(age),
+          gender,
+          gold: 1000,
+          rubies: 10,
+          rank,
+          theme: 'luxury-black',
+          card_style: 'default',
+          onboardingStep: 1, // Matches your App.tsx check
+          createdAt: serverTimestamp(),
+          bannedUntil: null
+        });
       }
       onAuthSuccess();
     } catch (err: any) {
-      setError(err.message);
+      console.error("Auth Error:", err);
+      // Convert Firebase codes to readable messages
+      if (err.code === 'auth/invalid-credential') {
+        setError('Invalid email or password.');
+      } else if (err.code === 'auth/email-already-in-use') {
+        setError('This email is already in use.');
+      } else if (err.code === 'auth/weak-password') {
+        setError('Password should be at least 6 characters.');
+      } else {
+        setError(err.message || 'An error occurred during authentication.');
+      }
     } finally {
       setLoading(false);
     }

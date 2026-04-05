@@ -14,5 +14,5 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 });
 
 // Convenience re-exports so components can do:
-//   import { supabase, auth } from '../supabase'
+import { supabase } from "./supabase";
 export const auth = supabase.auth;

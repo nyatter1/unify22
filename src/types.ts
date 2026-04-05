@@ -91,7 +91,7 @@ export interface UserProfile {
   likes?: string[]; // Array of UIDs who liked this profile
   customThemes?: Theme[];
   customCardStyles?: CardStyle[];
-  rank: UserRank;
+  rank: UserRank | string;
   customRank?: {
     name: string;
     icon: string;
@@ -106,6 +106,9 @@ export interface UserProfile {
   profileVideoUrl?: string;
   friends?: string[];
   friendRequests?: string[];
+  mutedUntil?: any;
+  kickedUntil?: any;
+  bannedUntil?: any;
 }
 
 export interface Message {

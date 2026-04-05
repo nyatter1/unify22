@@ -67,6 +67,7 @@ import { AdminModal } from './AdminModal';
 import { DeveloperConsole } from './DeveloperConsole';
 import { PollModal } from './PollModal';
 import { RatingsList } from './RatingsList';
+import { CustomizerPreview } from './CustomizerPreview';
 
 // Initialize Gemini API
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
@@ -175,6 +176,7 @@ export default function Chat({ user }: ChatProps) {
   const [selectedProfile, setSelectedProfile] = useState<UserProfile | null>(null);
   const [editTab, setEditTab] = useState<'username' | 'info' | 'bio' | 'pfp' | 'banner' | 'main' | 'rank' | 'youtube'>('main');
   const [customizerTab, setCustomizerTab] = useState<'themes' | 'cards' | 'borders' | 'effects'>('themes');
+  const [searchQuery, setSearchQuery] = useState('');
   const [toast, setToast] = useState<string | null>(null);
   const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
   const [userSearch, setUserSearch] = useState('');
@@ -424,7 +426,7 @@ export default function Chat({ user }: ChatProps) {
 
       // Only auto-update if user is currently a lower rank or a standard rank
       const standardRanks: UserRank[] = ['VIP', 'SUPER_VIP', 'ELITE', 'MILLIONAIRE', 'MANTIS', 'TIGER'];
-      if (!standardRanks.includes(user.rank)) return;
+      if (!standardRanks.includes(user.rank as UserRank)) return;
 
       let newRank: UserRank = 'VIP';
       
@@ -845,6 +847,21 @@ export default function Chat({ user }: ChatProps) {
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
+
+    // Moderation Check
+    const now = new Date();
+    if (user.bannedUntil?.toDate && user.bannedUntil.toDate() > now) {
+      showToast('You are banned and cannot send messages.');
+      return;
+    }
+    if (user.kickedUntil?.toDate && user.kickedUntil.toDate() > now) {
+      showToast('You have been kicked and cannot send messages.');
+      return;
+    }
+    if (user.mutedUntil?.toDate && user.mutedUntil.toDate() > now) {
+      showToast('You are muted and cannot send messages.');
+      return;
+    }
 
     const text = newMessage.trim();
     setNewMessage('');
@@ -1812,7 +1829,28 @@ export default function Chat({ user }: ChatProps) {
               </div>
 
               {/* Modal Content */}
-              <div className="flex-1 overflow-y-auto p-10 custom-scrollbar">
+              <div className="flex-1 overflow-hidden flex">
+                {/* Left: Preview Area */}
+                <div className="w-1/3 border-r border-white/5 p-6 bg-black/20">
+                  <CustomizerPreview 
+                    user={user} 
+                    tab={customizerTab} 
+                    selectedTheme={allThemes.find(t => t.id === user.theme)}
+                    selectedCard={allCardStyles.find(s => s.id === user.cardStyle)}
+                  />
+                </div>
+
+                {/* Right: Options Area */}
+                <div className="w-2/3 overflow-y-auto p-10 custom-scrollbar">
+                  <div className="mb-8">
+                    <input 
+                      type="text"
+                      placeholder={`Search ${customizerTab}...`}
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white placeholder:text-white/30 focus:outline-none focus:border-amber-500/50"
+                    />
+                  </div>
                 {customizerTab === 'themes' ? (
                   <div className="space-y-12">
                     {/* Create Custom Theme Button */}
@@ -1830,7 +1868,7 @@ export default function Chat({ user }: ChatProps) {
                     </button>
 
                     {['Custom', 'Essentials', 'Aesthetic', 'Street', 'Brain Rot', 'Niche', 'Pop Culture', 'Special'].map(category => {
-                      const categoryThemes = allThemes.filter(t => t.category === category);
+                      const categoryThemes = allThemes.filter(t => t.category === category && t.name.toLowerCase().includes(searchQuery.toLowerCase()));
                       if (categoryThemes.length === 0) return null;
                       
                       return (
@@ -1849,7 +1887,7 @@ export default function Chat({ user }: ChatProps) {
                                 <div 
                                   className="absolute inset-0 transition-transform group-hover:scale-110 duration-700"
                                   style={{ 
-                                    backgroundColor: t.background,
+                                    backgroundColor: typeof t.background === 'string' ? t.background : '#000',
                                   }}
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
@@ -1881,7 +1919,7 @@ export default function Chat({ user }: ChatProps) {
                     </button>
 
                     {['Custom', 'Elite', 'Fun', 'Street', 'Premium', 'Minimal', 'Extreme'].map(category => {
-                      const categoryCards = allCardStyles.filter(s => s.category === category);
+                      const categoryCards = allCardStyles.filter(s => s.category === category && s.name.toLowerCase().includes(searchQuery.toLowerCase()));
                       if (categoryCards.length === 0) return null;
 
                       return (
@@ -1980,6 +2018,67 @@ export default function Chat({ user }: ChatProps) {
                     })}
                   </div>
                 ) : null}
+              </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+      {/* Theme Editor Modal */}
+      <AnimatePresence>
+        {showThemeEditor && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowThemeEditor(false)}
+              className="absolute inset-0 bg-black/90 backdrop-blur-2xl"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-2xl bg-[#0a0a0a] border border-white/10 rounded-[2.5rem] overflow-hidden flex flex-col shadow-2xl"
+            >
+              <div className="p-8 border-b border-white/5 flex items-center justify-between">
+                <h3 className="text-2xl font-serif italic text-white">Design Theme</h3>
+                <button onClick={() => setShowThemeEditor(false)} className="p-2 hover:bg-white/5 rounded-full text-white/40"><X /></button>
+              </div>
+              
+              <div className="p-8 space-y-8 overflow-y-auto custom-scrollbar">
+                {/* Preview */}
+                <div className="space-y-3">
+                  <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Live Preview</p>
+                  <div 
+                    className="aspect-video rounded-3xl border-2 border-white/10 overflow-hidden flex flex-col p-6 gap-4"
+                    style={{ backgroundColor: newTheme.background }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-white/10" />
+                      <div className="space-y-2">
+                        <div className="h-2 w-24 rounded-full bg-white/20" />
+                        <div className="h-1.5 w-16 rounded-full bg-white/10" />
+                      </div>
+                    </div>
+                    <div className="flex-1 bg-white/5 rounded-xl" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-8 bg-black/40 border-t border-white/5 flex gap-4">
+                <button 
+                  onClick={() => setShowThemeEditor(false)}
+                  className="flex-1 py-4 rounded-2xl border border-white/10 text-white font-bold uppercase tracking-widest text-xs hover:bg-white/5 transition-all"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={saveCustomTheme}
+                  className="flex-[2] py-4 rounded-2xl bg-white text-black font-bold uppercase tracking-widest text-xs hover:scale-[1.02] active:scale-95 transition-all shadow-xl"
+                >
+                  Save & Apply Theme
+                </button>
               </div>
             </motion.div>
           </div>

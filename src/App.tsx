@@ -62,6 +62,19 @@ export default function App() {
     return <Auth onAuthSuccess={() => {}} />;
   }
 
+  // Ban Check
+  const now = new Date();
+  if (user.bannedUntil?.toDate && user.bannedUntil.toDate() > now) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center text-white p-8">
+        <div className="text-center space-y-4">
+          <h1 className="text-4xl font-bold text-red-500">You have been banned.</h1>
+          <p className="text-zinc-400">Please contact an administrator for more information.</p>
+        </div>
+      </div>
+    );
+  }
+
   const onboardingStep = user.onboardingStep ?? 1;
 
   if (onboardingStep > 0) {

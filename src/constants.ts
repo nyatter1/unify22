@@ -160,7 +160,9 @@ export const THEMES: Theme[] = [
   { id: 'neon-amber', name: 'Neon Amber', category: 'Cyber', background: '#451a03', textColor: 'text-amber-400', accentColor: 'amber-500', customStyles: { borderStyle: '1px solid #fbbf24', glassEffect: true } },
   { id: 'neon-slate', name: 'Neon Slate', category: 'Cyber', background: '#0f172a', textColor: 'text-slate-400', accentColor: 'slate-500', customStyles: { borderStyle: '1px solid #94a3b8', glassEffect: true } },
   { id: 'neon-zinc', name: 'Neon Zinc', category: 'Cyber', background: '#18181b', textColor: 'text-zinc-400', accentColor: 'zinc-500', customStyles: { borderStyle: '1px solid #a1a1aa', glassEffect: true } },
-  { id: 'neon-stone', name: 'Neon Stone', category: 'Cyber', background: '#1c1917', textColor: 'text-stone-400', accentColor: 'stone-500', customStyles: { borderStyle: '1px solid #a8a29e', glassEffect: true } }
+  { id: 'neon-stone', name: 'Neon Stone', category: 'Cyber', background: '#1c1917', textColor: 'text-stone-400', accentColor: 'stone-500', customStyles: { borderStyle: '1px solid #a8a29e', glassEffect: true } },
+  { id: 'cyber-gold', name: 'Cyber Gold', category: 'Cyber', background: '#1a1a1a', textColor: 'text-amber-400', accentColor: 'amber-500', customStyles: { borderStyle: '1px solid #fbbf24', glassEffect: true } },
+  { id: 'cyber-silver', name: 'Cyber Silver', category: 'Cyber', background: '#1a1a1a', textColor: 'text-slate-400', accentColor: 'slate-500', customStyles: { borderStyle: '1px solid #94a3b8', glassEffect: true } }
 ];
 
 export const CARD_STYLES: CardStyle[] = [

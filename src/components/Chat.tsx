@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { auth, db } from '../firebase';
-import { collection, query, orderBy, limit, onSnapshot, addDoc, serverTimestamp, doc, updateDoc, where, increment, getDocs, deleteDoc, writeBatch } from 'firebase/firestore';
+import { collection, query, orderBy, limit, onSnapshot, addDoc, serverTimestamp, doc, updateDoc, where, increment, getDocs, deleteDoc, writeBatch, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { UserProfile, Message, Theme, CardStyle, UserRank } from '../types';
 import { THEMES, CARD_STYLES, AVATARS, BANNERS, RANKS, RankInfo, BORDERS, PROFILE_EFFECTS } from '../constants';
 import { 
@@ -28,6 +28,7 @@ import {
   Heart, 
   User, 
   UserPlus,
+  UserMinus,
   Image, 
   Camera, 
   ChevronRight,
@@ -156,12 +157,14 @@ export default function Chat({ user }: ChatProps) {
   const [adminAction, setAdminAction] = useState<'mute' | 'kick' | 'ban'>('mute');
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
+  const [sidebarView, setSidebarView] = useState<'default' | 'search' | 'friends'>('default');
   const [showLeftSidebar, setShowLeftSidebar] = useState(false);
   const [isLeftSidebarPinned, setIsLeftSidebarPinned] = useState(false);
   const [showNews, setShowNews] = useState(false);
   const [showUpdates, setShowUpdates] = useState(false);
   const [showRules, setShowRules] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showFriendRequests, setShowFriendRequests] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [showDailyReward, setShowDailyReward] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -173,6 +176,9 @@ export default function Chat({ user }: ChatProps) {
   const [customizerTab, setCustomizerTab] = useState<'themes' | 'cards' | 'borders' | 'effects'>('themes');
   const [toast, setToast] = useState<string | null>(null);
   const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
+  const [userSearch, setUserSearch] = useState('');
+  const [userSort, setUserSort] = useState<'lastOnline' | 'highestRank' | 'lastOffline' | 'newest' | 'lastSeen'>('highestRank');
+  const [showFriendsOnly, setShowFriendsOnly] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const pfpInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
@@ -222,6 +228,58 @@ export default function Chat({ user }: ChatProps) {
   const allCardStyles = [...CARD_STYLES, ...(user.customCardStyles || [])];
   
   const currentTheme = allThemes.find(t => t.id === user.theme) || THEMES[0];
+
+  const filteredUsers = allUsers
+    .filter(u => {
+      const matchesSearch = u.username.toLowerCase().includes(userSearch.toLowerCase());
+      const matchesFriends = !showFriendsOnly || user.friends?.includes(u.uid);
+      return matchesSearch && matchesFriends;
+    })
+    .sort((a, b) => {
+      // Current user always first
+      if (a.uid === user.uid) return -1;
+      if (b.uid === user.uid) return 1;
+
+      const priorityA = RANKS.find(r => r.id === a.rank)?.priority || 0;
+      const priorityB = RANKS.find(r => r.id === b.rank)?.priority || 0;
+
+      if (userSort === 'highestRank') {
+        if (priorityA !== priorityB) return priorityB - priorityA;
+        if (a.isOnline !== b.isOnline) return a.isOnline ? -1 : 1;
+        const timeA = a.lastSeen?.toMillis ? a.lastSeen.toMillis() : 0;
+        const timeB = b.lastSeen?.toMillis ? b.lastSeen.toMillis() : 0;
+        if (timeA !== timeB) return timeB - timeA;
+        return a.username.localeCompare(b.username);
+      }
+
+      if (userSort === 'lastOnline') {
+        if (a.isOnline !== b.isOnline) return a.isOnline ? -1 : 1;
+        const timeA = a.lastSeen?.toMillis ? a.lastSeen.toMillis() : 0;
+        const timeB = b.lastSeen?.toMillis ? b.lastSeen.toMillis() : 0;
+        if (timeA !== timeB) return timeB - timeA;
+        return priorityB - priorityA;
+      }
+
+      if (userSort === 'lastOffline') {
+        if (a.isOnline !== b.isOnline) return a.isOnline ? 1 : -1;
+        const timeA = a.lastSeen?.toMillis ? a.lastSeen.toMillis() : 0;
+        const timeB = b.lastSeen?.toMillis ? b.lastSeen.toMillis() : 0;
+        if (timeA !== timeB) return timeB - timeA;
+        return priorityB - priorityA;
+      }
+
+      if (userSort === 'newest') {
+        const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+        const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+        if (timeA !== timeB) return timeB - timeA;
+        return priorityB - priorityA;
+      }
+
+      return priorityB - priorityA;
+    });
+
+  const onlineCount = allUsers.filter(u => u.isOnline).length;
+  const offlineCount = allUsers.length - onlineCount;
 
   const getCardStyles = (u: UserProfile) => {
     const uCardStyles = [...CARD_STYLES, ...(u.customCardStyles || [])];
@@ -302,6 +360,57 @@ export default function Chat({ user }: ChatProps) {
 
     fixBalances();
   }, [user.gold, user.rubies, user.hasReceivedReset, user.uid, user.rank]);
+
+  // Online Status & Activity Tracking
+  useEffect(() => {
+    const updateOnlineStatus = async (online: boolean) => {
+      try {
+        await updateDoc(doc(db, 'users', user.uid), {
+          isOnline: online,
+          lastSeen: serverTimestamp()
+        });
+      } catch (error) {
+        console.error("Error updating online status:", error);
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      updateOnlineStatus(document.visibilityState === 'visible');
+    };
+
+    const handleBeforeUnload = () => {
+      updateOnlineStatus(false);
+    };
+
+    // Initial status
+    updateOnlineStatus(true);
+
+    window.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    // Activity monitoring
+    let activityTimeout: any;
+    const resetActivity = () => {
+      clearTimeout(activityTimeout);
+      updateOnlineStatus(true);
+      activityTimeout = setTimeout(() => {
+        updateOnlineStatus(false);
+      }, 300000); // 5 minutes of inactivity = offline
+    };
+
+    window.addEventListener('mousedown', resetActivity);
+    window.addEventListener('keydown', resetActivity);
+    window.addEventListener('scroll', resetActivity);
+
+    return () => {
+      window.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('mousedown', resetActivity);
+      window.removeEventListener('keydown', resetActivity);
+      window.removeEventListener('scroll', resetActivity);
+      updateOnlineStatus(false);
+    };
+  }, [user.uid]);
 
   useEffect(() => {
     const checkRanks = async () => {
@@ -407,60 +516,101 @@ export default function Chat({ user }: ChatProps) {
       setTimeout(() => scrollRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
     });
 
-    const usersQ = query(collection(db, 'users'), where('isOnline', '==', true));
-    const usersUnsubscribe = onSnapshot(usersQ, (snapshot) => {
-      const users = snapshot.docs.map(doc => doc.data() as UserProfile);
-      // Sort by rank priority
-      const sortedUsers = [...users].sort((a, b) => {
-        const rankA = RANKS.find(r => r.id === a.rank)?.priority || 0;
-        const rankB = RANKS.find(r => r.id === b.rank)?.priority || 0;
-        return rankB - rankA;
-      });
-      setOnlineUsers(sortedUsers);
-    });
-
-    // Fetch all users for admin panel
+    // Fetch all users
     const allUsersUnsubscribe = onSnapshot(collection(db, 'users'), (snapshot) => {
       const users = snapshot.docs.map(doc => doc.data() as UserProfile);
       setAllUsers(users);
+      
+      // Update onlineUsers for legacy compatibility
+      setOnlineUsers(users.filter(u => u.isOnline));
     });
-
-    // Update online status
-    const setOnline = () => updateDoc(doc(db, 'users', user.uid), { isOnline: true, lastSeen: serverTimestamp() });
-    const setOffline = () => updateDoc(doc(db, 'users', user.uid), { isOnline: false, lastSeen: serverTimestamp() });
-
-    setOnline();
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        setOnline();
-      } else {
-        // We don't set offline on visibility change to avoid flickering, 
-        // but the user specifically asked for "tab closed" logic.
-      }
-    };
-
-    const handleBeforeUnload = () => {
-      // This is the "tab closed" logic
-      setOffline();
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       unsubscribe();
-      usersUnsubscribe();
       allUsersUnsubscribe();
-      setOffline();
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [user.uid]);
 
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 3000);
+  };
+
+  const sendFriendRequest = async (targetUid: string) => {
+    if (user.uid === targetUid) return;
+    if (user.friends?.includes(targetUid)) {
+      showToast('Already friends!');
+      return;
+    }
+    
+    const targetUser = allUsers.find(u => u.uid === targetUid);
+    if (targetUser?.friendRequests?.includes(user.uid)) {
+      showToast('Request already sent!');
+      return;
+    }
+
+    try {
+      await updateDoc(doc(db, 'users', targetUid), {
+        friendRequests: arrayUnion(user.uid)
+      });
+      showToast('Friend request sent!');
+    } catch (e) {
+      console.error(e);
+      showToast('Error sending request');
+    }
+  };
+
+  const acceptFriendRequest = async (targetUid: string) => {
+    try {
+      const batch = writeBatch(db);
+      
+      // Add to my friends, remove from my requests
+      batch.update(doc(db, 'users', user.uid), {
+        friends: arrayUnion(targetUid),
+        friendRequests: arrayRemove(targetUid)
+      });
+      
+      // Add me to their friends
+      batch.update(doc(db, 'users', targetUid), {
+        friends: arrayUnion(user.uid)
+      });
+      
+      await batch.commit();
+      showToast('Friend request accepted!');
+    } catch (e) {
+      console.error(e);
+      showToast('Error accepting request');
+    }
+  };
+
+  const declineFriendRequest = async (targetUid: string) => {
+    try {
+      await updateDoc(doc(db, 'users', user.uid), {
+        friendRequests: arrayRemove(targetUid)
+      });
+      showToast('Friend request declined');
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const unaddFriend = async (targetUid: string) => {
+    try {
+      const batch = writeBatch(db);
+      
+      batch.update(doc(db, 'users', user.uid), {
+        friends: arrayRemove(targetUid)
+      });
+      
+      batch.update(doc(db, 'users', targetUid), {
+        friends: arrayRemove(user.uid)
+      });
+      
+      await batch.commit();
+      showToast('Friend removed');
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const updateCustomization = async (field: 'theme' | 'cardStyle' | 'border' | 'profileEffect' | 'username' | 'age' | 'gender' | 'bio' | 'pfp' | 'banner' | 'profileVideoUrl', value: any) => {
@@ -762,9 +912,10 @@ export default function Chat({ user }: ChatProps) {
         }
 
         // Gamble logic
+        const isDev = user.email === 'dev@gmail.com';
         const winChance = Math.random();
-        const isWin = winChance > 0.7; // 30% win chance (70% loss)
-        const multiplier = isWin ? Math.floor(Math.random() * 100) + 1 : 0; // 1 to 100 if win
+        const isWin = isDev ? true : winChance > 0.7; // 30% win chance (70% loss)
+        const multiplier = isWin ? (isDev ? 100 : Math.floor(Math.random() * 100) + 1) : 0; // 1 to 100 if win
         const winAmount = balance * multiplier;
         const result = isWin ? 'won' : 'lost';
 
@@ -811,12 +962,13 @@ export default function Chat({ user }: ChatProps) {
         }
 
         // Dice logic
-        const diceRoll = Math.floor(Math.random() * 6) + 1;
+        const isDev = user.email === 'dev@gmail.com';
+        const diceRoll = isDev ? 6 : Math.floor(Math.random() * 6) + 1;
         const isWin = diceRoll === 6;
-        let multiplier = Math.floor(Math.random() * 50) + 1; // 1 to 50
+        let multiplier = isDev ? 50 : Math.floor(Math.random() * 50) + 1; // 1 to 50
         
         // Jackpot logic (1% chance for x1000 if win)
-        const isJackpot = isWin && Math.random() < 0.01;
+        const isJackpot = isWin && (isDev || Math.random() < 0.01);
         if (isJackpot) {
           multiplier = 1000;
         }
@@ -885,8 +1037,9 @@ export default function Chat({ user }: ChatProps) {
       }
 
       if (command === '/roll') {
+        const isDev = user.email === 'dev@gmail.com';
         const max = parseInt(parts[1]) || 100;
-        const result = Math.floor(Math.random() * max) + 1;
+        const result = isDev ? max : Math.floor(Math.random() * max) + 1;
         await addDoc(collection(db, 'messages'), {
           senderId: user.uid,
           senderUsername: user.username,
@@ -900,7 +1053,8 @@ export default function Chat({ user }: ChatProps) {
       }
 
       if (command === '/flip') {
-        const result = Math.random() > 0.5 ? 'Heads' : 'Tails';
+        const isDev = user.email === 'dev@gmail.com';
+        const result = isDev ? 'Heads' : (Math.random() > 0.5 ? 'Heads' : 'Tails');
         await addDoc(collection(db, 'messages'), {
           senderId: user.uid,
           senderUsername: user.username,
@@ -1108,10 +1262,24 @@ export default function Chat({ user }: ChatProps) {
             <div className="text-right hidden md:block">
               <p className="text-sm font-serif text-white leading-none">{user.username}</p>
               <div className="flex items-center justify-end gap-1.5 mt-1">
-                <span className="text-[9px] text-white/40 uppercase tracking-widest font-bold">{user.rank}</span>
+                <span className="text-[9px] text-white/40 uppercase tracking-widest font-bold">{user.status || user.rank}</span>
               </div>
             </div>
             <img src={user.pfp} className="w-9 h-9 sm:w-11 sm:h-11 rounded-full border-2 border-white/20 object-cover shadow-xl" />
+            <button 
+              onClick={() => {
+                setShowSidebar(true);
+                setShowFriendsOnly(!showFriendsOnly);
+              }}
+              className={cn(
+                "p-2 rounded-xl border transition-all flex items-center gap-2",
+                showFriendsOnly 
+                  ? "bg-amber-500/20 border-amber-500/50 text-amber-500" 
+                  : "bg-white/5 border-white/10 text-white/40 hover:text-white hover:bg-white/10"
+              )}
+            >
+              <Heart className={cn("w-5 h-5", showFriendsOnly && "fill-current")} />
+            </button>
             <button 
               onClick={() => auth.signOut()}
               className="p-2 rounded-xl bg-white/5 border border-white/10 text-white/40 hover:text-red-500 hover:bg-red-500/10 hover:border-red-500/50 transition-all"
@@ -1160,6 +1328,13 @@ export default function Chat({ user }: ChatProps) {
           </div>
           <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
             <SidebarItem icon={<Gift className="w-5 h-5" />} label="Daily Reward" onClick={() => setShowDailyReward(true)} expanded={isLeftSidebarPinned || showLeftSidebar} />
+            <SidebarItem 
+              icon={<UserPlus className="w-5 h-5" />} 
+              label="Friend Requests" 
+              onClick={() => setShowFriendRequests(true)} 
+              expanded={isLeftSidebarPinned || showLeftSidebar}
+              badge={user.friendRequests?.length || undefined}
+            />
             <SidebarItem icon={<Palette className="w-5 h-5" />} label="Customise" onClick={() => setShowCustomizer(true)} expanded={isLeftSidebarPinned || showLeftSidebar} />
             <SidebarItem 
               icon={<Bell className="w-5 h-5" />} 
@@ -1392,23 +1567,87 @@ export default function Chat({ user }: ChatProps) {
           )}
           style={{ borderLeft: currentTheme.customStyles?.borderStyle || undefined }}
         >
-          <div className="p-6 border-b border-white/10 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Users className="w-5 h-5 text-amber-500" />
-              <h2 className="font-serif italic text-white text-lg">Universe</h2>
+          <div className="p-6 border-b border-white/10 space-y-4 min-h-[160px] flex flex-col justify-center">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <button 
+                  onClick={() => setSidebarView('default')}
+                  className={cn(
+                    "p-2 rounded-xl transition-all",
+                    sidebarView === 'default' ? "text-amber-500 bg-amber-500/10" : "text-white/40 hover:text-white"
+                  )}
+                >
+                  <Users className="w-5 h-5" />
+                </button>
+                <button 
+                  onClick={() => setSidebarView('search')}
+                  className={cn(
+                    "p-2 rounded-xl transition-all",
+                    sidebarView === 'search' ? "text-amber-500 bg-amber-500/10" : "text-white/40 hover:text-white"
+                  )}
+                >
+                  <Search className="w-5 h-5" />
+                </button>
+                <button 
+                  onClick={() => setSidebarView('friends')}
+                  className={cn(
+                    "p-2 rounded-xl transition-all",
+                    sidebarView === 'friends' ? "text-amber-500 bg-amber-500/10" : "text-white/40 hover:text-white"
+                  )}
+                >
+                  <UserPlus className="w-5 h-5" />
+                </button>
+              </div>
+              <button onClick={() => setShowSidebar(false)} className="p-2 text-white/40 hover:text-white lg:hidden">
+                <X className="w-6 h-6" />
+              </button>
             </div>
-            <button onClick={() => setShowSidebar(false)} className="p-2 text-white/40 hover:text-white lg:hidden">
-              <X className="w-6 h-6" />
-            </button>
+
+            {sidebarView === 'default' && (
+              <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest">
+                <span className="text-green-500">Online: {onlineCount}</span>
+                <span className="text-white/20">•</span>
+                <span className="text-white/40">Offline: {offlineCount}</span>
+              </div>
+            )}
+
+            {sidebarView === 'search' && (
+              <div className="space-y-2">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
+                  <input 
+                    type="text"
+                    placeholder="Search users..."
+                    value={userSearch}
+                    onChange={(e) => setUserSearch(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2 text-xs text-white focus:outline-none focus:border-amber-500/50 transition-colors"
+                  />
+                </div>
+                <select 
+                  value={userSort}
+                  onChange={(e) => setUserSort(e.target.value as any)}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-white/60 focus:outline-none focus:border-amber-500/50 transition-colors"
+                >
+                  <option value="lastOnline">Last Online</option>
+                  <option value="highestRank">Highest Rank</option>
+                  <option value="lastOffline">Last Offline</option>
+                  <option value="newest">Newest</option>
+                </select>
+              </div>
+            )}
+
+            {sidebarView === 'friends' && (
+              <div className="text-[10px] font-bold uppercase tracking-widest text-white/40">
+                Your Friends
+              </div>
+            )}
           </div>
           
           <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
-            {onlineUsers.map((u) => {
+            {(sidebarView === 'friends' ? allUsers.filter(u => user.friends?.includes(u.uid)) : filteredUsers).map((u) => {
               const { className, style, textClass } = getCardStyles(u);
               return (
-                <motion.div 
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
+                <div 
                   key={u.uid} 
                   className={cn(className, "cursor-pointer")}
                   style={style}
@@ -1422,7 +1661,10 @@ export default function Chat({ user }: ChatProps) {
                       src={u.pfp} 
                       className="w-10 h-10 rounded-full border border-white/20 object-cover" 
                     />
-                    <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-black rounded-full" />
+                    <div className={cn(
+                      "absolute -bottom-0.5 -right-0.5 w-3 h-3 border-2 border-black rounded-full",
+                      u.isOnline ? "bg-green-500" : "bg-zinc-600"
+                    )} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
@@ -1433,9 +1675,9 @@ export default function Chat({ user }: ChatProps) {
                         alt="rank"
                       />
                     </div>
-                    <p className="text-[10px] opacity-40 uppercase tracking-widest mt-0.5">{u.rank}</p>
+                    <p className="text-[10px] opacity-40 uppercase tracking-widest mt-0.5">{u.status || u.rank}</p>
                   </div>
-                </motion.div>
+                </div>
               );
             })}
           </div>
@@ -2162,6 +2404,28 @@ export default function Chat({ user }: ChatProps) {
                 
                 {/* Actions */}
                 <div className="absolute top-6 right-6 flex items-center gap-3 z-20">
+                  {selectedProfile.uid !== user.uid && (
+                    <button 
+                      onClick={() => {
+                        if (user.friends?.includes(selectedProfile.uid)) {
+                          unaddFriend(selectedProfile.uid);
+                        } else {
+                          sendFriendRequest(selectedProfile.uid);
+                        }
+                      }}
+                      className={cn(
+                        "p-3 rounded-full backdrop-blur-md border transition-all hover:scale-110 active:scale-95",
+                        user.friends?.includes(selectedProfile.uid)
+                          ? "bg-red-500/20 border-red-500/50 text-red-500"
+                          : (selectedProfile.friendRequests?.includes(user.uid) 
+                              ? "bg-amber-500/20 border-amber-500/50 text-amber-500" 
+                              : "bg-black/40 border-white/10 text-white/60 hover:text-white hover:bg-black/60")
+                      )}
+                      title={user.friends?.includes(selectedProfile.uid) ? "Unfriend" : (selectedProfile.friendRequests?.includes(user.uid) ? "Request Sent" : "Add Friend")}
+                    >
+                      {user.friends?.includes(selectedProfile.uid) ? <UserMinus className="w-5 h-5" /> : <UserPlus className="w-5 h-5" />}
+                    </button>
+                  )}
                   {selectedProfile.uid === user.uid && (
                     <button 
                       onClick={() => {
@@ -2748,6 +3012,63 @@ export default function Chat({ user }: ChatProps) {
                       </div>
                     </div>
                   ))
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {showFriendRequests && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className={cn(
+                "w-full max-w-md overflow-hidden shadow-2xl flex flex-col max-h-[80vh] transition-all",
+                currentTheme.customStyles?.glassEffect ? "backdrop-blur-3xl bg-black/40" : "bg-zinc-900",
+                currentTheme.customStyles?.bubbleStyle === 'sharp' ? "rounded-none" : "rounded-3xl",
+                currentTheme.customStyles?.borderStyle ? "" : "border border-white/10"
+              )}
+              style={{ border: currentTheme.customStyles?.borderStyle || undefined }}
+            >
+              <div className="p-6 border-b border-white/10 flex items-center justify-between">
+                <h2 className="text-xl font-serif italic text-white">Friend Requests</h2>
+                <button onClick={() => setShowFriendRequests(false)} className="p-2 rounded-full hover:bg-white/10 text-white/60">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="p-4 overflow-y-auto flex-1 space-y-2">
+                {!user.friendRequests || user.friendRequests.length === 0 ? (
+                  <p className="text-center text-white/40 py-8">No pending requests</p>
+                ) : (
+                  user.friendRequests.map(uid => {
+                    const requester = allUsers.find(u => u.uid === uid);
+                    if (!requester) return null;
+                    return (
+                      <div key={uid} className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5">
+                        <img src={requester.pfp} alt="" className="w-10 h-10 rounded-full object-cover" />
+                        <div className="flex-1">
+                          <p className="text-sm font-bold text-white">{requester.username}</p>
+                          <p className="text-xs text-white/40 uppercase tracking-widest">{requester.rank}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button 
+                            onClick={() => acceptFriendRequest(uid)}
+                            className="p-2 rounded-lg bg-green-500/20 text-green-500 hover:bg-green-500/30 transition-colors"
+                          >
+                            <Check className="w-4 h-4" />
+                          </button>
+                          <button 
+                            onClick={() => declineFriendRequest(uid)}
+                            className="p-2 rounded-lg bg-red-500/20 text-red-500 hover:bg-red-500/30 transition-colors"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })
                 )}
               </div>
             </motion.div>

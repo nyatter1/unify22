@@ -104,6 +104,8 @@ export interface UserProfile {
   badges?: string[];
   status?: string;
   profileVideoUrl?: string;
+  friends?: string[];
+  friendRequests?: string[];
 }
 
 export interface Message {

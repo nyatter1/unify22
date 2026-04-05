@@ -385,6 +385,19 @@ export const CURSORS = [
   { id: 'cursor-not-allowed', name: 'Not Allowed', css: 'not-allowed' },
   { id: 'cursor-zoom-in', name: 'Zoom In', css: 'zoom-in' },
   { id: 'cursor-grab', name: 'Grab', css: 'grab' },
-  { id: 'cursor-custom-sword', name: 'Sword', css: 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'white\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'><path d=\'M14.5 17.5L3 6V3h3l11.5 11.5\'/><path d=\'M13 19l6-6\'/><path d=\'M16 16l4 4\'/><path d=\'M19 21l2-2\'/></svg>") 0 0, auto' },
-  { id: 'cursor-custom-wand', name: 'Magic Wand', css: 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'gold\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'><path d=\'M15 4V2\'/><path d=\'M15 16v-2\'/><path d=\'M8 9h2\'/><path d=\'M20 9h2\'/><path d=\'M17.8 11.8L19 13\'/><path d=\'M15 9h0\'/><path d=\'M17.8 6.2L19 5\'/><path d=\'M3 21l9-9\'/><path d=\'M12.2 6.2L11 5\'/></svg>") 0 0, auto' },
+  { 
+    id: 'cursor-custom-sword', 
+    name: 'Sword (SVG)', 
+    css: 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'white\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'><path d=\'M14.5 17.5L3 6V3h3l11.5 11.5\'/><path d=\'M13 19l6-6\'/><path d=\'M16 16l4 4\'/><path d=\'M19 21l2-2\'/></svg>") 0 0, auto' 
+  },
+  { 
+    id: 'cursor-custom-wand', 
+    name: 'Magic Wand', 
+    css: 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'gold\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'><path d=\'M15 4V2\'/><path d=\'M15 16v-2\'/><path d=\'M8 9h2\'/><path d=\'M20 9h2\'/><path d=\'M17.8 11.8L19 13\'/><path d=\'M15 9h0\'/><path d=\'M17.8 6.2L19 5\'/><path d=\'M3 21l9-9\'/><path d=\'M12.2 6.2L11 5\'/></svg>") 0 0, auto' 
+  },
+  { 
+    id: 'cursor-cartoon-sword', 
+    name: 'Cartoon Sword', 
+    css: 'url("https://www.pngmart.com/files/23/Cartoon-Sword-PNG-Isolated-Pic.png") 0 0, auto' 
+  },
 ];

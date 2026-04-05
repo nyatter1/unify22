@@ -101,6 +101,8 @@ export interface UserProfile {
   lastDailyReward?: any;
   badges?: string[];
   status?: string;
+  profileMusicUrl?: string;
+  profileVideoUrl?: string;
 }
 
 export interface Message {

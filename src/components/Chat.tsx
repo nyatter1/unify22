@@ -48,7 +48,8 @@ import {
   Smile,
   Terminal,
   Trash2,
-  BarChart2
+  BarChart2,
+  Youtube
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
@@ -70,6 +71,12 @@ interface ChatProps {
 }
 
 const DiceIcons = [Dice1, Dice2, Dice3, Dice4, Dice5, Dice6];
+
+const getYouTubeId = (url: string) => {
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+  const match = url.match(regExp);
+  return (match && match[2].length === 11) ? match[2] : null;
+};
 
 export default function Chat({ user }: ChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -106,7 +113,7 @@ export default function Chat({ user }: ChatProps) {
   const [appUpdates, setAppUpdates] = useState<any[]>([]);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [selectedProfile, setSelectedProfile] = useState<UserProfile | null>(null);
-  const [editTab, setEditTab] = useState<'username' | 'info' | 'bio' | 'pfp' | 'banner' | 'main' | 'rank'>('main');
+  const [editTab, setEditTab] = useState<'username' | 'info' | 'bio' | 'pfp' | 'banner' | 'main' | 'rank' | 'youtube'>('main');
   const [customizerTab, setCustomizerTab] = useState<'themes' | 'cards' | 'borders' | 'effects'>('themes');
   const [toast, setToast] = useState<string | null>(null);
   const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
@@ -2061,6 +2068,27 @@ export default function Chat({ user }: ChatProps) {
                 BORDERS.find(b => b.id === selectedProfile.border)?.className || "border border-white/10"
               )}
             >
+              {/* YouTube Background Video */}
+              {selectedProfile.profileVideoUrl && (
+                <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden rounded-[3rem]">
+                  <iframe
+                    className="absolute top-1/2 left-1/2 w-[300%] h-[300%] -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+                    src={`https://www.youtube.com/embed/${getYouTubeId(selectedProfile.profileVideoUrl)}?autoplay=1&mute=0&loop=1&playlist=${getYouTubeId(selectedProfile.profileVideoUrl)}&controls=0&showinfo=0&rel=0&enablejsapi=1`}
+                    allow="autoplay; encrypted-media"
+                  />
+                  <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
+                </div>
+              )}
+
+              {/* YouTube Music (Hidden) */}
+              {selectedProfile.profileMusicUrl && !selectedProfile.profileVideoUrl && (
+                <iframe
+                  className="hidden"
+                  src={`https://www.youtube.com/embed/${getYouTubeId(selectedProfile.profileMusicUrl)}?autoplay=1&mute=0&loop=1&playlist=${getYouTubeId(selectedProfile.profileMusicUrl)}&enablejsapi=1`}
+                  allow="autoplay"
+                />
+              )}
+
               {/* Banner */}
               <div 
                 className={cn(
@@ -2338,6 +2366,22 @@ export default function Chat({ user }: ChatProps) {
                       <ChevronRight className="w-5 h-5 text-white/20 group-hover:text-amber-500 transition-colors" />
                     </button>
 
+                    <button 
+                      onClick={() => setEditTab('youtube')}
+                      className="w-full p-6 rounded-2xl bg-white/5 border border-white/5 hover:border-amber-500/50 hover:bg-amber-500/5 transition-all flex items-center justify-between group"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-red-600/10 flex items-center justify-center">
+                          <Youtube className="w-5 h-5 text-red-600" />
+                        </div>
+                        <div className="text-left">
+                          <p className="text-white font-bold text-sm">YouTube Integration</p>
+                          <p className="text-white/40 text-xs">Music or Video Background</p>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-5 h-5 text-white/20 group-hover:text-amber-500 transition-colors" />
+                    </button>
+
                     <div className="grid grid-cols-2 gap-4">
                       <button 
                         onClick={() => pfpInputRef.current?.click()}
@@ -2470,6 +2514,73 @@ export default function Chat({ user }: ChatProps) {
                         className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white focus:outline-none focus:border-amber-500/50 resize-none"
                         placeholder="Tell the world about yourself..."
                       />
+                    </div>
+                    <button 
+                      onClick={() => setEditTab('main')}
+                      className="w-full py-4 rounded-2xl bg-amber-500 text-black font-bold uppercase tracking-widest text-sm shadow-xl"
+                    >
+                      Save Changes
+                    </button>
+                  </div>
+                ) : editTab === 'youtube' ? (
+                  <div className="space-y-6">
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Profile Music (YouTube URL)</label>
+                        <div className="flex gap-2">
+                          <input 
+                            type="text"
+                            placeholder="https://www.youtube.com/watch?v=..."
+                            defaultValue={user.profileMusicUrl}
+                            onBlur={(e) => {
+                              const url = e.target.value;
+                              updateCustomization('profileMusicUrl', url);
+                              if (url) updateCustomization('profileVideoUrl', ''); // Clear other
+                            }}
+                            className="flex-1 bg-white/5 border border-white/10 rounded-xl p-4 text-white focus:outline-none focus:border-amber-500/50"
+                          />
+                          {user.profileMusicUrl && (
+                            <button 
+                              onClick={() => updateCustomization('profileMusicUrl', '')}
+                              className="p-4 rounded-xl bg-red-500/10 text-red-500 border border-red-500/20"
+                            >
+                              <Trash2 className="w-5 h-5" />
+                            </button>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-white/20 italic">Plays audio only when someone views your profile.</p>
+                      </div>
+
+                      <div className="relative py-4">
+                        <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/5"></div></div>
+                        <div className="relative flex justify-center text-[10px] font-bold uppercase tracking-widest text-white/20 bg-zinc-900 px-4">OR</div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Video Background (YouTube URL)</label>
+                        <div className="flex gap-2">
+                          <input 
+                            type="text"
+                            placeholder="https://www.youtube.com/watch?v=..."
+                            defaultValue={user.profileVideoUrl}
+                            onBlur={(e) => {
+                              const url = e.target.value;
+                              updateCustomization('profileVideoUrl', url);
+                              if (url) updateCustomization('profileMusicUrl', ''); // Clear other
+                            }}
+                            className="flex-1 bg-white/5 border border-white/10 rounded-xl p-4 text-white focus:outline-none focus:border-amber-500/50"
+                          />
+                          {user.profileVideoUrl && (
+                            <button 
+                              onClick={() => updateCustomization('profileVideoUrl', '')}
+                              className="p-4 rounded-xl bg-red-500/10 text-red-500 border border-red-500/20"
+                            >
+                              <Trash2 className="w-5 h-5" />
+                            </button>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-white/20 italic">Plays video in full background with audio.</p>
+                      </div>
                     </div>
                     <button 
                       onClick={() => setEditTab('main')}

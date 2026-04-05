@@ -20,8 +20,7 @@ export const RatingsList: React.FC<RatingsListProps> = ({ targetUid, currentUser
   useEffect(() => {
     const q = query(
       collection(db, 'ratings'),
-      where('targetUid', '==', targetUid),
-      orderBy('timestamp', 'desc')
+      where('targetUid', '==', targetUid)
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -29,6 +28,14 @@ export const RatingsList: React.FC<RatingsListProps> = ({ targetUid, currentUser
         id: doc.id,
         ...doc.data()
       })) as ProfileRating[];
+      
+      // Sort client-side to avoid index error
+      data.sort((a, b) => {
+        const timeA = a.timestamp?.toMillis?.() || 0;
+        const timeB = b.timestamp?.toMillis?.() || 0;
+        return timeB - timeA;
+      });
+      
       setRatings(data);
     });
 

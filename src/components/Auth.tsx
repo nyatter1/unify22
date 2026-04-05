@@ -1,13 +1,8 @@
 import React, { useState } from 'react';
-// 1. Firebase Imports
 import { auth, db } from '../firebase';
-import { 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword,
-  updateProfile 
-} from 'firebase/auth';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { UserRank } from '../types';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { UserProfile, UserRank } from '../types';
 import { Infinity, Mail, Lock, User, Calendar, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
@@ -35,57 +30,47 @@ export default function Auth({ onAuthSuccess }: AuthProps) {
 
     try {
       if (isLogin) {
-        // --- FIREBASE LOGIN ---
         await signInWithEmailAndPassword(auth, email, password);
       } else {
-        // --- FIREBASE SIGN UP ---
         if (!username || !age || !gender) throw new Error('Please fill all fields');
         if (Number(age) < 7) throw new Error('You must be at least 7 years old to join');
         
+        // Check if email is banned (this is tricky without a separate ban list, 
+        // but we can check if a user with this email was previously banned if we had a list.
+        // For now, we'll just handle the login ban check).
+
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
-        // Update Firebase Auth Profile (Display Name)
-        await updateProfile(user, { displayName: username });
-
-        // Determine Rank
         let rank: UserRank = 'VIP';
         const devEmails = ['test@gmail.com', 'dev@gmail.com', 'developer@gmail.com', 'haydensixseven@gmail.com'];
         if (devEmails.includes(email.toLowerCase())) {
           rank = 'DEVELOPER';
         }
 
-        // Create Firestore Profile Document
-        // This replaces the Supabase 'profiles' table logic
-        await setDoc(doc(db, 'profiles', user.uid), {
-          id: user.uid,
+        await setDoc(doc(db, 'users', user.uid), {
+          uid: user.uid,
           username,
           email,
           age: Number(age),
           gender,
+          pfp: `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`,
+          banner: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809',
+          onboardingStep: 1,
+          isOnline: true,
+          lastSeen: new Date(),
           gold: 1000,
           rubies: 10,
-          rank,
+          hasReceivedReset: false,
           theme: 'luxury-black',
-          card_style: 'default',
-          onboardingStep: 1, // Matches your App.tsx check
-          createdAt: serverTimestamp(),
-          bannedUntil: null
+          cardStyle: 'default',
+          rank,
+          createdAt: new Date(),
         });
       }
       onAuthSuccess();
     } catch (err: any) {
-      console.error("Auth Error:", err);
-      // Convert Firebase codes to readable messages
-      if (err.code === 'auth/invalid-credential') {
-        setError('Invalid email or password.');
-      } else if (err.code === 'auth/email-already-in-use') {
-        setError('This email is already in use.');
-      } else if (err.code === 'auth/weak-password') {
-        setError('Password should be at least 6 characters.');
-      } else {
-        setError(err.message || 'An error occurred during authentication.');
-      }
+      setError(err.message);
     } finally {
       setLoading(false);
     }

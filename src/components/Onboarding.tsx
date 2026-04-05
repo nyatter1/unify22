@@ -1,105 +1,23 @@
-import React, { useState, useRef, useEffect } from 'react';
-// Firebase imports from the global environment
-import { initializeApp } from 'firebase/app';
-import { getAuth, onAuthStateChanged, signInAnonymously, signInWithCustomToken } from 'firebase/auth';
-import { getFirestore, doc, updateDoc } from 'firebase/firestore';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Check, ChevronRight, Sparkles, Upload, Camera, Loader2 } from 'lucide-react';
-
-// --- Types ---
-interface UserProfile {
-  id: string;
-  username: string;
-  age: number;
-  gender: string;
-  pfp?: string;
-  banner?: string;
-  onboardingStep?: number;
-}
+import React, { useState, useRef } from 'react';
+import { db } from '../firebase';
+import { doc, updateDoc } from 'firebase/firestore';
+import { UserProfile } from '../types';
+import { AVATARS, BANNERS } from '../constants';
+import { motion, AnimatePresence } from 'motion/react';
+import { Check, ChevronRight, Image as ImageIcon, Sparkles, Upload, Camera } from 'lucide-react';
+import { cn } from '../lib/utils';
 
 interface OnboardingProps {
   user: UserProfile;
   onComplete: () => void;
 }
 
-// --- Constants (Consolidated for Single-File Execution) ---
-const AVATARS = [
-  'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix',
-  'https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka',
-  'https://api.dicebear.com/7.x/avataaars/svg?seed=James',
-  'https://api.dicebear.com/7.x/avataaars/svg?seed=Luna',
-  'https://api.dicebear.com/7.x/avataaars/svg?seed=Zoe'
-];
-
-const BANNERS = [
-  'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=800',
-  'https://images.unsplash.com/photo-1635776062127-d379bfcba9f8?auto=format&fit=crop&q=80&w=800',
-  'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?auto=format&fit=crop&q=80&w=800',
-  'https://images.unsplash.com/photo-1614850523296-d8c1af93d400?auto=format&fit=crop&q=80&w=800'
-];
-
-// --- Utility: cn (Consolidated) ---
-function cn(...inputs: any[]) {
-  return inputs.filter(Boolean).join(' ');
-}
-
-// --- Firebase Setup (Standard Pattern) ---
-const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-
-export default function App() {
-  const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const initAuth = async () => {
-      try {
-        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-          await signInWithCustomToken(auth, __initial_auth_token);
-        } else {
-          await signInAnonymously(auth);
-        }
-      } catch (e) {
-        console.error("Auth init failed", e);
-      }
-    };
-    initAuth();
-    const unsubscribe = onAuthStateChanged(auth, (u) => {
-      setUser(u);
-      setLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-        <Loader2 className="w-10 h-10 text-amber-500 animate-spin" />
-      </div>
-    );
-  }
-
-  // Mock profile data for demonstration if not in your DB yet
-  const mockUser: UserProfile = {
-    id: user?.uid || 'guest',
-    username: user?.displayName || 'Guest Traveler',
-    age: 24,
-    gender: 'Explorer',
-    pfp: AVATARS[0],
-    banner: BANNERS[0]
-  };
-
-  return <Onboarding user={mockUser} onComplete={() => console.log('Onboarding Complete!')} />;
-}
-
-function Onboarding({ user, onComplete }: OnboardingProps) {
+export default function Onboarding({ user, onComplete }: OnboardingProps) {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [selectedPfp, setSelectedPfp] = useState(user.pfp || AVATARS[0]);
   const [selectedBanner, setSelectedBanner] = useState(user.banner || BANNERS[0]);
+  
   const [error, setError] = useState<string | null>(null);
   
   const pfpInputRef = useRef<HTMLInputElement>(null);
@@ -109,7 +27,8 @@ function Onboarding({ user, onComplete }: OnboardingProps) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 500000) { 
+    // Check file size (Firestore limit is 1MB per document, so we should keep it small)
+    if (file.size > 500000) { // 500KB limit for safety
       setError('File is too large. Please choose an image under 500KB.');
       setTimeout(() => setError(null), 3000);
       return;
@@ -130,17 +49,14 @@ function Onboarding({ user, onComplete }: OnboardingProps) {
     } else {
       setLoading(true);
       try {
-        const userRef = doc(db, 'artifacts', appId, 'public', 'data', 'profiles', user.id);
-        await updateDoc(userRef, {
+        await updateDoc(doc(db, 'users', user.uid), {
           pfp: selectedPfp,
           banner: selectedBanner,
           onboardingStep: 0,
         });
         onComplete();
-      } catch (err: any) {
-        console.error("Update Error:", err);
-        // Fallback for demo if document doesn't exist yet in the specific sandbox path
-        onComplete();
+      } catch (err) {
+        console.error(err);
       } finally {
         setLoading(false);
       }
@@ -148,9 +64,9 @@ function Onboarding({ user, onComplete }: OnboardingProps) {
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-amber-100/90 flex flex-col items-center justify-center p-4 font-sans relative overflow-hidden">
+    <div className="min-h-screen bg-[#050505] text-amber-100/90 flex flex-col items-center justify-center p-4 font-sans">
       {/* Luxury Background Accents */}
-      <div className="fixed inset-0 pointer-events-none">
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-amber-500/5 rounded-full blur-[120px]" />
         <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-amber-600/5 rounded-full blur-[120px]" />
       </div>
@@ -199,13 +115,14 @@ function Onboarding({ user, onComplete }: OnboardingProps) {
               className="bg-black/40 backdrop-blur-2xl border border-amber-900/20 rounded-[2rem] p-10 shadow-2xl"
             >
               <div className="text-center mb-10">
-                <h2 className="text-4xl font-serif italic bg-gradient-to-r from-amber-200 via-amber-400 to-amber-200 bg-clip-text text-transparent mb-2">
+                <h2 className="text-4xl font-serif italic text-gradient bg-gradient-to-r from-amber-200 via-amber-400 to-amber-200 bg-clip-text text-transparent mb-2">
                   Personalize Your Identity
                 </h2>
                 <p className="text-amber-700/60 tracking-widest uppercase text-xs">Step 01 — Visual Presence</p>
               </div>
               
               <div className="space-y-12">
+                {/* Profile Picture Section */}
                 <div className="flex flex-col items-center">
                   <div className="relative group">
                     <div className="absolute inset-0 bg-gradient-to-br from-amber-200 via-amber-500 to-amber-700 rounded-full blur-md opacity-20 group-hover:opacity-40 transition-opacity" />
@@ -231,7 +148,7 @@ function Onboarding({ user, onComplete }: OnboardingProps) {
                   
                   <div className="mt-6 w-full">
                     <p className="text-[10px] text-amber-900/60 uppercase tracking-widest mb-3 text-center">Or select a preset</p>
-                    <div className="flex justify-center gap-2 overflow-x-auto pb-2">
+                    <div className="flex justify-center gap-2 overflow-x-auto pb-2 custom-scrollbar">
                       {AVATARS.map((url) => (
                         <button
                           key={url}
@@ -248,6 +165,7 @@ function Onboarding({ user, onComplete }: OnboardingProps) {
                   </div>
                 </div>
 
+                {/* Banner Section */}
                 <div className="space-y-4">
                   <div className="flex justify-between items-end">
                     <p className="text-xs text-amber-900/60 uppercase tracking-widest">Profile Banner</p>
@@ -305,7 +223,7 @@ function Onboarding({ user, onComplete }: OnboardingProps) {
               <div className="w-24 h-24 bg-gradient-to-br from-amber-200 via-amber-500 to-amber-700 rounded-full flex items-center justify-center mx-auto mb-8 shadow-[0_0_30px_rgba(245,158,11,0.2)]">
                 <Sparkles className="w-12 h-12 text-black" />
               </div>
-              <h2 className="text-4xl font-serif italic bg-gradient-to-r from-amber-200 via-amber-400 to-amber-200 bg-clip-text text-transparent mb-4">
+              <h2 className="text-4xl font-serif italic text-gradient bg-gradient-to-r from-amber-200 via-amber-400 to-amber-200 bg-clip-text text-transparent mb-4">
                 Excellence Awaits
               </h2>
               <p className="text-amber-700/60 mb-10 max-w-md mx-auto leading-relaxed">
@@ -345,7 +263,7 @@ function Onboarding({ user, onComplete }: OnboardingProps) {
           >
             <div className="absolute inset-0 bg-gradient-to-r from-amber-400 via-amber-600 to-amber-400 bg-[length:200%_100%] animate-shimmer group-hover:animate-none" />
             <div className="relative flex items-center gap-3 text-black font-bold uppercase tracking-[0.2em] text-xs">
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : step === 2 ? 'Enter Universe' : 'Continue'}
+              {loading ? 'Finalizing...' : step === 2 ? 'Enter Universe' : 'Continue'}
               <ChevronRight className="w-4 h-4" />
             </div>
           </button>

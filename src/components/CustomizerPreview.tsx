@@ -4,7 +4,7 @@ import { cn } from '../lib/utils';
 
 interface CustomizerPreviewProps {
   user: UserProfile;
-  tab: 'themes' | 'cards' | 'borders' | 'effects' | 'pets' | 'cursors';
+  tab: 'themes' | 'cards' | 'borders' | 'effects';
   selectedTheme?: Theme;
   selectedCard?: CardStyle;
   selectedBorder?: Border;

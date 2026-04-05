@@ -15,8 +15,6 @@ import { db } from '../firebase';
 import { UserProfile, UserRank, Bot as BotType, BotTrigger, RankDefinition } from '../types';
 import { cn } from '../lib/utils';
 
-import { AdminModal } from './AdminModal';
-
 interface DeveloperConsoleProps {
   isOpen: boolean;
   onClose: () => void;
@@ -43,7 +41,7 @@ export const DeveloperConsole: React.FC<DeveloperConsoleProps> = ({ isOpen, onCl
   const [editingBot, setEditingBot] = useState<BotType | null>(null);
   const [editingRank, setEditingRank] = useState<RankDefinition | null>(null);
   const [selectedTutorial, setSelectedTutorial] = useState<any | null>(null);
-  const [moderationModal, setModerationModal] = useState<{ uid: string; action: 'mute' | 'kick' | 'ban' | 'unmute' | 'unkick' | 'unban' } | null>(null);
+  const [moderationModal, setModerationModal] = useState<{ uid: string; action: 'mute' | 'kick' | 'ban' } | null>(null);
 
   // Database Explorer State
   const [collections] = useState(['users', 'messages', 'notifications', 'news', 'bots', 'ranks', 'updates']);
@@ -432,9 +430,9 @@ export const DeveloperConsole: React.FC<DeveloperConsoleProps> = ({ isOpen, onCl
                                 >
                                   <Copy className="w-4 h-4" />
                                 </button>
-                                <button onClick={() => setModerationModal({ uid: u.uid, action: u.mutedUntil?.toDate && u.mutedUntil.toDate() > new Date() ? 'unmute' : 'mute' })} title="Mute/Unmute" className="p-2 rounded-lg hover:bg-amber-500/20 text-amber-500 transition-all"><VolumeX className="w-4 h-4" /></button>
-                                <button onClick={() => setModerationModal({ uid: u.uid, action: u.kickedUntil?.toDate && u.kickedUntil.toDate() > new Date() ? 'unkick' : 'kick' })} title="Kick/Unkick" className="p-2 rounded-lg hover:bg-orange-500/20 text-orange-500 transition-all"><Slash className="w-4 h-4" /></button>
-                                <button onClick={() => setModerationModal({ uid: u.uid, action: u.bannedUntil?.toDate && u.bannedUntil.toDate() > new Date() ? 'unban' : 'ban' })} title="Ban/Unban" className="p-2 rounded-lg hover:bg-red-500/20 text-red-500 transition-all"><Ban className="w-4 h-4" /></button>
+                                <button onClick={() => setModerationModal({ uid: u.uid, action: 'mute' })} title="Mute/Unmute" className="p-2 rounded-lg hover:bg-amber-500/20 text-amber-500 transition-all"><VolumeX className="w-4 h-4" /></button>
+                                <button onClick={() => setModerationModal({ uid: u.uid, action: 'kick' })} title="Kick/Unkick" className="p-2 rounded-lg hover:bg-orange-500/20 text-orange-500 transition-all"><Slash className="w-4 h-4" /></button>
+                                <button onClick={() => setModerationModal({ uid: u.uid, action: 'ban' })} title="Ban/Unban" className="p-2 rounded-lg hover:bg-red-500/20 text-red-500 transition-all"><Ban className="w-4 h-4" /></button>
                                 <button className="p-2 rounded-lg hover:bg-blue-500/20 text-blue-500 transition-all">
                                   <Edit2 className="w-4 h-4" />
                                 </button>
@@ -1122,12 +1120,56 @@ const handleBotTrigger = async (message, bot) => {
           )}
 
           {moderationModal && (
-            <AdminModal
-              targetUid={moderationModal.uid}
-              targetUsername={users.find(u => u.uid === moderationModal.uid)?.username || 'User'}
-              action={moderationModal.action}
-              onClose={() => setModerationModal(null)}
-            />
+            <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="w-full max-w-md bg-zinc-900 border border-white/10 rounded-3xl overflow-hidden flex flex-col"
+              >
+                <div className="p-6 border-b border-white/10 flex items-center justify-between">
+                  <h3 className="text-xl font-bold text-white capitalize">{moderationModal.action} User</h3>
+                  <button onClick={() => setModerationModal(null)} className="text-white/40 hover:text-white"><X /></button>
+                </div>
+                <div className="p-6 space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-white/40 uppercase">Reason</label>
+                    <input 
+                      type="text" 
+                      placeholder="Enter reason..."
+                      className="w-full bg-black border border-white/10 rounded-xl px-4 py-2 text-white"
+                      id="moderation-reason"
+                    />
+                  </div>
+                  {moderationModal.action !== 'ban' && (
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-white/40 uppercase">Duration (minutes)</label>
+                      <select 
+                        className="w-full bg-black border border-white/10 rounded-xl px-4 py-2 text-white"
+                        id="moderation-duration"
+                      >
+                        <option value="15">15 minutes</option>
+                        <option value="60">1 hour</option>
+                        <option value="1440">24 hours</option>
+                        <option value="10080">1 week</option>
+                      </select>
+                    </div>
+                  )}
+                </div>
+                <div className="p-6 border-t border-white/10 flex justify-end gap-4">
+                  <button onClick={() => setModerationModal(null)} className="px-6 py-2 rounded-xl text-white/40 hover:text-white font-bold">Cancel</button>
+                  <button 
+                    onClick={() => {
+                      const reason = (document.getElementById('moderation-reason') as HTMLInputElement).value;
+                      const duration = moderationModal.action === 'ban' ? 999999 : parseInt((document.getElementById('moderation-duration') as HTMLSelectElement).value);
+                      handleModerateUser(moderationModal.uid, moderationModal.action, duration, reason);
+                    }}
+                    className="px-6 py-2 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 transition-all"
+                  >
+                    Confirm
+                  </button>
+                </div>
+              </motion.div>
+            </div>
           )}
 
           {isCreatingUser && (

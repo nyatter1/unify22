@@ -183,3 +183,32 @@ export interface ProfileRating {
   comment: string;
   timestamp: any;
 }
+
+export interface BotTrigger {
+  id: string;
+  keyword: string;
+  response: string;
+  type: 'text' | 'image' | 'action';
+  action?: string;
+}
+
+export interface Bot {
+  id: string;
+  name: string;
+  username: string;
+  pfp: string;
+  rank: UserRank | string;
+  triggers: BotTrigger[];
+  isActive: boolean;
+  description: string;
+  tutorial?: string;
+}
+
+export interface RankDefinition {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  permissions: string[];
+  isCustom: boolean;
+}

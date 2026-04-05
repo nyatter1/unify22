@@ -524,4 +524,140 @@
     filter: grayscale(1);
     pointer-events: none;
   }
+
+  /* 50+ More Effects */
+  .effect-vibrant { filter: saturate(2); pointer-events: none; }
+  .effect-cool { filter: hue-rotate(180deg); pointer-events: none; }
+  .effect-warm { filter: hue-rotate(-30deg) saturate(1.5); pointer-events: none; }
+  .effect-pastel { filter: brightness(1.2) saturate(0.5); pointer-events: none; }
+  .effect-dark { filter: brightness(0.5); pointer-events: none; }
+  .effect-light-glow { filter: brightness(1.5) blur(2px); pointer-events: none; }
+  .effect-shadow-deep { box-shadow: inset 0 0 100px rgba(0,0,0,0.8); pointer-events: none; }
+  .effect-outline { border: 2px solid currentColor; pointer-events: none; }
+  .effect-double-outline { border: 4px double currentColor; pointer-events: none; }
+  .effect-triple-outline { border: 6px double currentColor; outline: 2px solid currentColor; pointer-events: none; }
+  
+  .effect-glow-red { box-shadow: inset 0 0 20px rgba(239,68,68,0.5); pointer-events: none; }
+  .effect-glow-blue { box-shadow: inset 0 0 20px rgba(59,130,246,0.5); pointer-events: none; }
+  .effect-glow-green { box-shadow: inset 0 0 20px rgba(34,197,94,0.5); pointer-events: none; }
+  .effect-glow-yellow { box-shadow: inset 0 0 20px rgba(234,179,8,0.5); pointer-events: none; }
+  .effect-glow-purple { box-shadow: inset 0 0 20px rgba(168,85,247,0.5); pointer-events: none; }
+  .effect-glow-pink { box-shadow: inset 0 0 20px rgba(236,72,153,0.5); pointer-events: none; }
+  .effect-glow-orange { box-shadow: inset 0 0 20px rgba(249,115,22,0.5); pointer-events: none; }
+  .effect-glow-cyan { box-shadow: inset 0 0 20px rgba(6,182,212,0.5); pointer-events: none; }
+  .effect-glow-lime { box-shadow: inset 0 0 20px rgba(132,204,22,0.5); pointer-events: none; }
+  .effect-glow-teal { box-shadow: inset 0 0 20px rgba(20,184,166,0.5); pointer-events: none; }
+  .effect-glow-indigo { box-shadow: inset 0 0 20px rgba(99,102,241,0.5); pointer-events: none; }
+  .effect-glow-violet { box-shadow: inset 0 0 20px rgba(139,92,246,0.5); pointer-events: none; }
+  .effect-glow-fuchsia { box-shadow: inset 0 0 20px rgba(217,70,239,0.5); pointer-events: none; }
+  .effect-glow-rose { box-shadow: inset 0 0 20px rgba(244,63,94,0.5); pointer-events: none; }
+  .effect-glow-sky { box-shadow: inset 0 0 20px rgba(14,165,233,0.5); pointer-events: none; }
+  .effect-glow-emerald { box-shadow: inset 0 0 20px rgba(16,185,129,0.5); pointer-events: none; }
+  .effect-glow-amber { box-shadow: inset 0 0 20px rgba(245,158,11,0.5); pointer-events: none; }
+  .effect-glow-slate { box-shadow: inset 0 0 20px rgba(100,116,139,0.5); pointer-events: none; }
+  .effect-glow-zinc { box-shadow: inset 0 0 20px rgba(113,113,122,0.5); pointer-events: none; }
+  .effect-glow-stone { box-shadow: inset 0 0 20px rgba(120,113,108,0.5); pointer-events: none; }
+
+  .effect-float-up { animation: float-up 3s ease-in-out infinite; pointer-events: none; }
+  .effect-float-down { animation: float-down 3s ease-in-out infinite; pointer-events: none; }
+  .effect-float-left { animation: float-left 3s ease-in-out infinite; pointer-events: none; }
+  .effect-float-right { animation: float-right 3s ease-in-out infinite; pointer-events: none; }
+  .effect-spin-slow { animation: spin 10s linear infinite; pointer-events: none; }
+  .effect-spin-fast { animation: spin 1s linear infinite; pointer-events: none; }
+  .effect-bounce-slow { animation: bounce 3s infinite; pointer-events: none; }
+  .effect-bounce-fast { animation: bounce 0.5s infinite; pointer-events: none; }
+  .effect-shake-slow { animation: shake 2s infinite; pointer-events: none; }
+  .effect-shake-fast { animation: shake 0.2s infinite; pointer-events: none; }
+  .effect-pulse-slow { animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite; pointer-events: none; }
+  .effect-pulse-fast { animation: pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite; pointer-events: none; }
+  .effect-blink-slow { animation: blink 2s step-end infinite; pointer-events: none; }
+  .effect-blink-fast { animation: blink 0.5s step-end infinite; pointer-events: none; }
+  .effect-fade-in { animation: fade-in 2s ease-in forwards; pointer-events: none; }
+  .effect-fade-out { animation: fade-out 2s ease-out forwards; pointer-events: none; }
+  .effect-zoom-in { animation: zoom-in 2s ease-in forwards; pointer-events: none; }
+  .effect-zoom-out { animation: zoom-out 2s ease-out forwards; pointer-events: none; }
+  .effect-slide-in { animation: slide-in 1s ease-out forwards; pointer-events: none; }
+  .effect-slide-out { animation: slide-out 1s ease-in forwards; pointer-events: none; }
+
+  @keyframes float-up { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+  @keyframes float-down { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(20px); } }
+  @keyframes float-left { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-20px); } }
+  @keyframes float-right { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(20px); } }
+  @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+  @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes fade-out { from { opacity: 1; } to { opacity: 0; } }
+  @keyframes zoom-in { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  @keyframes zoom-out { from { transform: scale(1.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  @keyframes slide-in { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+  @keyframes slide-out { from { transform: translateX(0); } to { transform: translateX(100%); } }
+
+  /* New Texture and Abstract Effects */
+  .effect-carbon-fiber {
+    background: radial-gradient(circle at 0% 0%, #333 25%, transparent 25%),
+                radial-gradient(circle at 100% 0%, #333 25%, transparent 25%),
+                radial-gradient(circle at 100% 100%, #333 25%, transparent 25%),
+                radial-gradient(circle at 0% 100%, #333 25%, transparent 25%),
+                #111;
+    background-size: 4px 4px;
+    opacity: 0.4;
+    pointer-events: none;
+  }
+  .effect-brushed-metal {
+    background: repeating-linear-gradient(90deg, #333, #333 1px, #444 1px, #444 2px);
+    opacity: 0.3;
+    pointer-events: none;
+  }
+  .effect-leather {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='leather'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.05' numOctaves='5' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='gamma' exponent='0.5'/%3E%3CfeFuncG type='gamma' exponent='0.5'/%3E%3CfeFuncB type='gamma' exponent='0.5'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23leather)'/%3E%3C/svg%3E");
+    opacity: 0.2;
+    pointer-events: none;
+  }
+  .effect-wood {
+    background: repeating-linear-gradient(135deg, #4b3621, #4b3621 10px, #3f2e1d 10px, #3f2e1d 20px);
+    opacity: 0.3;
+    pointer-events: none;
+  }
+  .effect-marble {
+    background: linear-gradient(125deg, #fff 0%, #eee 40%, #ddd 50%, #eee 60%, #fff 100%);
+    background-size: 200% 200%;
+    animation: flow 10s linear infinite;
+    opacity: 0.2;
+    pointer-events: none;
+  }
+  .effect-liquid-gold {
+    background: linear-gradient(45deg, #d4af37, #f9d71c, #d4af37);
+    background-size: 200% 200%;
+    animation: flow 3s linear infinite;
+    opacity: 0.4;
+    pointer-events: none;
+  }
+  .effect-cosmic-dust {
+    background-image: radial-gradient(white 1px, transparent 1px),
+                      radial-gradient(rgba(255,255,255,0.5) 1px, transparent 1px);
+    background-size: 20px 20px, 40px 40px;
+    animation: stars 10s linear infinite;
+    opacity: 0.3;
+    pointer-events: none;
+  }
+  .effect-digital-rain {
+    background: linear-gradient(to bottom, transparent, rgba(0,255,0,0.2), transparent);
+    background-size: 100% 100px;
+    animation: scanline 2s linear infinite;
+    opacity: 0.3;
+    pointer-events: none;
+  }
+  .effect-holographic {
+    background: linear-gradient(135deg, rgba(255,0,255,0.1), rgba(0,255,255,0.1), rgba(255,255,0,0.1));
+    background-size: 300% 300%;
+    animation: aurora 5s ease infinite;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  .effect-static {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    opacity: 0.15;
+    animation: glitch 0.1s infinite;
+    pointer-events: none;
+  }
 }

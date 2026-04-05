@@ -1,0 +1,630 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  Terminal, Users, Bot, Shield, Send, BookOpen, Database, 
+  Search, Plus, Trash2, Edit2, Save, X, Check, AlertTriangle,
+  Code, Cpu, Zap, Globe, Lock, UserPlus, MessageSquare,
+  BarChart2, Settings, ChevronRight, ChevronDown, Layers
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { 
+  collection, query, getDocs, doc, updateDoc, deleteDoc, 
+  setDoc, addDoc, serverTimestamp, onSnapshot, where, orderBy, limit 
+} from 'firebase/firestore';
+import { db } from '../firebase';
+import { UserProfile, UserRank, Bot as BotType, BotTrigger, RankDefinition } from '../types';
+import { cn } from '../lib/utils';
+
+interface DeveloperConsoleProps {
+  isOpen: boolean;
+  onClose: () => void;
+  currentUser: UserProfile;
+}
+
+type Tab = 'dashboard' | 'database' | 'users' | 'bots' | 'ranks' | 'broadcast' | 'tutorials';
+
+export const DeveloperConsole: React.FC<DeveloperConsoleProps> = ({ isOpen, onClose, currentUser }) => {
+  const [activeTab, setActiveTab] = useState<Tab>('dashboard');
+  const [users, setUsers] = useState<UserProfile[]>([]);
+  const [bots, setBots] = useState<BotType[]>([]);
+  const [ranks, setRanks] = useState<RankDefinition[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [broadcastMessage, setBroadcastMessage] = useState('');
+  const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
+  const [isEditingUser, setIsEditingUser] = useState(false);
+
+  // Database Explorer State
+  const [collections] = useState(['users', 'messages', 'notifications', 'news', 'bots', 'ranks', 'updates']);
+  const [selectedCollection, setSelectedCollection] = useState('users');
+  const [documents, setDocuments] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const unsubUsers = onSnapshot(collection(db, 'users'), (snap) => {
+      setUsers(snap.docs.map(d => ({ uid: d.id, ...d.data() } as UserProfile)));
+    });
+
+    const unsubBots = onSnapshot(collection(db, 'bots'), (snap) => {
+      setBots(snap.docs.map(d => ({ id: d.id, ...d.data() } as BotType)));
+    });
+
+    const unsubRanks = onSnapshot(collection(db, 'ranks'), (snap) => {
+      setRanks(snap.docs.map(d => ({ id: d.id, ...d.data() } as RankDefinition)));
+    });
+
+    setLoading(false);
+
+    return () => {
+      unsubUsers();
+      unsubBots();
+      unsubRanks();
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen || activeTab !== 'database') return;
+
+    const unsubDocs = onSnapshot(query(collection(db, selectedCollection), limit(50)), (snap) => {
+      setDocuments(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    });
+
+    return () => unsubDocs();
+  }, [isOpen, activeTab, selectedCollection]);
+
+  const handleSendBroadcast = async () => {
+    if (!broadcastMessage.trim()) return;
+    
+    try {
+      await addDoc(collection(db, 'messages'), {
+        senderId: 'SYSTEM',
+        senderUsername: 'BROADCAST',
+        senderPfp: 'https://api.dicebear.com/7.x/bottts/svg?seed=system',
+        senderRank: 'DEVELOPER',
+        text: `📢 GLOBAL BROADCAST: ${broadcastMessage}`,
+        timestamp: serverTimestamp(),
+        type: 'text'
+      });
+      setBroadcastMessage('');
+      alert('Broadcast sent successfully!');
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleUpdateUserRank = async (uid: string, newRank: UserRank) => {
+    try {
+      await updateDoc(doc(db, 'users', uid), { rank: newRank });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDeleteUser = async (uid: string) => {
+    if (!window.confirm('Are you sure you want to delete this user? This cannot be undone.')) return;
+    try {
+      await deleteDoc(doc(db, 'users', uid));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleCreateBot = async () => {
+    const name = prompt('Bot Name:');
+    if (!name) return;
+    try {
+      await addDoc(collection(db, 'bots'), {
+        name,
+        username: name.toLowerCase().replace(/\s/g, '_') + '_bot',
+        pfp: `https://api.dicebear.com/7.x/bottts/svg?seed=${name}`,
+        rank: 'MODERATOR',
+        triggers: [],
+        isActive: true,
+        description: 'New system bot',
+        createdAt: serverTimestamp()
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-xl p-4 sm:p-8">
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        className="w-full max-w-7xl h-full bg-[#0a0a0a] border border-white/10 rounded-3xl overflow-hidden flex flex-col shadow-[0_0_100px_rgba(0,0,0,0.5)]"
+      >
+        {/* Header */}
+        <div className="p-6 border-b border-white/10 flex items-center justify-between bg-zinc-900/50">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-red-500/20 flex items-center justify-center border border-red-500/50 shadow-[0_0_20px_rgba(239,68,68,0.3)]">
+              <Terminal className="w-6 h-6 text-red-500" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-black text-white tracking-tighter uppercase italic">Developer Console</h1>
+              <p className="text-xs text-white/40 font-mono">Uni-Fy Core Engine v2.5.0 // Root Access Granted</p>
+            </div>
+          </div>
+          <button 
+            onClick={onClose}
+            className="p-3 rounded-xl hover:bg-white/5 text-white/40 hover:text-white transition-all"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+
+        <div className="flex-1 flex overflow-hidden">
+          {/* Sidebar */}
+          <div className="w-64 border-r border-white/10 bg-black/40 p-4 space-y-2 overflow-y-auto">
+            <NavButton active={activeTab === 'dashboard'} icon={<BarChart2 />} label="Dashboard" onClick={() => setActiveTab('dashboard')} />
+            <NavButton active={activeTab === 'database'} icon={<Database />} label="DB Explorer" onClick={() => setActiveTab('database')} />
+            <NavButton active={activeTab === 'users'} icon={<Users />} label="Users" onClick={() => setActiveTab('users')} />
+            <NavButton active={activeTab === 'bots'} icon={<Bot />} label="Bot Factory" onClick={() => setActiveTab('bots')} />
+            <NavButton active={activeTab === 'ranks'} icon={<Shield />} label="Rank Editor" onClick={() => setActiveTab('ranks')} />
+            <NavButton active={activeTab === 'broadcast'} icon={<Send />} label="Broadcast" onClick={() => setActiveTab('broadcast')} />
+            <NavButton active={activeTab === 'tutorials'} icon={<BookOpen />} label="Dev Tutorials" onClick={() => setActiveTab('tutorials')} />
+            
+            <div className="pt-8 px-4">
+              <p className="text-[10px] text-white/20 uppercase tracking-widest font-bold mb-4">System Status</p>
+              <div className="space-y-3">
+                <StatusItem label="Firestore" status="Online" color="text-green-500" />
+                <StatusItem label="Auth Engine" status="Active" color="text-green-500" />
+                <StatusItem label="Realtime" status="Connected" color="text-green-500" />
+                <StatusItem label="Bot Engine" status="Standby" color="text-amber-500" />
+              </div>
+            </div>
+          </div>
+
+          {/* Content Area */}
+          <div className="flex-1 overflow-y-auto p-8 custom-scrollbar bg-[radial-gradient(circle_at_top_right,rgba(239,68,68,0.05),transparent)]">
+            <AnimatePresence mode="wait">
+              {activeTab === 'dashboard' && (
+                <motion.div 
+                  key="dashboard"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  className="space-y-8"
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <StatCard icon={<Users />} label="Total Users" value={users.length} color="text-blue-500" />
+                    <StatCard icon={<Bot />} label="Active Bots" value={bots.filter(b => b.isActive).length} color="text-purple-500" />
+                    <StatCard icon={<Zap />} label="Online Now" value={users.filter(u => u.isOnline).length} color="text-green-500" />
+                    <StatCard icon={<Globe />} label="Server Load" value="12%" color="text-cyan-500" />
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div className="bg-zinc-900/50 border border-white/10 rounded-3xl p-6">
+                      <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                        <Zap className="w-5 h-5 text-amber-500" />
+                        Recent Activity
+                      </h3>
+                      <div className="space-y-4">
+                        {users.slice(0, 5).map((u, i) => (
+                          <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5">
+                            <div className="flex items-center gap-3">
+                              <img src={u.pfp} className="w-8 h-8 rounded-lg" alt="" />
+                              <div>
+                                <p className="text-sm font-bold text-white">{u.username}</p>
+                                <p className="text-[10px] text-white/40 font-mono uppercase">{u.rank}</p>
+                              </div>
+                            </div>
+                            <span className="text-[10px] text-white/20 font-mono">Just joined</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="bg-zinc-900/50 border border-white/10 rounded-3xl p-6">
+                      <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                        <Terminal className="w-5 h-5 text-red-500" />
+                        Console Output
+                      </h3>
+                      <div className="bg-black rounded-xl p-4 font-mono text-xs text-green-500/80 h-64 overflow-y-auto space-y-1 custom-scrollbar">
+                        <p>[{new Date().toLocaleTimeString()}] Initializing Uni-Fy Core...</p>
+                        <p>[{new Date().toLocaleTimeString()}] Connection established to Firestore cluster-0</p>
+                        <p>[{new Date().toLocaleTimeString()}] Auth token verified for {currentUser.username}</p>
+                        <p>[{new Date().toLocaleTimeString()}] Loading {bots.length} system bots...</p>
+                        <p>[{new Date().toLocaleTimeString()}] Syncing {users.length} user profiles...</p>
+                        <p className="text-white/40">_</p>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {activeTab === 'users' && (
+                <motion.div 
+                  key="users"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="space-y-6"
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/20" />
+                      <input 
+                        type="text" 
+                        placeholder="Search users by username, email, or UID..."
+                        className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white focus:outline-none focus:border-red-500/50 transition-all"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                      />
+                    </div>
+                    <button className="bg-red-500 hover:bg-red-600 text-white px-6 py-4 rounded-2xl font-bold flex items-center gap-2 transition-all">
+                      <UserPlus className="w-5 h-5" />
+                      Create User
+                    </button>
+                  </div>
+
+                  <div className="bg-zinc-900/50 border border-white/10 rounded-3xl overflow-hidden">
+                    <table className="w-full text-left">
+                      <thead className="bg-black/40 border-b border-white/10">
+                        <tr>
+                          <th className="p-4 text-xs font-bold text-white/40 uppercase tracking-widest">User</th>
+                          <th className="p-4 text-xs font-bold text-white/40 uppercase tracking-widest">Rank</th>
+                          <th className="p-4 text-xs font-bold text-white/40 uppercase tracking-widest">Stats</th>
+                          <th className="p-4 text-xs font-bold text-white/40 uppercase tracking-widest text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/5">
+                        {users.filter(u => 
+                          u.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          u.uid.includes(searchTerm)
+                        ).map((u) => (
+                          <tr key={u.uid} className="hover:bg-white/5 transition-all group">
+                            <td className="p-4">
+                              <div className="flex items-center gap-3">
+                                <img src={u.pfp} className="w-10 h-10 rounded-xl" alt="" />
+                                <div>
+                                  <p className="text-sm font-bold text-white">{u.username}</p>
+                                  <p className="text-xs text-white/40">{u.email}</p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="p-4">
+                              <select 
+                                value={u.rank}
+                                onChange={(e) => handleUpdateUserRank(u.uid, e.target.value as UserRank)}
+                                className="bg-black/40 border border-white/10 rounded-lg px-2 py-1 text-xs text-white focus:outline-none focus:border-red-500/50"
+                              >
+                                {['DEVELOPER', 'FOUNDER', 'ADMINISTRATION', 'MODERATOR', 'VIP', 'ELITE', 'SUPER_VIP'].map(r => (
+                                  <option key={r} value={r}>{r}</option>
+                                ))}
+                              </select>
+                            </td>
+                            <td className="p-4">
+                              <div className="flex items-center gap-4 text-xs">
+                                <span className="text-amber-500 font-bold">{u.gold}G</span>
+                                <span className="text-red-500 font-bold">{u.rubies}R</span>
+                                <span className="text-blue-500 font-bold">Lvl {u.level || 1}</span>
+                              </div>
+                            </td>
+                            <td className="p-4 text-right">
+                              <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                                <button className="p-2 rounded-lg hover:bg-blue-500/20 text-blue-500 transition-all">
+                                  <Edit2 className="w-4 h-4" />
+                                </button>
+                                <button 
+                                  onClick={() => handleDeleteUser(u.uid)}
+                                  className="p-2 rounded-lg hover:bg-red-500/20 text-red-500 transition-all"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </motion.div>
+              )}
+
+              {activeTab === 'database' && (
+                <motion.div 
+                  key="database"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="h-full flex flex-col gap-6"
+                >
+                  <div className="flex items-center gap-4 overflow-x-auto pb-2 custom-scrollbar">
+                    {collections.map(c => (
+                      <button
+                        key={c}
+                        onClick={() => setSelectedCollection(c)}
+                        className={cn(
+                          "px-6 py-3 rounded-2xl font-bold text-sm whitespace-nowrap transition-all border",
+                          selectedCollection === c 
+                            ? "bg-red-500 border-red-400 text-white shadow-[0_0_20px_rgba(239,68,68,0.3)]" 
+                            : "bg-white/5 border-white/10 text-white/40 hover:text-white hover:bg-white/10"
+                        )}
+                      >
+                        {c}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="flex-1 bg-zinc-900/50 border border-white/10 rounded-3xl overflow-hidden flex flex-col">
+                    <div className="p-4 border-b border-white/10 bg-black/40 flex items-center justify-between">
+                      <h3 className="text-sm font-mono text-white/60">Collection: <span className="text-red-500">{selectedCollection}</span></h3>
+                      <button className="p-2 rounded-lg hover:bg-white/5 text-white/40 hover:text-white">
+                        <Plus className="w-5 h-5" />
+                      </button>
+                    </div>
+                    <div className="flex-1 overflow-y-auto custom-scrollbar">
+                      {documents.map((doc, i) => (
+                        <div key={doc.id || i} className="p-4 border-b border-white/5 hover:bg-white/5 transition-all group">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-mono text-red-500/80">{doc.id}</span>
+                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                              <button className="p-1.5 rounded-lg hover:bg-blue-500/20 text-blue-500"><Edit2 className="w-3.5 h-3.5" /></button>
+                              <button className="p-1.5 rounded-lg hover:bg-red-500/20 text-red-500"><Trash2 className="w-3.5 h-3.5" /></button>
+                            </div>
+                          </div>
+                          <pre className="text-[10px] font-mono text-white/40 overflow-x-auto bg-black/20 p-3 rounded-xl">
+                            {JSON.stringify(doc, null, 2)}
+                          </pre>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {activeTab === 'bots' && (
+                <motion.div 
+                  key="bots"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="space-y-8"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-2xl font-black text-white italic uppercase tracking-tighter">Bot Factory</h2>
+                      <p className="text-sm text-white/40">Create and manage automated system entities</p>
+                    </div>
+                    <button 
+                      onClick={handleCreateBot}
+                      className="bg-purple-500 hover:bg-purple-600 text-white px-8 py-4 rounded-2xl font-bold flex items-center gap-3 transition-all shadow-[0_0_30px_rgba(168,85,247,0.3)]"
+                    >
+                      <Plus className="w-6 h-6" />
+                      Deploy New Bot
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {bots.map(bot => (
+                      <div key={bot.id} className="bg-zinc-900/50 border border-white/10 rounded-3xl p-6 space-y-6 relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-4">
+                          <div className={cn(
+                            "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border",
+                            bot.isActive ? "bg-green-500/20 border-green-500/50 text-green-500" : "bg-red-500/20 border-red-500/50 text-red-500"
+                          )}>
+                            {bot.isActive ? 'Active' : 'Offline'}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-4">
+                          <div className="relative">
+                            <img src={bot.pfp} className="w-16 h-16 rounded-2xl border-2 border-purple-500/50" alt="" />
+                            <div className="absolute -bottom-2 -right-2 w-6 h-6 rounded-lg bg-purple-500 flex items-center justify-center border-2 border-[#0a0a0a]">
+                              <Cpu className="w-3 h-3 text-white" />
+                            </div>
+                          </div>
+                          <div>
+                            <h3 className="text-xl font-black text-white uppercase italic tracking-tighter">{bot.name}</h3>
+                            <p className="text-xs text-white/40 font-mono">@{bot.username}</p>
+                          </div>
+                        </div>
+
+                        <div className="space-y-3">
+                          <p className="text-xs text-white/60 leading-relaxed">{bot.description}</p>
+                          <div className="flex flex-wrap gap-2">
+                            {bot.triggers.map((t, i) => (
+                              <span key={i} className="px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-[10px] text-purple-400 font-mono">
+                                /{t.keyword}
+                              </span>
+                            ))}
+                            <button className="px-2 py-1 rounded-lg bg-purple-500/20 border border-purple-500/50 text-[10px] text-purple-400 hover:bg-purple-500/40 transition-all">
+                              + Add Trigger
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3 pt-4 border-t border-white/5">
+                          <button className="flex-1 bg-white/5 hover:bg-white/10 text-white py-3 rounded-xl text-sm font-bold transition-all border border-white/5">
+                            Configure Logic
+                          </button>
+                          <button className="p-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 transition-all">
+                            <Trash2 className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+
+              {activeTab === 'broadcast' && (
+                <motion.div 
+                  key="broadcast"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="max-w-2xl mx-auto space-y-8 py-12"
+                >
+                  <div className="text-center space-y-4">
+                    <div className="w-20 h-20 rounded-3xl bg-amber-500/20 flex items-center justify-center border border-amber-500/50 shadow-[0_0_40px_rgba(245,158,11,0.2)] mx-auto mb-6">
+                      <Send className="w-10 h-10 text-amber-500" />
+                    </div>
+                    <h2 className="text-3xl font-black text-white italic uppercase tracking-tighter">Global Broadcast</h2>
+                    <p className="text-white/40">Send a system-wide announcement to all active users. Use with extreme caution.</p>
+                  </div>
+
+                  <div className="space-y-6">
+                    <textarea 
+                      value={broadcastMessage}
+                      onChange={(e) => setBroadcastMessage(e.target.value)}
+                      placeholder="Enter your message here..."
+                      className="w-full h-48 bg-white/5 border border-white/10 rounded-3xl p-6 text-white text-lg focus:outline-none focus:border-amber-500/50 transition-all resize-none"
+                    />
+                    <button 
+                      onClick={handleSendBroadcast}
+                      disabled={!broadcastMessage.trim()}
+                      className="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed text-white py-6 rounded-3xl font-black text-xl uppercase italic tracking-widest transition-all shadow-[0_0_50px_rgba(245,158,11,0.3)]"
+                    >
+                      Fire Broadcast
+                    </button>
+                  </div>
+
+                  <div className="p-6 rounded-3xl bg-red-500/10 border border-red-500/20 flex gap-4">
+                    <AlertTriangle className="w-6 h-6 text-red-500 shrink-0" />
+                    <p className="text-xs text-red-500/80 leading-relaxed">
+                      Warning: Broadcasts are logged and visible to all users. Abuse of this system will result in immediate revocation of developer privileges.
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+
+              {activeTab === 'tutorials' && (
+                <motion.div 
+                  key="tutorials"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="space-y-12"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-blue-500/20 flex items-center justify-center border border-blue-500/50">
+                      <BookOpen className="w-6 h-6 text-blue-500" />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-black text-white italic uppercase tracking-tighter">Developer Tutorials</h2>
+                      <p className="text-sm text-white/40">Master the Uni-Fy Core Engine</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <TutorialCard 
+                      icon={<Code />}
+                      title="Coding Your First Bot"
+                      description="Learn how to define triggers, handle user input, and create dynamic responses using the Bot Engine."
+                      difficulty="Beginner"
+                    />
+                    <TutorialCard 
+                      icon={<Shield />}
+                      title="Permission Hierarchy"
+                      description="Deep dive into the rank system and how to secure your collections using Firestore rules."
+                      difficulty="Advanced"
+                    />
+                    <TutorialCard 
+                      icon={<Zap />}
+                      title="Realtime Events"
+                      description="Understanding the WebSocket layer and how to push instant updates to clients."
+                      difficulty="Intermediate"
+                    />
+                    <TutorialCard 
+                      icon={<Layers />}
+                      title="Custom UI Components"
+                      description="How to build and register new themes and card styles for the Uni-Fy marketplace."
+                      difficulty="Intermediate"
+                    />
+                  </div>
+
+                  <div className="bg-zinc-900/50 border border-white/10 rounded-3xl p-8 space-y-6">
+                    <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                      <Terminal className="w-6 h-6 text-green-500" />
+                      Bot Logic Example (Node.js)
+                    </h3>
+                    <pre className="bg-black rounded-2xl p-6 font-mono text-sm text-green-500/80 overflow-x-auto">
+{`// Example: A simple "Question Bot" trigger
+const handleBotTrigger = async (message, bot) => {
+  const trigger = bot.triggers.find(t => 
+    message.text.toLowerCase().includes(t.keyword)
+  );
+
+  if (trigger) {
+    await addDoc(collection(db, 'messages'), {
+      senderId: bot.id,
+      senderUsername: bot.name,
+      senderPfp: bot.pfp,
+      text: \`@\${message.senderUsername} \${trigger.response}\`,
+      timestamp: serverTimestamp()
+    });
+  }
+};`}
+                    </pre>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
+const NavButton: React.FC<{ active: boolean; icon: React.ReactNode; label: string; onClick: () => void }> = ({ active, icon, label, onClick }) => (
+  <button
+    onClick={onClick}
+    className={cn(
+      "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all border",
+      active 
+        ? "bg-red-500 border-red-400 text-white shadow-[0_0_20px_rgba(239,68,68,0.3)]" 
+        : "bg-transparent border-transparent text-white/40 hover:text-white hover:bg-white/5"
+    )}
+  >
+    {React.isValidElement(icon) && React.cloneElement(icon as React.ReactElement<any>, { className: "w-5 h-5" })}
+    {label}
+  </button>
+);
+
+const StatCard: React.FC<{ icon: React.ReactNode; label: string; value: string | number; color: string }> = ({ icon, label, value, color }) => (
+  <div className="bg-zinc-900/50 border border-white/10 rounded-3xl p-6 space-y-2">
+    <div className={cn("w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/10", color)}>
+      {React.isValidElement(icon) && React.cloneElement(icon as React.ReactElement<any>, { className: "w-5 h-5" })}
+    </div>
+    <p className="text-xs text-white/40 uppercase tracking-widest font-bold">{label}</p>
+    <p className="text-3xl font-black text-white tracking-tighter">{value}</p>
+  </div>
+);
+
+const StatusItem: React.FC<{ label: string; status: string; color: string }> = ({ label, status, color }) => (
+  <div className="flex items-center justify-between text-xs">
+    <span className="text-white/40">{label}</span>
+    <div className="flex items-center gap-2">
+      <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse bg-current", color)} />
+      <span className={cn("font-bold", color)}>{status}</span>
+    </div>
+  </div>
+);
+
+const TutorialCard: React.FC<{ icon: React.ReactNode; title: string; description: string; difficulty: string }> = ({ icon, title, description, difficulty }) => (
+  <div className="bg-zinc-900/50 border border-white/10 rounded-3xl p-6 space-y-4 hover:border-blue-500/50 transition-all cursor-pointer group">
+    <div className="flex items-center justify-between">
+      <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10 group-hover:bg-blue-500/20 group-hover:border-blue-500/50 transition-all">
+        {React.isValidElement(icon) && React.cloneElement(icon as React.ReactElement<any>, { className: "w-6 h-6 text-white/40 group-hover:text-blue-500 transition-all" })}
+      </div>
+      <span className={cn(
+        "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border",
+        difficulty === 'Beginner' ? "bg-green-500/10 border-green-500/50 text-green-500" :
+        difficulty === 'Intermediate' ? "bg-blue-500/10 border-blue-500/50 text-blue-500" :
+        "bg-red-500/10 border-red-500/50 text-red-500"
+      )}>
+        {difficulty}
+      </span>
+    </div>
+    <div>
+      <h3 className="text-lg font-bold text-white mb-2">{title}</h3>
+      <p className="text-sm text-white/40 leading-relaxed">{description}</p>
+    </div>
+    <div className="flex items-center gap-2 text-blue-500 text-xs font-bold">
+      Start Learning
+      <ChevronRight className="w-4 h-4" />
+    </div>
+  </div>
+);

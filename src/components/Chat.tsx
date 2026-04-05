@@ -64,6 +64,7 @@ import { UserOptions } from './UserOptions';
 import { RatingModal } from './RatingModal';
 import { ForceSpeakModal } from './ForceSpeakModal';
 import { AdminModal } from './AdminModal';
+import { DeveloperConsole } from './DeveloperConsole';
 import { PollModal } from './PollModal';
 import { RatingsList } from './RatingsList';
 
@@ -1347,14 +1348,14 @@ export default function Chat({ user }: ChatProps) {
             <SidebarItem icon={<RefreshCw className="w-5 h-5" />} label="Updates" onClick={() => setShowUpdates(true)} expanded={isLeftSidebarPinned || showLeftSidebar} />
             <SidebarItem icon={<BookOpen className="w-5 h-5" />} label="Rules" onClick={() => setShowRules(true)} expanded={isLeftSidebarPinned || showLeftSidebar} />
             {user.rank === 'DEVELOPER' && (
-              <SidebarItem icon={<Terminal className="w-5 h-5" />} label="Admin Panel" onClick={() => setShowAdminPanel(true)} expanded={isLeftSidebarPinned || showLeftSidebar} variant="danger" />
+              <SidebarItem icon={<Terminal className="w-5 h-5" />} label="Dev Console" onClick={() => setShowAdminPanel(true)} expanded={isLeftSidebarPinned || showLeftSidebar} variant="danger" />
             )}
           </div>
         </aside>
 
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col min-w-0 pb-20 lg:pb-0">
-          <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-8 custom-scrollbar">
+        <div className="flex-1 flex flex-col min-w-0 pb-20 lg:pb-0 overflow-x-hidden">
+          <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-8 space-y-8 custom-scrollbar">
             {messages.map((msg, i) => {
               const isMe = msg.senderId === user.uid;
               
@@ -3387,174 +3388,11 @@ export default function Chat({ user }: ChatProps) {
           </div>
         )}
       </AnimatePresence>
-      <AnimatePresence>
-        {showAdminPanel && user.rank === 'DEVELOPER' && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className={cn(
-                "w-full max-w-4xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh] transition-all",
-                currentTheme.customStyles?.glassEffect ? "backdrop-blur-3xl bg-black/40" : "bg-zinc-900",
-                currentTheme.customStyles?.bubbleStyle === 'sharp' ? "rounded-none" : "rounded-3xl",
-                currentTheme.customStyles?.borderStyle ? "" : "border border-red-500/30"
-              )}
-              style={{ border: currentTheme.customStyles?.borderStyle || undefined }}
-            >
-              <div className="p-6 border-b border-red-500/20 flex items-center justify-between bg-red-500/5">
-                <div className="flex items-center gap-3">
-                  <Terminal className="w-6 h-6 text-red-500" />
-                  <h2 className="text-xl font-serif italic text-red-500">Developer Console</h2>
-                </div>
-                <button onClick={() => setShowAdminPanel(false)} className="p-2 rounded-full hover:bg-white/10 text-white/60">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              <div className="p-6 overflow-y-auto flex-1 space-y-8">
-                {/* Global Notification */}
-                <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
-                  <h3 className="text-sm font-bold text-white mb-4 uppercase tracking-widest flex items-center gap-2">
-                    <Bell className="w-4 h-4 text-purple-400" />
-                    Global Notification
-                  </h3>
-                  <div className="flex gap-4">
-                    <input type="text" id="globalNotification" placeholder="Enter notification message..." className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white" />
-                    <button 
-                      onClick={async () => {
-                        const input = document.getElementById('globalNotification') as HTMLInputElement;
-                        if (!input.value) return;
-                        
-                        const batch = writeBatch(db);
-                        allUsers.forEach(u => {
-                          const notifRef = doc(collection(db, 'notifications'));
-                          batch.set(notifRef, {
-                            userId: u.uid,
-                            senderId: user.uid,
-                            senderUsername: user.username || 'Admin',
-                            senderPfp: user.pfp,
-                            type: 'global_notification',
-                            content: input.value,
-                            read: false,
-                            timestamp: serverTimestamp()
-                          });
-                        });
-                        
-                        await batch.commit();
-                        input.value = '';
-                        showToast('Global notification sent!');
-                      }}
-                      className="px-6 py-3 rounded-xl bg-purple-500 text-white font-bold uppercase tracking-widest hover:bg-purple-400 transition-colors"
-                    >
-                      Send
-                    </button>
-                  </div>
-                </div>
-
-                {/* System Broadcast */}
-                <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
-                  <h3 className="text-sm font-bold text-white mb-4 uppercase tracking-widest flex items-center gap-2">
-                    <ShieldAlert className="w-4 h-4 text-amber-500" />
-                    System Broadcast
-                  </h3>
-                  <div className="flex gap-4">
-                    <input type="text" id="broadcastMessage" placeholder="Enter broadcast message..." className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white" />
-                    <button 
-                      onClick={async () => {
-                        const input = document.getElementById('broadcastMessage') as HTMLInputElement;
-                        if (!input.value) return;
-                        await addDoc(collection(db, 'messages'), {
-                          text: `[SYSTEM BROADCAST]: ${input.value}`,
-                          uid: 'system',
-                          username: 'SYSTEM',
-                          pfp: 'https://api.dicebear.com/7.x/bottts/svg?seed=system',
-                          rank: 'DEVELOPER',
-                          timestamp: serverTimestamp(),
-                          isSystem: true
-                        });
-                        input.value = '';
-                        showToast('Broadcast sent!');
-                      }}
-                      className="px-6 py-3 rounded-xl bg-amber-500 text-black font-bold uppercase tracking-widest hover:bg-amber-400 transition-colors"
-                    >
-                      Send
-                    </button>
-                  </div>
-                </div>
-
-                {/* Nuke Chat */}
-                <div className="p-6 rounded-2xl bg-red-500/10 border border-red-500/20">
-                  <h3 className="text-sm font-bold text-red-500 mb-4 uppercase tracking-widest flex items-center gap-2">
-                    <Trash2 className="w-4 h-4" />
-                    Danger Zone
-                  </h3>
-                  <button 
-                    onClick={async () => {
-                      if (window.confirm('Are you sure you want to nuke the chat? This cannot be undone.')) {
-                        const msgs = await getDocs(collection(db, 'messages'));
-                        const batch = writeBatch(db);
-                        msgs.docs.forEach(doc => batch.delete(doc.ref));
-                        await batch.commit();
-                        showToast('Chat nuked!');
-                      }
-                    }}
-                    className="w-full py-3 rounded-xl bg-red-500 text-white font-bold uppercase tracking-widest hover:bg-red-600 transition-colors"
-                  >
-                    Nuke Chat
-                  </button>
-                </div>
-
-                {/* User Management */}
-                <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
-                  <h3 className="text-sm font-bold text-white mb-4 uppercase tracking-widest flex items-center gap-2">
-                    <Users className="w-4 h-4 text-blue-400" />
-                    User Management ({allUsers.length})
-                  </h3>
-                  <div className="space-y-2 max-h-96 overflow-y-auto pr-2">
-                    {allUsers.map(u => (
-                      <div key={u.uid} className="flex items-center justify-between p-3 rounded-xl bg-black/40 border border-white/5">
-                        <div className="flex items-center gap-3">
-                          <img src={u.pfp} alt="" className="w-8 h-8 rounded-full" />
-                          <div>
-                            <p className="text-sm font-bold text-white">{u.username}</p>
-                            <p className="text-xs text-white/40">{u.email}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <select 
-                            value={u.rank}
-                            onChange={async (e) => {
-                              await updateDoc(doc(db, 'users', u.uid), { rank: e.target.value });
-                              showToast(`Updated rank for ${u.username}`);
-                            }}
-                            className="bg-black border border-white/10 rounded-lg px-2 py-1 text-xs text-white"
-                          >
-                            {RANKS.map(r => (
-                              <option key={r.id} value={r.id}>{r.name}</option>
-                            ))}
-                          </select>
-                          <button 
-                            onClick={async () => {
-                              const gold = prompt(`Add gold to ${u.username} (current: ${u.gold}):`, '1000');
-                              if (gold && !isNaN(Number(gold))) {
-                                await updateDoc(doc(db, 'users', u.uid), { gold: increment(Number(gold)) });
-                                showToast(`Added ${gold} gold to ${u.username}`);
-                              }
-                            }}
-                            className="p-2 rounded-lg bg-yellow-500/20 text-yellow-500 hover:bg-yellow-500/30"
-                          >
-                            <Coins className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      <DeveloperConsole 
+        isOpen={showAdminPanel} 
+        onClose={() => setShowAdminPanel(false)} 
+        currentUser={user} 
+      />
 
       <AnimatePresence>
         {showDailyReward && (

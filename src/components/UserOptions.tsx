@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { UserProfile, RankDefinition } from '../types';
 import { RANKS } from '../constants';
-import { supabase } from '../supabase';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../firebase';
 
 interface UserOptionsProps {
   targetUser: UserProfile;
@@ -45,9 +46,8 @@ export const UserOptions: React.FC<UserOptionsProps> = ({
   useEffect(() => {
     const fetchCustomRanks = async () => {
       try {
-        const { data, error } = await supabase.from('ranks').select('*');
-        if (error) throw error;
-        setCustomRanks((data ?? []) as RankDefinition[]);
+        const snap = await getDocs(collection(db, 'ranks'));
+        setCustomRanks(snap.docs.map(d => ({ id: d.id, ...d.data() } as RankDefinition)));
       } catch (e) {
         console.error(e);
       }
@@ -62,29 +62,29 @@ export const UserOptions: React.FC<UserOptionsProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <motion.div
+      <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         className="bg-zinc-900 border border-white/10 rounded-3xl p-0 w-full max-w-2xl shadow-2xl overflow-hidden flex flex-row max-h-[90vh]"
       >
         {/* Left: Profile Preview */}
         <div className="w-1/3 bg-white/5 p-6 flex flex-col items-center justify-center border-r border-white/10 overflow-y-auto">
-          <div className="relative mb-4">
-            <div className="absolute inset-0 bg-blue-500 rounded-full blur-xl opacity-20"></div>
-            <img src={targetUser.pfp} alt={targetUser.username} className="w-24 h-24 rounded-full border-2 border-white/20 relative z-10 object-cover" />
-          </div>
-          <h2 className="text-xl font-bold text-white mb-1 text-center">{targetUser.username}</h2>
-          <p className="text-sm text-white/40 italic mb-4 text-center">"{targetUser.status || 'No status'}"</p>
-
-          {targetUser.badges && targetUser.badges.length > 0 && (
-            <div className="flex flex-wrap gap-1 justify-center">
-              {targetUser.badges.map((badge, i) => (
-                <span key={i} className="px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-[10px] text-white/60 uppercase tracking-wider">
-                  {badge}
-                </span>
-              ))}
-            </div>
-          )}
+           <div className="relative mb-4">
+             <div className="absolute inset-0 bg-blue-500 rounded-full blur-xl opacity-20"></div>
+             <img src={targetUser.pfp} alt={targetUser.username} className="w-24 h-24 rounded-full border-2 border-white/20 relative z-10 object-cover" />
+           </div>
+           <h2 className="text-xl font-bold text-white mb-1 text-center">{targetUser.username}</h2>
+           <p className="text-sm text-white/40 italic mb-4 text-center">"{targetUser.status || 'No status'}"</p>
+           
+           {targetUser.badges && targetUser.badges.length > 0 && (
+             <div className="flex flex-wrap gap-1 justify-center">
+               {targetUser.badges.map((badge, i) => (
+                 <span key={i} className="px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-[10px] text-white/60 uppercase tracking-wider">
+                   {badge}
+                 </span>
+               ))}
+             </div>
+           )}
         </div>
 
         {/* Right: Actions */}
@@ -93,22 +93,22 @@ export const UserOptions: React.FC<UserOptionsProps> = ({
             <h2 className="text-lg font-bold text-white">Actions</h2>
             <button onClick={onClose} className="text-white/60 hover:text-white transition-colors"><X className="w-5 h-5" /></button>
           </div>
-
+          
           <div className="space-y-2">
             <button onClick={() => onViewProfile(targetUser.uid)} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-white/80 transition-all"><Eye className="w-4 h-4" /> View Profile</button>
             <button onClick={() => onViewRatings(targetUser.uid)} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-white/80 transition-all"><Star className="w-4 h-4" /> {isSelf ? 'My Ratings' : 'View Ratings'}</button>
             {!isSelf && (
               <button onClick={() => onRateProfile(targetUser.uid)} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-white/80 transition-all"><MessageSquare className="w-4 h-4" /> Rate Profile</button>
             )}
-
+            
             {isDev && (
               <button onClick={() => onForceSpeak(targetUser.uid)} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-amber-500/10 text-amber-500 transition-all"><Mic className="w-4 h-4" /> Force Speak</button>
             )}
-
+            
             {isMod && !isSelf && (
               <div className="pt-4 border-t border-white/5 mt-4 space-y-2">
                 <h3 className="text-xs font-bold text-white/40 uppercase tracking-wider px-3 mb-2">Moderation</h3>
-
+                
                 {targetUser.isMuted ? (
                   <button onClick={() => onUnmute(targetUser.uid)} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-green-500/10 text-green-400 transition-all"><Volume2 className="w-4 h-4" /> Unmute User</button>
                 ) : (
@@ -130,24 +130,24 @@ export const UserOptions: React.FC<UserOptionsProps> = ({
                     )}
 
                     <div className="mt-4">
-                      <button
-                        onClick={() => setShowRanks(!showRanks)}
+                      <button 
+                        onClick={() => setShowRanks(!showRanks)} 
                         className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-white/5 text-white/80 transition-all"
                       >
                         <div className="flex items-center gap-3"><Shield className="w-4 h-4" /> Change Rank</div>
                         <ChevronDown className={cn("w-4 h-4 transition-transform", showRanks && "rotate-180")} />
                       </button>
-
+                      
                       <AnimatePresence>
                         {showRanks && (
-                          <motion.div
+                          <motion.div 
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: 'auto', opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
                             className="overflow-hidden mt-2 space-y-1 pl-4 border-l border-white/10 ml-4 max-h-48 overflow-y-auto pr-2"
                           >
                             {RANKS.map(r => (
-                              <button
+                              <button 
                                 key={r.id}
                                 onClick={() => onChangeRank(targetUser.uid, r.id, false)}
                                 className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-white/5 text-sm text-white/60 hover:text-white transition-colors"
@@ -157,7 +157,7 @@ export const UserOptions: React.FC<UserOptionsProps> = ({
                               </button>
                             ))}
                             {customRanks.map(r => (
-                              <button
+                              <button 
                                 key={r.id}
                                 onClick={() => onChangeRank(targetUser.uid, r.id, true)}
                                 className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-white/5 text-sm text-white/60 hover:text-white transition-colors"

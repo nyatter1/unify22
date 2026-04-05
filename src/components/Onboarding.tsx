@@ -1,9 +1,10 @@
 import React, { useState, useRef } from 'react';
-import { supabase } from '../supabase';
+import { db } from '../firebase';
+import { doc, updateDoc } from 'firebase/firestore';
 import { UserProfile } from '../types';
 import { AVATARS, BANNERS } from '../constants';
 import { motion, AnimatePresence } from 'motion/react';
-import { Check, ChevronRight, Sparkles, Upload, Camera } from 'lucide-react';
+import { Check, ChevronRight, Image as ImageIcon, Sparkles, Upload, Camera } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 interface OnboardingProps {
@@ -16,8 +17,9 @@ export default function Onboarding({ user, onComplete }: OnboardingProps) {
   const [loading, setLoading] = useState(false);
   const [selectedPfp, setSelectedPfp] = useState(user.pfp || AVATARS[0]);
   const [selectedBanner, setSelectedBanner] = useState(user.banner || BANNERS[0]);
+  
   const [error, setError] = useState<string | null>(null);
-
+  
   const pfpInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
 
@@ -25,7 +27,8 @@ export default function Onboarding({ user, onComplete }: OnboardingProps) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 500000) {
+    // Check file size (Firestore limit is 1MB per document, so we should keep it small)
+    if (file.size > 500000) { // 500KB limit for safety
       setError('File is too large. Please choose an image under 500KB.');
       setTimeout(() => setError(null), 3000);
       return;
@@ -46,15 +49,11 @@ export default function Onboarding({ user, onComplete }: OnboardingProps) {
     } else {
       setLoading(true);
       try {
-        const { error } = await supabase
-          .from('users')
-          .update({
-            pfp: selectedPfp,
-            banner: selectedBanner,
-            onboarding_step: 0,
-          })
-          .eq('uid', user.uid);
-        if (error) throw error;
+        await updateDoc(doc(db, 'users', user.uid), {
+          pfp: selectedPfp,
+          banner: selectedBanner,
+          onboardingStep: 0,
+        });
         onComplete();
       } catch (err) {
         console.error(err);
@@ -79,8 +78,8 @@ export default function Onboarding({ user, onComplete }: OnboardingProps) {
             <div key={i} className="flex items-center flex-1 last:flex-none">
               <div className={cn(
                 "w-12 h-12 rounded-full flex items-center justify-center font-serif text-xl border transition-all duration-700",
-                step >= i
-                  ? "bg-gradient-to-br from-amber-200 via-amber-500 to-amber-700 border-amber-400 text-black shadow-[0_0_20px_rgba(245,158,11,0.3)]"
+                step >= i 
+                  ? "bg-gradient-to-br from-amber-200 via-amber-500 to-amber-700 border-amber-400 text-black shadow-[0_0_20px_rgba(245,158,11,0.3)]" 
                   : "bg-black/40 border-amber-900/30 text-amber-900/50"
               )}>
                 {step > i ? <Check className="w-6 h-6" /> : i}
@@ -121,13 +120,13 @@ export default function Onboarding({ user, onComplete }: OnboardingProps) {
                 </h2>
                 <p className="text-amber-700/60 tracking-widest uppercase text-xs">Step 01 — Visual Presence</p>
               </div>
-
+              
               <div className="space-y-12">
                 {/* Profile Picture Section */}
                 <div className="flex flex-col items-center">
                   <div className="relative group">
                     <div className="absolute inset-0 bg-gradient-to-br from-amber-200 via-amber-500 to-amber-700 rounded-full blur-md opacity-20 group-hover:opacity-40 transition-opacity" />
-                    <button
+                    <button 
                       onClick={() => pfpInputRef.current?.click()}
                       className="relative w-32 h-32 rounded-full border-2 border-amber-500/30 overflow-hidden bg-black/60 flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
                     >
@@ -137,16 +136,16 @@ export default function Onboarding({ user, onComplete }: OnboardingProps) {
                         <span className="text-[10px] font-bold text-amber-400 uppercase tracking-tighter">Upload</span>
                       </div>
                     </button>
-                    <input
-                      type="file"
-                      ref={pfpInputRef}
-                      className="hidden"
-                      accept="image/*"
-                      onChange={(e) => handleFileUpload(e, 'pfp')}
+                    <input 
+                      type="file" 
+                      ref={pfpInputRef} 
+                      className="hidden" 
+                      accept="image/*" 
+                      onChange={(e) => handleFileUpload(e, 'pfp')} 
                     />
                   </div>
                   <p className="mt-4 text-sm text-amber-500/50 font-medium">Click to upload custom profile picture</p>
-
+                  
                   <div className="mt-6 w-full">
                     <p className="text-[10px] text-amber-900/60 uppercase tracking-widest mb-3 text-center">Or select a preset</p>
                     <div className="flex justify-center gap-2 overflow-x-auto pb-2 custom-scrollbar">
@@ -170,21 +169,21 @@ export default function Onboarding({ user, onComplete }: OnboardingProps) {
                 <div className="space-y-4">
                   <div className="flex justify-between items-end">
                     <p className="text-xs text-amber-900/60 uppercase tracking-widest">Profile Banner</p>
-                    <button
+                    <button 
                       onClick={() => bannerInputRef.current?.click()}
                       className="text-[10px] font-bold text-amber-500 hover:text-amber-400 uppercase tracking-widest flex items-center gap-1 transition-colors"
                     >
                       <Upload className="w-3 h-3" /> Upload Custom
                     </button>
-                    <input
-                      type="file"
-                      ref={bannerInputRef}
-                      className="hidden"
-                      accept="image/*"
-                      onChange={(e) => handleFileUpload(e, 'banner')}
+                    <input 
+                      type="file" 
+                      ref={bannerInputRef} 
+                      className="hidden" 
+                      accept="image/*" 
+                      onChange={(e) => handleFileUpload(e, 'banner')} 
                     />
                   </div>
-
+                  
                   <div className="relative h-32 rounded-2xl border border-amber-900/20 overflow-hidden bg-black/40 group">
                     <img src={selectedBanner} alt="Banner" className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity" />
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -230,7 +229,7 @@ export default function Onboarding({ user, onComplete }: OnboardingProps) {
               <p className="text-amber-700/60 mb-10 max-w-md mx-auto leading-relaxed">
                 Your profile has been curated to perfection. Welcome to the unified experience of Uni-Fy.
               </p>
-
+              
               <div className="max-w-sm mx-auto bg-black/60 rounded-3xl p-8 border border-amber-900/30 shadow-2xl relative overflow-hidden group">
                 <div className="absolute inset-0 bg-gradient-to-b from-amber-500/5 to-transparent pointer-events-none" />
                 <div className="relative mb-6">

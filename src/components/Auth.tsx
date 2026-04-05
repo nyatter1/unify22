@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { supabase } from '../supabase';
-import { UserRank } from '../types';
+import { auth, db } from '../firebase';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { UserProfile, UserRank } from '../types';
 import { Infinity, Mail, Lock, User, Calendar, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
@@ -28,11 +30,17 @@ export default function Auth({ onAuthSuccess }: AuthProps) {
 
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+        await signInWithEmailAndPassword(auth, email, password);
       } else {
         if (!username || !age || !gender) throw new Error('Please fill all fields');
         if (Number(age) < 7) throw new Error('You must be at least 7 years old to join');
+        
+        // Check if email is banned (this is tricky without a separate ban list, 
+        // but we can check if a user with this email was previously banned if we had a list.
+        // For now, we'll just handle the login ban check).
+
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
 
         let rank: UserRank = 'VIP';
         const devEmails = ['test@gmail.com', 'dev@gmail.com', 'developer@gmail.com', 'haydensixseven@gmail.com'];
@@ -40,39 +48,25 @@ export default function Auth({ onAuthSuccess }: AuthProps) {
           rank = 'DEVELOPER';
         }
 
-        const { data, error: signUpError } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: { username, rank },
-          },
-        });
-        if (signUpError) throw signUpError;
-
-        const uid = data.user?.id;
-        if (!uid) throw new Error('Sign-up failed — no user returned');
-
-        // Insert profile row (trigger handles it too, but we upsert with full data)
-        const { error: insertError } = await supabase.from('users').upsert({
-          uid,
+        await setDoc(doc(db, 'users', user.uid), {
+          uid: user.uid,
           username,
           email,
           age: Number(age),
           gender,
           pfp: `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`,
           banner: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809',
-          onboarding_step: 1,
-          is_online: true,
-          last_seen: new Date().toISOString(),
+          onboardingStep: 1,
+          isOnline: true,
+          lastSeen: new Date(),
           gold: 1000,
           rubies: 10,
-          has_received_reset: false,
+          hasReceivedReset: false,
           theme: 'luxury-black',
-          card_style: 'default',
+          cardStyle: 'default',
           rank,
-          created_at: new Date().toISOString(),
+          createdAt: new Date(),
         });
-        if (insertError) throw insertError;
       }
       onAuthSuccess();
     } catch (err: any) {

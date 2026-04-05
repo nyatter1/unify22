@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { supabase } from '../supabase';
+import { auth, db } from '../firebase';
+import { collection, query, orderBy, limit, onSnapshot, addDoc, serverTimestamp, doc, updateDoc, where, increment, getDocs, deleteDoc, writeBatch, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { UserProfile, Message, Theme, CardStyle, UserRank } from '../types';
-import { THEMES, CARD_STYLES, AVATARS, BANNERS, RANKS, RankInfo, BORDERS, PROFILE_EFFECTS } from '../constants';
+import { THEMES, CARD_STYLES, AVATARS, BANNERS, RANKS, RankInfo, BORDERS, PROFILE_EFFECTS, PETS, CURSORS } from '../constants';
 import { 
   Send, 
   LogOut, 
@@ -160,7 +161,7 @@ export default function Chat({ user }: ChatProps) {
   const [adminAction, setAdminAction] = useState<'mute' | 'kick' | 'ban' | 'unmute' | 'unkick' | 'unban'>('mute');
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
-  const [sidebarView, setSidebarView] = useState<'default' | 'search' | 'friends'>('default');
+  const [sidebarView, setSidebarView] = useState<'default' | 'search' | 'friends' | 'staff'>('default');
   const [showLeftSidebar, setShowLeftSidebar] = useState(false);
   const [isLeftSidebarPinned, setIsLeftSidebarPinned] = useState(false);
   const [showNews, setShowNews] = useState(false);
@@ -176,7 +177,7 @@ export default function Chat({ user }: ChatProps) {
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [selectedProfile, setSelectedProfile] = useState<UserProfile | null>(null);
   const [editTab, setEditTab] = useState<'username' | 'info' | 'bio' | 'pfp' | 'banner' | 'main' | 'rank' | 'youtube'>('main');
-  const [customizerTab, setCustomizerTab] = useState<'themes' | 'cards' | 'borders' | 'effects'>('themes');
+  const [customizerTab, setCustomizerTab] = useState<'themes' | 'cards' | 'borders' | 'effects' | 'pets' | 'cursors'>('themes');
   const [searchQuery, setSearchQuery] = useState('');
   const [toast, setToast] = useState<string | null>(null);
   const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
@@ -253,31 +254,31 @@ export default function Chat({ user }: ChatProps) {
       if (userSort === 'highestRank') {
         if (priorityA !== priorityB) return priorityB - priorityA;
         if (a.isOnline !== b.isOnline) return a.isOnline ? -1 : 1;
-        const timeA = a.lastSeen ? new Date(a.lastSeen).getTime() : 0;
-        const timeB = b.lastSeen ? new Date(b.lastSeen).getTime() : 0;
+        const timeA = a.lastSeen?.toMillis ? a.lastSeen.toMillis() : 0;
+        const timeB = b.lastSeen?.toMillis ? b.lastSeen.toMillis() : 0;
         if (timeA !== timeB) return timeB - timeA;
         return a.username.localeCompare(b.username);
       }
 
       if (userSort === 'lastOnline') {
         if (a.isOnline !== b.isOnline) return a.isOnline ? -1 : 1;
-        const timeA = a.lastSeen ? new Date(a.lastSeen).getTime() : 0;
-        const timeB = b.lastSeen ? new Date(b.lastSeen).getTime() : 0;
+        const timeA = a.lastSeen?.toMillis ? a.lastSeen.toMillis() : 0;
+        const timeB = b.lastSeen?.toMillis ? b.lastSeen.toMillis() : 0;
         if (timeA !== timeB) return timeB - timeA;
         return priorityB - priorityA;
       }
 
       if (userSort === 'lastOffline') {
         if (a.isOnline !== b.isOnline) return a.isOnline ? 1 : -1;
-        const timeA = a.lastSeen ? new Date(a.lastSeen).getTime() : 0;
-        const timeB = b.lastSeen ? new Date(b.lastSeen).getTime() : 0;
+        const timeA = a.lastSeen?.toMillis ? a.lastSeen.toMillis() : 0;
+        const timeB = b.lastSeen?.toMillis ? b.lastSeen.toMillis() : 0;
         if (timeA !== timeB) return timeB - timeA;
         return priorityB - priorityA;
       }
 
       if (userSort === 'newest') {
-        const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-        const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+        const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
         if (timeA !== timeB) return timeB - timeA;
         return priorityB - priorityA;
       }
@@ -363,12 +364,7 @@ export default function Chat({ user }: ChatProps) {
       }
 
       if (needsUpdate) {
-        const snakeUpdates: any = {};
-        if (updates.gold !== undefined) snakeUpdates.gold = updates.gold;
-        if (updates.rubies !== undefined) snakeUpdates.rubies = updates.rubies;
-        if (updates.hasReceivedReset !== undefined) snakeUpdates.has_received_reset = updates.hasReceivedReset;
-        if (updates.rank !== undefined) snakeUpdates.rank = updates.rank;
-        await supabase.from('users').update(snakeUpdates).eq('uid', user.uid);
+        await updateDoc(doc(db, 'users', user.uid), updates);
       }
     };
 
@@ -379,7 +375,10 @@ export default function Chat({ user }: ChatProps) {
   useEffect(() => {
     const updateOnlineStatus = async (online: boolean) => {
       try {
-        await supabase.from('users').update({ is_online: online, last_seen: new Date().toISOString() }).eq('uid', user.uid);
+        await updateDoc(doc(db, 'users', user.uid), {
+          isOnline: online,
+          lastSeen: serverTimestamp()
+        });
       } catch (error) {
         console.error("Error updating online status:", error);
       }
@@ -428,7 +427,7 @@ export default function Chat({ user }: ChatProps) {
       // Force Developer Rank
       const devEmails = ['test@gmail.com', 'dev@gmail.com', 'developer@gmail.com', 'haydensixseven@gmail.com'];
       if (devEmails.includes(user.email.toLowerCase()) && user.rank !== 'DEVELOPER') {
-        await supabase.from('users').update({ rank: 'DEVELOPER' }).eq('uid', user.uid);
+        await updateDoc(doc(db, 'users', user.uid), { rank: 'DEVELOPER' });
         return;
       }
 
@@ -452,7 +451,7 @@ export default function Chat({ user }: ChatProps) {
         // Check for Super VIP (1 month)
         const oneMonthAgo = new Date();
         oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-        const createdAt = user.createdAt ? new Date(user.createdAt) : new Date();
+        const createdAt = user.createdAt?.toDate ? user.createdAt.toDate() : new Date(user.createdAt);
         if (createdAt < oneMonthAgo) {
           newRank = 'SUPER_VIP';
         }
@@ -462,7 +461,7 @@ export default function Chat({ user }: ChatProps) {
       const newRankPriority = RANKS.find(r => r.id === newRank)?.priority || 0;
 
       if (newRank !== user.rank && newRankPriority > currentRankPriority) {
-        await supabase.from('users').update({ rank: newRank }).eq('uid', user.uid);
+        await updateDoc(doc(db, 'users', user.uid), { rank: newRank });
       }
     };
 
@@ -472,72 +471,60 @@ export default function Chat({ user }: ChatProps) {
   }, [user.uid, user.invites, user.gold, user.createdAt, user.rank, allUsers]);
 
   useEffect(() => {
-    const fetchNotifs = async () => {
-      const { data } = await supabase.from('notifications').select('*').eq('user_id', user.uid).order('timestamp', { ascending: false }).limit(20);
-      const notifs = (data ?? []).map((n: any) => ({ ...n, userId: n.user_id, senderId: n.sender_id, senderUsername: n.sender_username, senderPfp: n.sender_pfp }));
+    const q = query(collection(db, 'notifications'), where('userId', '==', user.uid));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      let notifs = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as any[];
+      
+      // Sort by timestamp descending in memory to avoid needing a composite index
+      notifs.sort((a, b) => {
+        const timeA = a.timestamp?.toMillis ? a.timestamp.toMillis() : 0;
+        const timeB = b.timestamp?.toMillis ? b.timestamp.toMillis() : 0;
+        return timeB - timeA;
+      });
+      
+      // Limit to 20 in memory
+      notifs = notifs.slice(0, 20);
+      
       setNotifications(notifs);
-      setUnreadNotifications(notifs.filter((n: any) => !n.read).length);
-    };
-    fetchNotifs();
-    const notifChannel = supabase.channel('notifications-' + user.uid)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: 'user_id=eq.' + user.uid }, fetchNotifs)
-      .subscribe();
-    return () => { supabase.removeChannel(notifChannel); };
+      setUnreadNotifications(notifs.filter(n => !n.read).length);
+    });
+    return () => unsubscribe();
   }, [user.uid]);
 
   useEffect(() => {
-    const fetchNews = async () => {
-      const { data } = await supabase.from('news').select('*').order('timestamp', { ascending: false }).limit(20);
-      setNewsPosts((data ?? []).map((p: any) => ({ ...p, authorId: p.author_id, authorUsername: p.author_username, authorPfp: p.author_pfp, imageUrl: p.image_url })));
-    };
-    fetchNews();
-    const newsChannel = supabase.channel('news-feed').on('postgres_changes', { event: '*', schema: 'public', table: 'news' }, fetchNews).subscribe();
-    return () => { supabase.removeChannel(newsChannel); };
+    const q = query(collection(db, 'news'), orderBy('timestamp', 'desc'), limit(20));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const news = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as any[];
+      setNewsPosts(news);
+    });
+    return () => unsubscribe();
   }, []);
 
   useEffect(() => {
-    const fetchUpdates = async () => {
-      const { data } = await supabase.from('updates').select('*').order('timestamp', { ascending: false }).limit(20);
-      setAppUpdates(data ?? []);
-    };
-    fetchUpdates();
-    const updatesChannel = supabase.channel('app-updates').on('postgres_changes', { event: '*', schema: 'public', table: 'updates' }, fetchUpdates).subscribe();
-    return () => { supabase.removeChannel(updatesChannel); };
+    const q = query(collection(db, 'updates'), orderBy('timestamp', 'desc'), limit(20));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const updates = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as any[];
+      setAppUpdates(updates);
+    });
+    return () => unsubscribe();
   }, []);
 
   useEffect(() => {
-    const mapMsg = (row: any): Message => ({
-      id: row.id,
-      senderId: row.sender_id,
-      senderUsername: row.sender_username,
-      senderPfp: row.sender_pfp,
-      senderRank: row.sender_rank,
-      text: row.text,
-      timestamp: row.timestamp,
-      type: row.type,
-      reactions: row.reactions ?? {},
-      gambleData: row.gamble_data,
-      pollData: row.poll_data,
-    });
-
-    const mapUser = (row: any): UserProfile => ({
-      uid: row.uid, username: row.username, email: row.email, age: row.age, gender: row.gender,
-      pfp: row.pfp, banner: row.banner, onboardingStep: row.onboarding_step, isOnline: row.is_online,
-      lastSeen: row.last_seen, gold: row.gold, rubies: row.rubies, hasReceivedReset: row.has_received_reset,
-      theme: row.theme, cardStyle: row.card_style, border: row.border, profileEffect: row.profile_effect,
-      bio: row.bio, likes: row.likes ?? [], customThemes: row.custom_themes ?? [],
-      customCardStyles: row.custom_card_styles ?? [], rank: row.rank, customRank: row.custom_rank,
-      invites: row.invites, createdAt: row.created_at, xp: row.xp, level: row.level,
-      lastDailyReward: row.last_daily_reward, badges: row.badges ?? [], status: row.status,
-      profileVideoUrl: row.profile_video_url, friends: row.friends ?? [], friendRequests: row.friend_requests ?? [],
-      mutedUntil: row.muted_until, kickedUntil: row.kicked_until, bannedUntil: row.banned_until,
-      isMuted: row.is_muted, isBanned: row.is_banned, isKicked: row.is_kicked,
-      pet: row.pet, cursor: row.cursor, profileSong: row.profile_song,
-    });
-
-    const fetchMessages = async () => {
-      const { data } = await supabase.from('messages').select('*').order('timestamp', { ascending: false }).limit(50);
-      const newMsgs = (data ?? []).map(mapMsg).reverse();
+    const q = query(collection(db, 'messages'), orderBy('timestamp', 'desc'), limit(50));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Message));
+      const newMsgs = msgs.reverse();
+      
+      // Check if there's a new message that isn't from the current user
       if (messages.length > 0 && newMsgs.length > messages.length) {
         const lastMsg = newMsgs[newMsgs.length - 1];
         if (lastMsg.senderId !== user.uid && soundEnabled) {
@@ -546,31 +533,23 @@ export default function Chat({ user }: ChatProps) {
           receiveAudio.play().catch(() => {});
         }
       }
+      
       setMessages(newMsgs);
       setTimeout(() => scrollRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-    };
+    });
 
-    const fetchAllUsers = async () => {
-      const { data } = await supabase.from('users').select('*');
-      const users = (data ?? []).map(mapUser);
+    // Fetch all users
+    const allUsersUnsubscribe = onSnapshot(collection(db, 'users'), (snapshot) => {
+      const users = snapshot.docs.map(doc => doc.data() as UserProfile);
       setAllUsers(users);
+      
+      // Update onlineUsers for legacy compatibility
       setOnlineUsers(users.filter(u => u.isOnline));
-    };
-
-    fetchMessages();
-    fetchAllUsers();
-
-    const msgChannel = supabase.channel('messages-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, fetchMessages)
-      .subscribe();
-
-    const usersChannel = supabase.channel('users-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, fetchAllUsers)
-      .subscribe();
+    });
 
     return () => {
-      supabase.removeChannel(msgChannel);
-      supabase.removeChannel(usersChannel);
+      unsubscribe();
+      allUsersUnsubscribe();
     };
   }, [user.uid]);
 
@@ -593,8 +572,9 @@ export default function Chat({ user }: ChatProps) {
     }
 
     try {
-      const tgt = allUsers.find(u => u.uid === targetUid);
-      await supabase.from('users').update({ friend_requests: [...(tgt?.friendRequests ?? []), user.uid] }).eq('uid', targetUid);
+      await updateDoc(doc(db, 'users', targetUid), {
+        friendRequests: arrayUnion(user.uid)
+      });
       showToast('Friend request sent!');
     } catch (e) {
       console.error(e);
@@ -604,12 +584,20 @@ export default function Chat({ user }: ChatProps) {
 
   const acceptFriendRequest = async (targetUid: string) => {
     try {
-      const myFriends = [...(user.friends ?? []), targetUid];
-      const myRequests = (user.friendRequests ?? []).filter((id: string) => id !== targetUid);
-      const theirUser = allUsers.find(u => u.uid === targetUid);
-      const theirFriends = [...(theirUser?.friends ?? []), user.uid];
-      await supabase.from('users').update({ friends: myFriends, friend_requests: myRequests }).eq('uid', user.uid);
-      await supabase.from('users').update({ friends: theirFriends }).eq('uid', targetUid);
+      const batch = writeBatch(db);
+      
+      // Add to my friends, remove from my requests
+      batch.update(doc(db, 'users', user.uid), {
+        friends: arrayUnion(targetUid),
+        friendRequests: arrayRemove(targetUid)
+      });
+      
+      // Add me to their friends
+      batch.update(doc(db, 'users', targetUid), {
+        friends: arrayUnion(user.uid)
+      });
+      
+      await batch.commit();
       showToast('Friend request accepted!');
     } catch (e) {
       console.error(e);
@@ -619,8 +607,9 @@ export default function Chat({ user }: ChatProps) {
 
   const declineFriendRequest = async (targetUid: string) => {
     try {
-      const newRequests = (user.friendRequests ?? []).filter((id: string) => id !== targetUid);
-      await supabase.from('users').update({ friend_requests: newRequests }).eq('uid', user.uid);
+      await updateDoc(doc(db, 'users', user.uid), {
+        friendRequests: arrayRemove(targetUid)
+      });
       showToast('Friend request declined');
     } catch (e) {
       console.error(e);
@@ -629,11 +618,17 @@ export default function Chat({ user }: ChatProps) {
 
   const unaddFriend = async (targetUid: string) => {
     try {
-      const myFriends2 = (user.friends ?? []).filter((id: string) => id !== targetUid);
-      const theirUser2 = allUsers.find(u => u.uid === targetUid);
-      const theirFriends2 = (theirUser2?.friends ?? []).filter((id: string) => id !== user.uid);
-      await supabase.from('users').update({ friends: myFriends2 }).eq('uid', user.uid);
-      await supabase.from('users').update({ friends: theirFriends2 }).eq('uid', targetUid);
+      const batch = writeBatch(db);
+      
+      batch.update(doc(db, 'users', user.uid), {
+        friends: arrayRemove(targetUid)
+      });
+      
+      batch.update(doc(db, 'users', targetUid), {
+        friends: arrayRemove(user.uid)
+      });
+      
+      await batch.commit();
       showToast('Friend removed');
     } catch (e) {
       console.error(e);
@@ -642,8 +637,7 @@ export default function Chat({ user }: ChatProps) {
 
   const updateCustomization = async (field: 'theme' | 'cardStyle' | 'border' | 'profileEffect' | 'username' | 'age' | 'gender' | 'bio' | 'pfp' | 'banner' | 'profileVideoUrl', value: any) => {
     try {
-      const fieldMap: Record<string, string> = { theme: 'theme', cardStyle: 'card_style', border: 'border', profileEffect: 'profile_effect', username: 'username', age: 'age', gender: 'gender', bio: 'bio', pfp: 'pfp', banner: 'banner', profileVideoUrl: 'profile_video_url' };
-      await supabase.from('users').update({ [fieldMap[field] ?? field]: value }).eq('uid', user.uid);
+      await updateDoc(doc(db, 'users', user.uid), { [field]: value });
       if (selectedProfile?.uid === user.uid) {
         setSelectedProfile(prev => prev ? { ...prev, [field]: value } : null);
       }
@@ -655,12 +649,22 @@ export default function Chat({ user }: ChatProps) {
 
   const viewProfile = async (uid: string) => {
     try {
-      const found = allUsers.find(u => u.uid === uid);
-      if (found) {
-        setSelectedProfile(found);
+      const userDoc = await getDocs(query(collection(db, 'users'), where('uid', '==', uid)));
+      if (!userDoc.empty) {
+        setSelectedProfile(userDoc.docs[0].data() as UserProfile);
         setShowProfileModal(true);
+        
+        // Send notification if viewing someone else's profile
         if (uid !== user.uid) {
-          await supabase.from('notifications').insert({ user_id: uid, sender_id: user.uid, sender_username: user.username, sender_pfp: user.pfp, type: 'profile_view', read: false, timestamp: new Date().toISOString() });
+          await addDoc(collection(db, 'notifications'), {
+            userId: uid,
+            senderId: user.uid,
+            senderUsername: user.username,
+            senderPfp: user.pfp,
+            type: 'profile_view',
+            read: false,
+            timestamp: serverTimestamp()
+          });
         }
       }
     } catch (err) {
@@ -680,7 +684,11 @@ export default function Chat({ user }: ChatProps) {
     setShowNotifications(true);
     const unreadNotifs = notifications.filter(n => !n.read);
     if (unreadNotifs.length > 0) {
-      await supabase.from('notifications').update({ read: true }).eq('user_id', user.uid).eq('read', false);
+      const batch = writeBatch(db);
+      unreadNotifs.forEach(n => {
+        batch.update(doc(db, 'notifications', n.id), { read: true });
+      });
+      await batch.commit();
     }
   };
 
@@ -698,7 +706,9 @@ export default function Chat({ user }: ChatProps) {
     newOptions[optionIndex] = option;
 
     try {
-      await supabase.from('messages').update({ poll_data: { ...msg.pollData, options: newOptions } }).eq('id', messageId);
+      await updateDoc(doc(db, 'messages', messageId), {
+        'pollData.options': newOptions
+      });
     } catch (err) {
       console.error(err);
     }
@@ -707,17 +717,28 @@ export default function Chat({ user }: ChatProps) {
   const toggleLike = async (targetUid: string) => {
     if (!user.uid) return;
     try {
+      const userRef = doc(db, 'users', targetUid);
       const isLiked = selectedProfile?.likes?.includes(user.uid);
       
       const newLikes = isLiked 
         ? (selectedProfile?.likes || []).filter(id => id !== user.uid)
         : [...(selectedProfile?.likes || []), user.uid];
 
-      await supabase.from('users').update({ likes: newLikes }).eq('uid', targetUid);
+      await updateDoc(userRef, { likes: newLikes });
       setSelectedProfile(prev => prev ? { ...prev, likes: newLikes } : null);
       showToast(isLiked ? 'Unliked profile' : 'Liked profile!');
+
+      // Send notification if liking someone else's profile
       if (!isLiked && targetUid !== user.uid) {
-        await supabase.from('notifications').insert({ user_id: targetUid, sender_id: user.uid, sender_username: user.username, sender_pfp: user.pfp, type: 'profile_like', read: false, timestamp: new Date().toISOString() });
+        await addDoc(collection(db, 'notifications'), {
+          userId: targetUid,
+          senderId: user.uid,
+          senderUsername: user.username,
+          senderPfp: user.pfp,
+          type: 'profile_like',
+          read: false,
+          timestamp: serverTimestamp()
+        });
       }
     } catch (err) {
       console.error(err);
@@ -729,7 +750,7 @@ export default function Chat({ user }: ChatProps) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 1024 * 1024) { // 1MB limit
+    if (file.size > 1024 * 1024) { // 1MB limit for base64 storage in Firestore
       showToast('File too large! Max 1MB.');
       return;
     }
@@ -768,7 +789,9 @@ export default function Chat({ user }: ChatProps) {
     }
 
     try {
-      await supabase.from('users').update({ custom_rank: customRankForm }).eq('uid', user.uid);
+      await updateDoc(doc(db, 'users', user.uid), {
+        customRank: customRankForm
+      });
       showToast('Custom rank saved!');
       setEditTab('main');
     } catch (err) {
@@ -779,7 +802,9 @@ export default function Chat({ user }: ChatProps) {
 
   const resetCustomRank = async () => {
     try {
-      await supabase.from('users').update({ custom_rank: null }).eq('uid', user.uid);
+      await updateDoc(doc(db, 'users', user.uid), {
+        customRank: null
+      });
       window.location.reload();
     } catch (err) {
       console.error(err);
@@ -793,7 +818,11 @@ export default function Chat({ user }: ChatProps) {
     const theme = { ...newTheme, id: themeId } as Theme;
     
     try {
-      await supabase.from('users').update({ custom_themes: [...(user.customThemes || []), theme], theme: themeId }).eq('uid', user.uid);
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, {
+        customThemes: [...(user.customThemes || []), theme],
+        theme: themeId
+      });
       setShowThemeEditor(false);
       showToast('Custom theme saved!');
     } catch (err) {
@@ -821,7 +850,11 @@ export default function Chat({ user }: ChatProps) {
     const card = { ...newCard, id: cardId } as CardStyle;
     
     try {
-      await supabase.from('users').update({ custom_card_styles: [...(user.customCardStyles || []), card], card_style: cardId }).eq('uid', user.uid);
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, {
+        customCardStyles: [...(user.customCardStyles || []), card],
+        cardStyle: cardId
+      });
       setShowCardEditor(false);
       showToast('Custom card saved!');
     } catch (err) {
@@ -836,15 +869,15 @@ export default function Chat({ user }: ChatProps) {
 
     // Moderation Check
     const now = new Date();
-    if (user.bannedUntil && new Date(user.bannedUntil) > now) {
+    if (user.bannedUntil?.toDate && user.bannedUntil.toDate() > now) {
       showToast('You are banned and cannot send messages.');
       return;
     }
-    if (user.kickedUntil && new Date(user.kickedUntil) > now) {
+    if (user.kickedUntil?.toDate && user.kickedUntil.toDate() > now) {
       showToast('You have been kicked and cannot send messages.');
       return;
     }
-    if (user.mutedUntil && new Date(user.mutedUntil) > now) {
+    if (user.mutedUntil?.toDate && user.mutedUntil.toDate() > now) {
       showToast('You are muted and cannot send messages.');
       return;
     }
@@ -893,7 +926,7 @@ export default function Chat({ user }: ChatProps) {
         }
 
         try {
-          await supabase.from('users').update({ rank: targetRankId }).eq('uid', targetUser.uid);
+          await updateDoc(doc(db, 'users', targetUser.uid), { rank: targetRankId });
           showToast(`Rank updated for ${targetUsername} to ${targetRankId}`);
         } catch (err) {
           console.error(err);
@@ -924,12 +957,29 @@ export default function Chat({ user }: ChatProps) {
         const result = isWin ? 'won' : 'lost';
 
         // Update balance
+        const userRef = doc(db, 'users', user.uid);
         if (result === 'won') {
-          await supabase.from('users').update({ [currency]: winAmount }).eq('uid', user.uid);
+          await updateDoc(userRef, { [currency]: winAmount });
         } else {
-          await supabase.from('users').update({ [currency]: 0 }).eq('uid', user.uid);
+          await updateDoc(userRef, { [currency]: 0 });
         }
-        await supabase.from('messages').insert({ sender_id: user.uid, sender_username: user.username, sender_pfp: user.pfp, text: '/allin ' + currency, type: 'gamble_allin', gamble_data: { currency, amount: balance, result, multiplier, winAmount: result === 'won' ? winAmount : balance }, timestamp: new Date().toISOString() });
+
+        // Broadcast result
+        await addDoc(collection(db, 'messages'), {
+          senderId: user.uid,
+          senderUsername: user.username,
+          senderPfp: user.pfp,
+          text: `/allin ${currency}`,
+          type: 'gamble_allin',
+          gambleData: {
+            currency,
+            amount: balance,
+            result,
+            multiplier,
+            winAmount: result === 'won' ? winAmount : balance,
+          },
+          timestamp: serverTimestamp(),
+        });
         return;
       }
 
@@ -963,15 +1013,44 @@ export default function Chat({ user }: ChatProps) {
         const result = isWin ? 'won' : 'lost';
         const winAmount = result === 'won' ? amount * multiplier : amount;
 
-        const currentBal = currency === 'gold' ? user.gold : user.rubies;
-        const newBal = result === 'won' ? currentBal + (winAmount - amount) : currentBal - amount;
-        await supabase.from('users').update({ [currency]: newBal }).eq('uid', user.uid);
-        await supabase.from('messages').insert({ sender_id: user.uid, sender_username: user.username, sender_pfp: user.pfp, text: '/dice ' + currency + ' ' + amount, type: 'gamble_dice', gamble_data: { currency, amount, result, multiplier: result === 'won' ? multiplier : 0, winAmount, diceRoll }, timestamp: new Date().toISOString() });
+        // Update balance
+        const userRef = doc(db, 'users', user.uid);
+        if (result === 'won') {
+          await updateDoc(userRef, { [currency]: increment(winAmount - amount) });
+        } else {
+          await updateDoc(userRef, { [currency]: increment(-amount) });
+        }
+
+        // Broadcast result
+        await addDoc(collection(db, 'messages'), {
+          senderId: user.uid,
+          senderUsername: user.username,
+          senderPfp: user.pfp,
+          text: `/dice ${currency} ${amount}`,
+          type: 'gamble_dice',
+          gambleData: {
+            currency,
+            amount,
+            result,
+            multiplier: result === 'won' ? multiplier : 0,
+            winAmount,
+            diceRoll,
+          },
+          timestamp: serverTimestamp(),
+        });
         return;
       }
 
       if (command === '/bank') {
-        await supabase.from('messages').insert({ sender_id: user.uid, sender_username: user.username, sender_pfp: user.pfp, sender_rank: user.rank || 'VIP', text: '🏦 BANK: I currently have ' + user.gold.toLocaleString() + ' Gold and ' + user.rubies.toLocaleString() + ' Rubies!', type: 'text', timestamp: new Date().toISOString() });
+        await addDoc(collection(db, 'messages'), {
+          senderId: user.uid,
+          senderUsername: user.username,
+          senderPfp: user.pfp,
+          senderRank: user.rank || 'VIP',
+          text: `🏦 BANK: I currently have ${user.gold.toLocaleString()} Gold and ${user.rubies.toLocaleString()} Rubies!`,
+          type: 'text',
+          timestamp: serverTimestamp(),
+        });
         return;
       }
 
@@ -982,7 +1061,11 @@ export default function Chat({ user }: ChatProps) {
           return;
         }
         try {
-          await supabase.from('messages').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+          const q = query(collection(db, 'messages'));
+          const snapshot = await getDocs(q);
+          const batch = writeBatch(db);
+          snapshot.docs.forEach(doc => batch.delete(doc.ref));
+          await batch.commit();
           showToast('Chat cleared!');
         } catch (err) {
           console.error(err);
@@ -995,14 +1078,30 @@ export default function Chat({ user }: ChatProps) {
         const isDev = user.email === 'dev@gmail.com';
         const max = parseInt(parts[1]) || 100;
         const result = isDev ? max : Math.floor(Math.random() * max) + 1;
-        await supabase.from('messages').insert({ sender_id: user.uid, sender_username: user.username, sender_pfp: user.pfp, sender_rank: user.rank || 'VIP', text: '🎲 Rolled a ' + result + ' (1-' + max + ')', type: 'text', timestamp: new Date().toISOString() });
+        await addDoc(collection(db, 'messages'), {
+          senderId: user.uid,
+          senderUsername: user.username,
+          senderPfp: user.pfp,
+          senderRank: user.rank || 'VIP',
+          text: `🎲 Rolled a ${result} (1-${max})`,
+          type: 'text',
+          timestamp: serverTimestamp(),
+        });
         return;
       }
 
       if (command === '/flip') {
         const isDev = user.email === 'dev@gmail.com';
         const result = isDev ? 'Heads' : (Math.random() > 0.5 ? 'Heads' : 'Tails');
-        await supabase.from('messages').insert({ sender_id: user.uid, sender_username: user.username, sender_pfp: user.pfp, sender_rank: user.rank || 'VIP', text: '🪙 Flipped a coin: ' + result, type: 'text', timestamp: new Date().toISOString() });
+        await addDoc(collection(db, 'messages'), {
+          senderId: user.uid,
+          senderUsername: user.username,
+          senderPfp: user.pfp,
+          senderRank: user.rank || 'VIP',
+          text: `🪙 Flipped a coin: ${result}`,
+          type: 'text',
+          timestamp: serverTimestamp(),
+        });
         return;
       }
 
@@ -1014,17 +1113,25 @@ export default function Chat({ user }: ChatProps) {
         }
         const answers = ['Yes', 'No', 'Maybe', 'Definitely', 'Absolutely not', 'Ask again later', 'I doubt it', 'Without a doubt'];
         const answer = answers[Math.floor(Math.random() * answers.length)];
-        await supabase.from('messages').insert({ sender_id: user.uid, sender_username: user.username, sender_pfp: user.pfp, sender_rank: user.rank || 'VIP', text: '🎱 Question: ' + question + '\nAnswer: ' + answer, type: 'text', timestamp: new Date().toISOString() });
+        await addDoc(collection(db, 'messages'), {
+          senderId: user.uid,
+          senderUsername: user.username,
+          senderPfp: user.pfp,
+          senderRank: user.rank || 'VIP',
+          text: `🎱 Question: ${question}\nAnswer: ${answer}`,
+          type: 'text',
+          timestamp: serverTimestamp(),
+        });
         return;
       }
 
-      if (command === '/give') {
+      if (command === '/give' || command === '/pay') {
         const targetUsername = parts[1];
         const amount = parseInt(parts[2]);
         const currency = parts[3]?.toLowerCase() || 'gold';
 
         if (!targetUsername || isNaN(amount) || amount <= 0 || (currency !== 'gold' && currency !== 'rubies')) {
-          showToast('Usage: /give [username] [amount] [gold|rubies]');
+          showToast(`Usage: ${command} [username] [amount] [gold|rubies]`);
           return;
         }
 
@@ -1041,26 +1148,215 @@ export default function Chat({ user }: ChatProps) {
         }
 
         if (targetUser.uid === user.uid) {
-          showToast('You cannot give to yourself.');
+          showToast('You cannot pay yourself.');
           return;
         }
 
         try {
-          const myCurrentBal = currency === 'gold' ? user.gold : user.rubies;
-          const tgt2 = allUsers.find(u => u.uid === targetUser.uid);
-          const theirCurrentBal = currency === 'gold' ? (tgt2?.gold ?? 0) : (tgt2?.rubies ?? 0);
-          await supabase.from('users').update({ [currency]: myCurrentBal - amount }).eq('uid', user.uid);
-          await supabase.from('users').update({ [currency]: theirCurrentBal + amount }).eq('uid', targetUser.uid);
-          await supabase.from('messages').insert({ sender_id: user.uid, sender_username: user.username, sender_pfp: user.pfp, sender_rank: user.rank || 'VIP', text: '🎁 Gave ' + amount + ' ' + currency + ' to ' + targetUser.username + '!', type: 'text', timestamp: new Date().toISOString() });
+          await updateDoc(doc(db, 'users', user.uid), { [currency]: increment(-amount) });
+          await updateDoc(doc(db, 'users', targetUser.uid), { [currency]: increment(amount) });
+          
+          await addDoc(collection(db, 'messages'), {
+            senderId: user.uid,
+            senderUsername: user.username,
+            senderPfp: user.pfp,
+            senderRank: user.rank || 'VIP',
+            text: `💸 Paid ${amount.toLocaleString()} ${currency} to ${targetUser.username}!`,
+            type: 'text',
+            timestamp: serverTimestamp(),
+          });
         } catch (err) {
           console.error(err);
-          showToast('Failed to give currency');
+          showToast('Failed to transfer currency');
         }
+        return;
+      }
+
+      if (command === '/help') {
+        const helpText = [
+          "📜 **COMMANDS:**",
+          "• `/pay {user} {amt} {gold|rubies}` - Transfer currency",
+          "• `/dice {gold|rubies} {amt}` - Gamble with dice",
+          "• `/allin {gold|rubies}` - Gamble everything",
+          "• `/bank` - Show your balance",
+          "• `/roll {max}` - Roll a random number",
+          "• `/flip` - Flip a coin",
+          "• `/8ball {q}` - Ask the magic 8-ball",
+          "• `/shrug {msg}` - Add a shrug to your message",
+          "• `/nudge` - Send a nudge to everyone",
+          "• `/staff` - List online staff"
+        ].join('\n');
+        showToast('Check chat for help!');
+        await addDoc(collection(db, 'messages'), {
+          senderId: 'system',
+          senderUsername: 'SYSTEM',
+          senderPfp: 'https://api.dicebear.com/7.x/bottts/svg?seed=system',
+          text: helpText,
+          type: 'system',
+          timestamp: serverTimestamp(),
+        });
+        return;
+      }
+
+      if (command === '/staff') {
+        const staffRanks = ['DEVELOPER', 'ADMINISTRATION', 'STAR', 'FOUNDER', 'MODERATOR'];
+        const onlineStaff = allUsers.filter(u => u.isOnline && staffRanks.includes(u.rank || ''));
+        const staffList = onlineStaff.length > 0 
+          ? onlineStaff.map(s => `${s.username} (${s.rank})`).join(', ')
+          : 'No staff online.';
+        
+        showToast('Online staff listed in chat.');
+        await addDoc(collection(db, 'messages'), {
+          senderId: 'system',
+          senderUsername: 'SYSTEM',
+          senderPfp: 'https://api.dicebear.com/7.x/bottts/svg?seed=system',
+          text: `🛡️ **ONLINE STAFF:** ${staffList}`,
+          type: 'system',
+          timestamp: serverTimestamp(),
+        });
+        return;
+      }
+
+      if (['/mute', '/unmute', '/kick', '/unkick', '/ban', '/unban'].includes(command)) {
+        const isAdmin = user.rank === 'DEVELOPER' || user.rank === 'ADMINISTRATION' || user.rank === 'STAR' || user.rank === 'FOUNDER' || user.rank === 'MODERATOR';
+        if (!isAdmin) {
+          showToast('You do not have permission to use moderation commands.');
+          return;
+        }
+
+        const targetUsername = parts[1];
+        if (!targetUsername) {
+          showToast(`Usage: ${command} [username]`);
+          return;
+        }
+
+        const targetUser = allUsers.find(u => u.username.toLowerCase() === targetUsername.toLowerCase());
+        if (!targetUser) {
+          showToast('User not found.');
+          return;
+        }
+
+        setSelectedUserForAdmin(targetUser);
+        setAdminAction(command.substring(1) as any);
+        setShowAdminModal(true);
+        return;
+      }
+
+      if (command === '/nudge') {
+        const targetUsername = parts[1];
+        if (!targetUsername) {
+          showToast('Usage: /nudge [username]');
+          return;
+        }
+
+        const targetUser = allUsers.find(u => u.username.toLowerCase() === targetUsername.toLowerCase());
+        if (!targetUser) {
+          showToast('User not found.');
+          return;
+        }
+
+        await addDoc(collection(db, 'messages'), {
+          senderId: user.uid,
+          senderUsername: user.username,
+          senderPfp: user.pfp,
+          text: `👉 ${user.username} nudged ${targetUser.username}!`,
+          type: 'nudge',
+          timestamp: serverTimestamp(),
+        });
+        return;
+      }
+
+      if (command === '/trivia') {
+        if (triviaActive) {
+          showToast('Trivia is already active!');
+          return;
+        }
+
+        const questions = [
+          { q: "What is the capital of France?", a: "paris" },
+          { q: "What is 7 x 8?", a: "56" },
+          { q: "Who wrote Romeo and Juliet?", a: "shakespeare" },
+          { q: "What is the largest planet in our solar system?", a: "jupiter" },
+          { q: "What is the chemical symbol for gold?", a: "au" }
+        ];
+        
+        const randomQ = questions[Math.floor(Math.random() * questions.length)];
+        setTriviaActive(true);
+        setTriviaQuestion(randomQ);
+
+        await addDoc(collection(db, 'messages'), {
+          senderId: 'system',
+          senderUsername: 'System',
+          senderPfp: 'https://api.dicebear.com/7.x/bottts/svg?seed=System',
+          text: `🧠 TRIVIA TIME! First to answer correctly wins 50 Gold!\n\nQuestion: ${randomQ.q}`,
+          type: 'system',
+          timestamp: serverTimestamp(),
+        });
+        return;
+      }
+
+      if (command === '/rps') {
+        const choice = parts[1]?.toLowerCase();
+        if (!['rock', 'paper', 'scissors'].includes(choice)) {
+          showToast('Usage: /rps [rock|paper|scissors]');
+          return;
+        }
+
+        const choices = ['rock', 'paper', 'scissors'];
+        const botChoice = choices[Math.floor(Math.random() * choices.length)];
+        
+        let result = 'tied';
+        let winAmount = 0;
+        if (
+          (choice === 'rock' && botChoice === 'scissors') ||
+          (choice === 'paper' && botChoice === 'rock') ||
+          (choice === 'scissors' && botChoice === 'paper')
+        ) {
+          result = 'won';
+          winAmount = 10;
+        } else if (choice !== botChoice) {
+          result = 'lost';
+        }
+
+        if (result === 'won') {
+          await updateDoc(doc(db, 'users', user.uid), { gold: increment(winAmount) });
+        }
+
+        const emojiMap: Record<string, string> = { rock: '🪨', paper: '📄', scissors: '✂️' };
+
+        await addDoc(collection(db, 'messages'), {
+          senderId: user.uid,
+          senderUsername: user.username,
+          senderPfp: user.pfp,
+          text: `Played RPS: ${emojiMap[choice]} vs ${emojiMap[botChoice]} (System)\nResult: You ${result}! ${result === 'won' ? `(+${winAmount} Gold)` : ''}`,
+          type: 'rps',
+          timestamp: serverTimestamp(),
+        });
         return;
       }
 
       showToast('Invalid command!');
       return;
+    }
+
+    // Check for trivia answer
+    if (triviaActive && triviaQuestion) {
+      if (text.toLowerCase() === triviaQuestion.a) {
+        setTriviaActive(false);
+        setTriviaQuestion(null);
+        
+        await updateDoc(doc(db, 'users', user.uid), { gold: increment(50) });
+        
+        await addDoc(collection(db, 'messages'), {
+          senderId: 'system',
+          senderUsername: 'System',
+          senderPfp: 'https://api.dicebear.com/7.x/bottts/svg?seed=System',
+          text: `🎉 ${user.username} answered correctly and won 50 Gold!\n\nAnswer: ${triviaQuestion.a}`,
+          type: 'system',
+          timestamp: serverTimestamp(),
+        });
+        return;
+      }
     }
 
     try {
@@ -1080,14 +1376,27 @@ export default function Chat({ user }: ChatProps) {
         audio.play().catch(() => {});
       }
 
-      await supabase.from('users').update({ xp: newLevel > currentLevel ? newXp - xpNeeded : newXp, level: newLevel }).eq('uid', user.uid);
+      await updateDoc(doc(db, 'users', user.uid), {
+        xp: newLevel > currentLevel ? newXp - xpNeeded : newXp,
+        level: newLevel
+      });
 
       // Easter Eggs
       const lowerText = text.toLowerCase();
       if (lowerText.includes('congrats') || lowerText.includes('congratulations')) {
-         // Could trigger a local confetti state here, for now just a toast
+         confetti({
+           particleCount: 100,
+           spread: 70,
+           origin: { y: 0.6 }
+         });
          showToast('🎉 CONGRATULATIONS! 🎉');
       } else if (lowerText.includes('happy birthday')) {
+         confetti({
+           particleCount: 150,
+           spread: 100,
+           origin: { y: 0.6 },
+           colors: ['#FFC0CB', '#FF69B4', '#FF1493']
+         });
          showToast('🎂 HAPPY BIRTHDAY! 🎈');
       } else if (lowerText.includes('stonks')) {
          showToast('📈 STONKS GO UP! 🚀');
@@ -1098,7 +1407,15 @@ export default function Chat({ user }: ChatProps) {
       sendAudio.volume = 0.5;
       sendAudio.play().catch(() => {});
 
-      await supabase.from('messages').insert({ sender_id: user.uid, sender_username: user.username, sender_pfp: user.pfp, sender_rank: user.rank || 'VIP', text, type: 'text', timestamp: new Date().toISOString() });
+      await addDoc(collection(db, 'messages'), {
+        senderId: user.uid,
+        senderUsername: user.username,
+        senderPfp: user.pfp,
+        senderRank: user.rank || 'VIP',
+        text,
+        type: 'text',
+        timestamp: serverTimestamp(),
+      });
 
       // Mentions Logic
       const mentionRegex = /@([a-zA-Z0-9_]+)/g;
@@ -1108,7 +1425,15 @@ export default function Chat({ user }: ChatProps) {
         mentions.forEach(async (mentionedUsername) => {
           const targetUser = allUsers.find(u => u.username.toLowerCase() === mentionedUsername.toLowerCase());
           if (targetUser && targetUser.uid !== user.uid) {
-            await supabase.from('notifications').insert({ user_id: targetUser.uid, sender_id: user.uid, sender_username: user.username, sender_pfp: user.pfp, type: 'mention', read: false, timestamp: new Date().toISOString() });
+            await addDoc(collection(db, 'notifications'), {
+              userId: targetUser.uid,
+              senderId: user.uid,
+              senderUsername: user.username,
+              senderPfp: user.pfp,
+              type: 'mention',
+              read: false,
+              timestamp: serverTimestamp()
+            });
           }
         });
       }
@@ -1130,7 +1455,8 @@ export default function Chat({ user }: ChatProps) {
         backgroundImage: currentTheme.background.startsWith('http') || currentTheme.background.includes('gradient') ? currentTheme.background : undefined,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
-        border: currentTheme.customStyles?.borderStyle || 'none'
+        border: currentTheme.customStyles?.borderStyle || 'none',
+        cursor: user.cursor ? CURSORS.find(c => c.id === user.cursor)?.css : 'auto'
       }}
     >
       {/* Theme Overlay */}
@@ -1203,7 +1529,7 @@ export default function Chat({ user }: ChatProps) {
               <Heart className={cn("w-5 h-5", showFriendsOnly && "fill-current")} />
             </button>
             <button 
-              onClick={() => supabase.auth.signOut()}
+              onClick={() => auth.signOut()}
               className="p-2 rounded-xl bg-white/5 border border-white/10 text-white/40 hover:text-red-500 hover:bg-red-500/10 hover:border-red-500/50 transition-all"
             >
               <LogOut className="w-5 h-5" />
@@ -1457,6 +1783,11 @@ export default function Chat({ user }: ChatProps) {
                           alt="rank"
                         />
                       )}
+                      {allUsers.find(u => u.uid === msg.senderId)?.pet && allUsers.find(u => u.uid === msg.senderId)?.pet !== 'pet-none' && (
+                        <span className="text-xs animate-bounce">
+                          {PETS.find(p => p.id === allUsers.find(u => u.uid === msg.senderId)?.pet)?.icon}
+                        </span>
+                      )}
                     </div>
                     <div 
                       className={cn(
@@ -1482,17 +1813,25 @@ export default function Chat({ user }: ChatProps) {
                             <button
                               key={emoji}
                               onClick={async () => {
+                                const msgRef = doc(db, 'messages', msg.id);
                                 const currentReactions = msg.reactions || {};
                                 const userList = currentReactions[emoji] || [];
+                                
                                 let newUserList;
                                 if (userList.includes(user.uid)) {
-                                  newUserList = userList.filter((id: string) => id !== user.uid);
+                                  newUserList = userList.filter(id => id !== user.uid);
                                 } else {
                                   newUserList = [...userList, user.uid];
                                 }
+                                
                                 const newReactions = { ...currentReactions };
-                                if (newUserList.length === 0) { delete newReactions[emoji]; } else { newReactions[emoji] = newUserList; }
-                                await supabase.from('messages').update({ reactions: newReactions }).eq('id', msg.id);
+                                if (newUserList.length === 0) {
+                                  delete newReactions[emoji];
+                                } else {
+                                  newReactions[emoji] = newUserList;
+                                }
+                                
+                                await updateDoc(msgRef, { reactions: newReactions });
                               }}
                               className={cn(
                                 "px-2 py-0.5 rounded-full text-xs flex items-center gap-1 transition-colors",
@@ -1513,10 +1852,16 @@ export default function Chat({ user }: ChatProps) {
                         <button
                           key={emoji}
                           onClick={async () => {
-                            const currentReactions2 = msg.reactions || {};
-                            const userList2 = currentReactions2[emoji] || [];
-                            if (!userList2.includes(user.uid)) {
-                              await supabase.from('messages').update({ reactions: { ...currentReactions2, [emoji]: [...userList2, user.uid] } }).eq('id', msg.id);
+                            const msgRef = doc(db, 'messages', msg.id);
+                            const currentReactions = msg.reactions || {};
+                            const userList = currentReactions[emoji] || [];
+                            if (!userList.includes(user.uid)) {
+                              await updateDoc(msgRef, {
+                                reactions: {
+                                  ...currentReactions,
+                                  [emoji]: [...userList, user.uid]
+                                }
+                              });
                             }
                           }}
                           className="w-6 h-6 rounded-full bg-black/40 hover:bg-white/20 flex items-center justify-center text-xs transition-colors"
@@ -1613,8 +1958,19 @@ export default function Chat({ user }: ChatProps) {
                     "p-2 rounded-xl transition-all",
                     sidebarView === 'friends' ? "text-amber-500 bg-amber-500/10" : "text-white/40 hover:text-white"
                   )}
+                  title="Friends"
                 >
                   <UserPlus className="w-5 h-5" />
+                </button>
+                <button 
+                  onClick={() => setSidebarView('staff')}
+                  className={cn(
+                    "p-2 rounded-xl transition-all",
+                    sidebarView === 'staff' ? "text-amber-500 bg-amber-500/10" : "text-white/40 hover:text-white"
+                  )}
+                  title="Staff"
+                >
+                  <Shield className="w-5 h-5" />
                 </button>
               </div>
               <button onClick={() => setShowSidebar(false)} className="p-2 text-white/40 hover:text-white lg:hidden">
@@ -1627,6 +1983,12 @@ export default function Chat({ user }: ChatProps) {
                 <span className="text-green-500">Online: {onlineCount}</span>
                 <span className="text-white/20">•</span>
                 <span className="text-white/40">Offline: {offlineCount}</span>
+              </div>
+            )}
+
+            {sidebarView === 'staff' && (
+              <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-amber-500">
+                🛡️ Staff Members
               </div>
             )}
 
@@ -1693,6 +2055,11 @@ export default function Chat({ user }: ChatProps) {
                         className="w-3.5 h-3.5 object-contain"
                         alt="rank"
                       />
+                      {u.pet && u.pet !== 'pet-none' && (
+                        <span className="text-xs animate-bounce">
+                          {PETS.find(p => p.id === u.pet)?.icon}
+                        </span>
+                      )}
                     </div>
                     <p className="text-[10px] opacity-40 uppercase tracking-widest mt-0.5">{u.status || u.rank}</p>
                   </div>
@@ -1716,6 +2083,11 @@ export default function Chat({ user }: ChatProps) {
                       className="w-3.5 h-3.5 object-contain"
                       alt="rank"
                     />
+                    {user.pet && user.pet !== 'pet-none' && (
+                      <span className="text-xs animate-bounce">
+                        {PETS.find(p => p.id === user.pet)?.icon}
+                      </span>
+                    )}
                   </div>
                   <button 
                     onClick={() => setShowStatusEditor(true)}
@@ -1818,6 +2190,24 @@ export default function Chat({ user }: ChatProps) {
                       )}
                     >
                       Effects
+                    </button>
+                    <button 
+                      onClick={() => setCustomizerTab('pets')}
+                      className={cn(
+                        "px-6 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all whitespace-nowrap",
+                        customizerTab === 'pets' ? "bg-white text-black shadow-xl" : "text-white/40 hover:text-white"
+                      )}
+                    >
+                      Pets
+                    </button>
+                    <button 
+                      onClick={() => setCustomizerTab('cursors')}
+                      className={cn(
+                        "px-6 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all whitespace-nowrap",
+                        customizerTab === 'cursors' ? "bg-white text-black shadow-xl" : "text-white/40 hover:text-white"
+                      )}
+                    >
+                      Cursors
                     </button>
                   </div>
                 </div>
@@ -2019,6 +2409,46 @@ export default function Chat({ user }: ChatProps) {
                         </div>
                       );
                     })}
+                  </div>
+                ) : customizerTab === 'pets' ? (
+                  <div className="space-y-6">
+                    <h3 className="text-sm font-bold text-amber-500 uppercase tracking-[0.3em] pl-2 border-l-2 border-amber-500">Virtual Pets</h3>
+                    <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                      {PETS.map(pet => (
+                        <button
+                          key={pet.id}
+                          onClick={() => updateCustomization('pet', pet.id)}
+                          className={cn(
+                            "group relative aspect-square rounded-2xl overflow-hidden border-2 transition-all hover:scale-[1.02] active:scale-95 flex flex-col items-center justify-center gap-4 bg-white/5",
+                            user.pet === pet.id ? "border-amber-500 shadow-[0_0_30px_rgba(245,158,11,0.3)]" : "border-white/5 hover:border-white/20"
+                          )}
+                        >
+                          <span className="text-4xl">{pet.icon}</span>
+                          <span className="text-[10px] font-bold text-white uppercase tracking-widest text-center px-2">{pet.name}</span>
+                          {user.pet === pet.id && <Check className="absolute top-2 right-2 w-4 h-4 text-amber-500" />}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : customizerTab === 'cursors' ? (
+                  <div className="space-y-6">
+                    <h3 className="text-sm font-bold text-amber-500 uppercase tracking-[0.3em] pl-2 border-l-2 border-amber-500">Custom Cursors</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                      {CURSORS.map(cursor => (
+                        <button
+                          key={cursor.id}
+                          onClick={() => updateCustomization('cursor', cursor.id)}
+                          className={cn(
+                            "group relative aspect-video rounded-2xl overflow-hidden border-2 transition-all hover:scale-[1.02] active:scale-95 flex flex-col items-center justify-center gap-4 bg-white/5",
+                            user.cursor === cursor.id ? "border-amber-500 shadow-[0_0_30px_rgba(245,158,11,0.3)]" : "border-white/5 hover:border-white/20"
+                          )}
+                          style={{ cursor: cursor.css }}
+                        >
+                          <span className="text-[10px] font-bold text-white uppercase tracking-widest text-center px-2">{cursor.name}</span>
+                          {user.cursor === cursor.id && <Check className="absolute top-2 right-2 w-4 h-4 text-amber-500" />}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 ) : null}
               </div>
@@ -3110,7 +3540,7 @@ export default function Chat({ user }: ChatProps) {
                           {notif.type === 'mention' && ' mentioned you in chat'}
                         </p>
                         <p className="text-xs text-white/40 mt-1">
-                          {notif.timestamp ? new Date(notif.timestamp).toLocaleString() : 'Just now'}
+                          {notif.timestamp?.toDate ? notif.timestamp.toDate().toLocaleString() : 'Just now'}
                         </p>
                       </div>
                     </div>
@@ -3259,7 +3689,7 @@ export default function Chat({ user }: ChatProps) {
                         const title = (document.getElementById('updateTitle') as HTMLInputElement).value;
                         const content = (document.getElementById('updateContent') as HTMLTextAreaElement).value;
                         if (!version || !title || !content) return;
-                        await supabase.from('updates').insert({ version, title, content: content, timestamp: new Date().toISOString() });
+                        await addDoc(collection(db, 'updates'), { version, title, content, timestamp: serverTimestamp() });
                         (document.getElementById('updateVersion') as HTMLInputElement).value = '';
                         (document.getElementById('updateTitle') as HTMLInputElement).value = '';
                         (document.getElementById('updateContent') as HTMLTextAreaElement).value = '';
@@ -3282,7 +3712,7 @@ export default function Chat({ user }: ChatProps) {
                       </div>
                       <p className="text-white/80 whitespace-pre-wrap">{update.content}</p>
                       <p className="text-xs text-white/40 mt-4">
-                        {update.timestamp ? new Date(update.timestamp).toLocaleString() : 'Just now'}
+                        {update.timestamp?.toDate ? update.timestamp.toDate().toLocaleString() : 'Just now'}
                       </p>
                     </div>
                   ))
@@ -3335,13 +3765,26 @@ export default function Chat({ user }: ChatProps) {
                           likes: [],
                           dislikes: [],
                           comments: [],
-                          timestamp: new Date().toISOString()
+                          timestamp: serverTimestamp()
                         };
                         
-                        const newsPayload = { author_id: newPost.authorId, author_username: newPost.authorUsername, author_pfp: newPost.authorPfp, content: newPost.content, image_url: newPost.imageUrl ?? null, likes: [], dislikes: [], comments: [], timestamp: new Date().toISOString() };
-                        await supabase.from('news').insert(newsPayload);
-                        const notifPayloads = allUsers.filter(u => u.uid !== user.uid).map(u => ({ user_id: u.uid, sender_id: user.uid, sender_username: user.username, sender_pfp: user.pfp, type: 'news_post', content: content.substring(0, 50) + (content.length > 50 ? '...' : ''), read: false, timestamp: new Date().toISOString() }));
-                        if (notifPayloads.length > 0) await supabase.from('notifications').insert(notifPayloads);
+                        await addDoc(collection(db, 'news'), newPost);
+                        
+                        // Notify everyone
+                        allUsers.forEach(u => {
+                          if (u.uid !== user.uid) {
+                            addDoc(collection(db, 'notifications'), {
+                              userId: u.uid,
+                              senderId: user.uid,
+                              senderUsername: user.username,
+                              senderPfp: user.pfp,
+                              type: 'news_post',
+                              content: content.substring(0, 50) + (content.length > 50 ? '...' : ''),
+                              read: false,
+                              timestamp: serverTimestamp()
+                            });
+                          }
+                        });
 
                         (document.getElementById('newsContent') as HTMLTextAreaElement).value = '';
                         (document.getElementById('newsImage') as HTMLInputElement).value = '';
@@ -3363,7 +3806,7 @@ export default function Chat({ user }: ChatProps) {
                         <div>
                           <p className="text-sm font-bold text-white">{post.authorUsername}</p>
                           <p className="text-xs text-white/40">
-                            {post.timestamp ? new Date(post.timestamp).toLocaleString() : 'Just now'}
+                            {post.timestamp?.toDate ? post.timestamp.toDate().toLocaleString() : 'Just now'}
                           </p>
                         </div>
                       </div>
@@ -3375,11 +3818,21 @@ export default function Chat({ user }: ChatProps) {
                       <div className="flex items-center gap-4 border-t border-white/10 pt-4">
                         <button 
                           onClick={async () => {
+                            const postRef = doc(db, 'news', post.id);
                             const hasLiked = post.likes?.includes(user.uid);
+                            const hasDisliked = post.dislikes?.includes(user.uid);
+                            
                             let newLikes = post.likes || [];
                             let newDislikes = post.dislikes || [];
-                            if (hasLiked) { newLikes = newLikes.filter((id: string) => id !== user.uid); } else { newLikes = [...newLikes, user.uid]; newDislikes = newDislikes.filter((id: string) => id !== user.uid); }
-                            await supabase.from('news').update({ likes: newLikes, dislikes: newDislikes }).eq('id', post.id);
+                            
+                            if (hasLiked) {
+                              newLikes = newLikes.filter((id: string) => id !== user.uid);
+                            } else {
+                              newLikes.push(user.uid);
+                              newDislikes = newDislikes.filter((id: string) => id !== user.uid);
+                            }
+                            
+                            await updateDoc(postRef, { likes: newLikes, dislikes: newDislikes });
                           }}
                           className={cn("flex items-center gap-2 text-sm", post.likes?.includes(user.uid) ? "text-amber-500" : "text-white/60 hover:text-white")}
                         >
@@ -3389,11 +3842,21 @@ export default function Chat({ user }: ChatProps) {
                         
                         <button 
                           onClick={async () => {
+                            const postRef = doc(db, 'news', post.id);
+                            const hasLiked = post.likes?.includes(user.uid);
                             const hasDisliked = post.dislikes?.includes(user.uid);
-                            let newLikes2 = post.likes || [];
-                            let newDislikes2 = post.dislikes || [];
-                            if (hasDisliked) { newDislikes2 = newDislikes2.filter((id: string) => id !== user.uid); } else { newDislikes2 = [...newDislikes2, user.uid]; newLikes2 = newLikes2.filter((id: string) => id !== user.uid); }
-                            await supabase.from('news').update({ likes: newLikes2, dislikes: newDislikes2 }).eq('id', post.id);
+                            
+                            let newLikes = post.likes || [];
+                            let newDislikes = post.dislikes || [];
+                            
+                            if (hasDisliked) {
+                              newDislikes = newDislikes.filter((id: string) => id !== user.uid);
+                            } else {
+                              newDislikes.push(user.uid);
+                              newLikes = newLikes.filter((id: string) => id !== user.uid);
+                            }
+                            
+                            await updateDoc(postRef, { likes: newLikes, dislikes: newDislikes });
                           }}
                           className={cn("flex items-center gap-2 text-sm", post.dislikes?.includes(user.uid) ? "text-red-500" : "text-white/60 hover:text-white")}
                         >
@@ -3439,7 +3902,9 @@ export default function Chat({ user }: ChatProps) {
                                   timestamp: new Date()
                                 };
                                 
-                                await supabase.from('news').update({ comments: [...(post.comments || []), newComment] }).eq('id', post.id);
+                                await updateDoc(doc(db, 'news', post.id), {
+                                  comments: [...(post.comments || []), newComment]
+                                });
                                 
                                 input.value = '';
                               }
@@ -3498,7 +3963,7 @@ export default function Chat({ user }: ChatProps) {
 
                 <button 
                   onClick={async () => {
-                    const lastClaim = user.lastDailyReward ? new Date(user.lastDailyReward) : new Date(0);
+                    const lastClaim = user.lastDailyReward?.toDate ? user.lastDailyReward.toDate() : new Date(0);
                     const now = new Date();
                     const hoursSinceLastClaim = (now.getTime() - lastClaim.getTime()) / (1000 * 60 * 60);
                     
@@ -3507,7 +3972,11 @@ export default function Chat({ user }: ChatProps) {
                       return;
                     }
 
-                    await supabase.from('users').update({ gold: (user.gold ?? 0) + 500, rubies: (user.rubies ?? 0) + 10, last_daily_reward: new Date().toISOString() }).eq('uid', user.uid);
+                    await updateDoc(doc(db, 'users', user.uid), {
+                      gold: increment(500),
+                      rubies: increment(10),
+                      lastDailyReward: serverTimestamp()
+                    });
 
                     confetti({
                       particleCount: 100,
@@ -3613,13 +4082,15 @@ export default function Chat({ user }: ChatProps) {
           }}
           onChangeRank={async (uid, rankId, isCustom) => {
             try {
+              const userRef = doc(db, 'users', uid);
               if (isCustom) {
-                const { data: rankData } = await supabase.from('ranks').select('*').eq('id', rankId).single();
-                if (rankData) {
-                  await supabase.from('users').update({ rank: rankId, custom_rank: { name: rankData.name, icon: rankData.icon } }).eq('uid', uid);
+                const rankDoc = await getDocs(collection(db, 'ranks'));
+                const customRank = rankDoc.docs.find(d => d.id === rankId)?.data();
+                if (customRank) {
+                  await updateDoc(userRef, { rank: rankId, customRank: { name: customRank.name, icon: customRank.icon } });
                 }
               } else {
-                await supabase.from('users').update({ rank: rankId, custom_rank: null }).eq('uid', uid);
+                await updateDoc(userRef, { rank: rankId, customRank: deleteField() });
               }
             } catch (e) {
               console.error(e);
@@ -3694,7 +4165,7 @@ export default function Chat({ user }: ChatProps) {
             />
             <button 
               onClick={async () => {
-                await supabase.from('users').update({ status: newStatus }).eq('uid', user.uid);
+                await updateDoc(doc(db, 'users', user.uid), { status: newStatus });
                 setShowStatusEditor(false);
                 showToast('Status updated!');
               }}

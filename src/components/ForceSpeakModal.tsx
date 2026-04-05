@@ -1,7 +1,7 @@
-// ForceSpeakModal.tsx — replace src/components/ForceSpeakModal.tsx
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
-import { supabase } from '../supabase';
+import { db } from '../firebase';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 
 interface ForceSpeakModalProps {
   targetUid: string;
@@ -16,13 +16,13 @@ export const ForceSpeakModal: React.FC<ForceSpeakModalProps> = ({ targetUid, tar
   const handleSend = async () => {
     if (!content) return;
     try {
-      await supabase.from('messages').insert({
-        sender_id: targetUid,
-        sender_username: targetUsername,
-        sender_pfp: targetPfp,
+      await addDoc(collection(db, 'messages'), {
+        senderId: targetUid,
+        senderUsername: targetUsername,
+        senderPfp: targetPfp,
         text: content,
-        timestamp: new Date().toISOString(),
-        type: 'text',
+        timestamp: serverTimestamp(),
+        type: 'text'
       });
       onClose();
     } catch (err) {
@@ -37,16 +37,19 @@ export const ForceSpeakModal: React.FC<ForceSpeakModalProps> = ({ targetUid, tar
           <h2 className="text-lg font-bold text-white">Force Speak as {targetUsername}</h2>
           <button onClick={onClose} className="text-white/60 hover:text-white"><X className="w-5 h-5" /></button>
         </div>
+        
         <div className="flex items-center gap-3 mb-4">
           <img src={targetPfp} className="w-10 h-10 rounded-full" />
           <span className="text-white font-bold">{targetUsername}</span>
         </div>
-        <textarea
+        
+        <textarea 
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder="Enter message..."
           className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white mb-4 h-24"
         />
+        
         <button onClick={handleSend} className="w-full py-3 rounded-xl bg-amber-500 text-black font-bold uppercase tracking-widest hover:bg-amber-400 transition-colors">
           Send Message
         </button>

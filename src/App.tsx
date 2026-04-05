@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from './supabase';
+import { db } from './firebase';
 import { UserProfile } from './types';
 import Auth from './components/Auth';
 import Onboarding from './components/Onboarding';

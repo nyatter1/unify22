@@ -69,6 +69,13 @@ export type UserRank =
   | 'BUNNY'
   | 'VIP';
 
+export interface Aura {
+  id: string;
+  name: string;
+  category: string;
+  className: string;
+}
+
 export interface UserProfile {
   uid: string;
   username: string;
@@ -87,6 +94,7 @@ export interface UserProfile {
   cardStyle?: string;
   border?: string;
   profileEffect?: string;
+  aura?: string;
   bio?: string;
   likes?: string[]; // Array of UIDs who liked this profile
   customThemes?: Theme[];
@@ -112,8 +120,6 @@ export interface UserProfile {
   isMuted?: boolean;
   isBanned?: boolean;
   isKicked?: boolean;
-  pet?: string;
-  cursor?: string;
   profileSong?: string;
 }
 

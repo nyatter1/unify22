@@ -500,5 +500,3 @@ export const BORDERS: Border[] = (() => {
   );
   return borders;
 })();
-
-}

@@ -986,7 +986,9 @@ export default function Chat({ user }: ChatProps) {
           return;
         }
 
-        const balance = currency === 'gold' ? user.gold : user.rubies;
+        const { data: latestUser } = await supabase.from('users').select('gold, rubies').eq('uid', user.uid).single();
+        const balance = currency === 'gold' ? (latestUser?.gold ?? user.gold) : (latestUser?.rubies ?? user.rubies);
+        
         if (balance <= 0 || isNaN(balance)) {
           showToast(`You have no ${currency} to gamble!`);
           return;
@@ -996,13 +998,13 @@ export default function Chat({ user }: ChatProps) {
         const isDev = user.email === 'dev@gmail.com';
         const winChance = Math.random();
         const isWin = isDev ? true : winChance > 0.7; // 30% win chance (70% loss)
-        const multiplier = isWin ? (isDev ? 100 : Math.floor(Math.random() * 100) + 1) : 0; // 1 to 100 if win
+        const multiplier = isWin ? (isDev ? 100 : Math.floor(Math.random() * 99) + 2) : 0; // 2 to 100 if win
         const winAmount = balance * multiplier;
         const result = isWin ? 'won' : 'lost';
 
         // Update balance
         if (result === 'won') {
-          await supabase.from('users').update({ [currency]: winAmount }).eq('uid', user.uid);
+          await supabase.from('users').update({ [currency]: balance + winAmount }).eq('uid', user.uid);
         } else {
           await supabase.from('users').update({ [currency]: 0 }).eq('uid', user.uid);
         }
@@ -1035,7 +1037,9 @@ export default function Chat({ user }: ChatProps) {
           return;
         }
 
-        const balance = currency === 'gold' ? user.gold : user.rubies;
+        const { data: latestUser } = await supabase.from('users').select('gold, rubies').eq('uid', user.uid).single();
+        const balance = currency === 'gold' ? (latestUser?.gold ?? user.gold) : (latestUser?.rubies ?? user.rubies);
+        
         if (amount > balance) {
           showToast(`Insufficient ${currency}!`);
           return;
@@ -1087,12 +1091,16 @@ export default function Chat({ user }: ChatProps) {
       }
 
       if (command === '/bank') {
+        const { data: latestUser } = await supabase.from('users').select('gold, rubies').eq('uid', user.uid).single();
+        const currentGold = latestUser?.gold ?? user.gold;
+        const currentRubies = latestUser?.rubies ?? user.rubies;
+
         await supabase.from('messages').insert({
           senderId: user.uid,
           senderUsername: user.username,
           senderPfp: user.pfp,
           senderRank: user.rank || 'VIP',
-          text: `🏦 BANK: I currently have ${user.gold.toLocaleString()} Gold and ${user.rubies.toLocaleString()} Rubies!`,
+          text: `🏦 BANK: I currently have ${currentGold.toLocaleString()} Gold and ${currentRubies.toLocaleString()} Rubies!`,
           type: 'text',
           timestamp: new Date().toISOString(),
         });
@@ -1181,7 +1189,9 @@ export default function Chat({ user }: ChatProps) {
           return;
         }
 
-        const balance = currency === 'gold' ? user.gold : user.rubies;
+        const { data: latestUser } = await supabase.from('users').select('gold, rubies').eq('uid', user.uid).single();
+        const balance = currency === 'gold' ? (latestUser?.gold ?? user.gold) : (latestUser?.rubies ?? user.rubies);
+
         if (amount > balance) {
           showToast(`Insufficient ${currency}!`);
           return;
@@ -1824,7 +1834,7 @@ export default function Chat({ user }: ChatProps) {
                 >
                   <div className="relative flex-shrink-0">
                     <img 
-                      src={msg.senderPfp || allUsers.find(u => u.uid === msg.senderId)?.pfp || `https://api.dicebear.com/7.x/avataaars/svg?seed=${msg.senderUsername || 'Guest'}`} 
+                      src={msg.senderPfp || allUsers.find(u => u.uid === msg.senderId)?.pfp || DEFAULT_PFP} 
                       onClick={() => handleProfileClick(msg.senderId)}
                       className={cn(
                         "w-10 h-10 rounded-full object-cover shadow-lg cursor-pointer hover:scale-105 transition-transform",

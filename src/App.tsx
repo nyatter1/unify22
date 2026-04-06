@@ -49,8 +49,8 @@ export default function App() {
     if (!user) return;
     
     const channel = supabase.channel('app-user-changes')
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users', filter: `uid=eq.${user.uid}` }, (payload) => {
-        setUser(payload.new as UserProfile);
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users', filter: `uid=eq.${user.uid}` }, () => {
+        fetchProfile(user.uid);
       })
       .subscribe();
       

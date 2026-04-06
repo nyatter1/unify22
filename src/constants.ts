@@ -507,5 +507,3 @@ export interface Aura {
   category: string;
   className: string;
 }
-
-];

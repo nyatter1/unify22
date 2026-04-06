@@ -1,16 +1,15 @@
 import React from 'react';
-import { Theme, CardStyle, Border, ProfileEffect, UserProfile, Aura } from '../types';
+import { Theme, CardStyle, Border, ProfileEffect, UserProfile } from '../types';
 import { AVATARS, DEFAULT_PFP } from '../constants';
 import { cn } from '../lib/utils';
 
 interface CustomizerPreviewProps {
   user: UserProfile;
-  tab: 'themes' | 'cards' | 'borders' | 'effects' | 'auras';
+  tab: 'themes' | 'cards' | 'borders' | 'effects';
   selectedTheme?: Theme;
   selectedCard?: CardStyle;
   selectedBorder?: Border;
   selectedEffect?: ProfileEffect;
-  selectedAura?: Aura;
 }
 
 export const CustomizerPreview: React.FC<CustomizerPreviewProps> = ({
@@ -20,7 +19,6 @@ export const CustomizerPreview: React.FC<CustomizerPreviewProps> = ({
   selectedCard,
   selectedBorder,
   selectedEffect,
-  selectedAura
 }) => {
   // Preview logic based on tab
   return (
@@ -60,12 +58,6 @@ export const CustomizerPreview: React.FC<CustomizerPreviewProps> = ({
           </div>
         )}
         
-        {tab === 'auras' && selectedAura && (
-          <div className="mt-8 p-4 rounded-xl bg-white/5 border border-white/10 text-center">
-            <p className="text-white/60 text-[10px] uppercase tracking-widest font-bold">Current Aura</p>
-            <p className="text-white font-black uppercase tracking-widest italic mt-1">{selectedAura.name}</p>
-          </div>
-        )}
       </div>
     </div>
   );

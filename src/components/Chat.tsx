@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../supabase';
-import { UserProfile, Message, Theme, CardStyle, UserRank, Border, ProfileEffect, Aura } from '../types';
-import { THEMES, CARD_STYLES, AVATARS, BANNERS, RANKS, RankInfo, BORDERS, PROFILE_EFFECTS, AURAS, DEFAULT_PFP, DEFAULT_BANNER } from '../constants';
+import { UserProfile, Message, Theme, CardStyle, UserRank, Border, ProfileEffect } from '../types';
+import { THEMES, CARD_STYLES, AVATARS, BANNERS, RANKS, RankInfo, BORDERS, PROFILE_EFFECTS, DEFAULT_PFP, DEFAULT_BANNER } from '../constants';
 import { 
   Send, 
   LogOut, 

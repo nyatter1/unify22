@@ -489,19 +489,29 @@ export const PROFILE_EFFECTS: ProfileEffect[] = [
   { id: 'effect-ohio-rain', name: 'Only in Ohio', category: 'Funny', className: 'effect-ohio-rain' },
 ];
 
+export interface Border {
+  id: string;
+  name: string;
+  category: 'Basic' | 'Special';
+  className: string;
+}
+
 export const BORDERS: Border[] = (() => {
   const colors = ['red', 'orange', 'amber', 'yellow', 'lime', 'green', 'emerald', 'teal', 'cyan', 'sky', 'blue', 'indigo', 'violet', 'purple', 'fuchsia', 'pink', 'rose', 'slate', 'gray', 'zinc', 'neutral', 'stone'];
   const styles = ['solid', 'dashed', 'dotted', 'double'];
   const widths = ['2', '4', '8'];
+  
   const borders: Border[] = [
     { id: 'border-none', name: 'None', category: 'Basic', className: '' }
   ];
-  let id = 1;
+
+  // 1. Generate Basic Borders
+  let idCounter = 1;
   for (const color of colors) {
     for (const style of styles) {
       for (const width of widths) {
         borders.push({
-          id: `border-${id++}`,
+          id: `border-${idCounter++}`,
           name: `${color.charAt(0).toUpperCase() + color.slice(1)} ${style.charAt(0).toUpperCase() + style.slice(1)} ${width}px`,
           category: 'Basic',
           className: `border-${color}-500 border-${style} border-${width}`
@@ -509,13 +519,16 @@ export const BORDERS: Border[] = (() => {
       }
     }
   }
+
+  // 2. Add Special Borders (Originals + New Concepts)
   borders.push(
+    // --- FROM YOUR ORIGINAL LIST ---
     { id: 'border-gold-glow', name: 'Gold Glow', category: 'Special', className: 'border-amber-400 border-4 shadow-[0_0_15px_rgba(251,191,36,0.8)]' },
     { id: 'border-neon-pink', name: 'Neon Pink', category: 'Special', className: 'border-pink-500 border-4 shadow-[0_0_20px_rgba(236,72,153,0.8)]' },
     { id: 'border-cyber-blue', name: 'Cyber Blue', category: 'Special', className: 'border-cyan-400 border-[6px] border-double shadow-[0_0_25px_rgba(34,211,238,0.6)]' },
     { id: 'border-toxic', name: 'Toxic Sludge', category: 'Special', className: 'border-lime-500 border-8 border-dotted shadow-[0_0_30px_rgba(132,204,22,0.5)]' },
     { id: 'border-blood', name: 'Blood Moon', category: 'Special', className: 'border-red-600 border-4 shadow-[inset_0_0_20px_rgba(220,38,38,0.8),0_0_20px_rgba(220,38,38,0.8)]' },
-    { id: 'border-rainbow', name: 'Rainbow Flow', category: 'Special', className: 'border-transparent border-4' },
+    { id: 'border-rainbow', name: 'Rainbow Flow', category: 'Special', className: 'border-transparent border-4 bg-gradient-to-r from-red-500 via-yellow-500 via-green-500 via-blue-500 to-purple-500 bg-clip-border' },
     { id: 'border-glitch', name: 'Glitch', category: 'Special', className: 'border-white border-4 skew-x-2 -rotate-1 shadow-[2px_2px_0_rgba(255,0,0,0.5),-2px_-2px_0_rgba(0,255,255,0.5)]' },
     { id: 'border-void', name: 'The Void', category: 'Special', className: 'border-black border-8 shadow-[0_0_50px_rgba(0,0,0,1)]' },
     { id: 'border-fire-glow', name: 'Fire Glow', category: 'Special', className: 'border-orange-500 border-4 shadow-[0_0_20px_rgba(249,115,22,0.8),inset_0_0_10px_rgba(249,115,22,0.5)] animate-pulse' },
@@ -526,6 +539,32 @@ export const BORDERS: Border[] = (() => {
     { id: 'border-snake-border', name: 'Snake Border', category: 'Special', className: 'border-emerald-500 border-4 border-double' },
     { id: 'border-glitch-border', name: 'Glitch Border', category: 'Special', className: 'border-white border-4 skew-x-1 -rotate-1 shadow-[2px_2px_0_#f0f,-2px_-2px_0_#0ff]' },
     { id: 'border-gold-leaf', name: 'Gold Leaf', category: 'Special', className: 'border-amber-400 border-[3px] shadow-[0_0_15px_rgba(251,191,36,0.5)]' },
+
+    // --- COSMIC & ETHEREAL ---
+    { id: 'border-event-horizon', name: 'Event Horizon', category: 'Special', className: 'border-black border-4 shadow-[0_0_30px_10px_rgba(76,29,149,0.4)] animate-pulse' },
+    { id: 'border-stardust', name: 'Stardust Sparkle', category: 'Special', className: 'border-slate-800 border-2 shadow-[0_0_10px_#fff,inset_0_0_10px_#fff] opacity-90' },
+    { id: 'border-nebula', name: 'Nebula Drift', category: 'Special', className: 'border-transparent border-4 bg-gradient-to-br from-purple-600 via-fuchsia-500 to-blue-600 shadow-[0_0_20px_rgba(192,38,211,0.5)]' },
+
+    // --- HIGH-TECH & SCI-FI ---
+    { id: 'border-active-circuit', name: 'Active Circuit', category: 'Special', className: 'border-slate-700 border-2 border-t-cyan-400 border-l-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.4)]' },
+    { id: 'border-data-stream', name: 'Data Stream', category: 'Special', className: 'border-2 border-dashed border-emerald-500 animate-[spin_20s_linear_infinite]' },
+    { id: 'border-hologram', name: 'Hologram Flicker', category: 'Special', className: 'border-cyan-300/40 border-2 shadow-[0_0_15px_rgba(165,243,252,0.4)] animate-[pulse_0.2s_ease-in-out_infinite]' },
+
+    // --- SUPERNATURAL & ELEMENTAL ---
+    { id: 'border-magma', name: 'Magma Core', category: 'Special', className: 'border-stone-900 border-4 shadow-[inset_0_0_15px_#f97316,0_0_15px_#ef4444] animate-pulse' },
+    { id: 'border-frozen', name: 'Frozen Frost', category: 'Special', className: 'border-white border-2 shadow-[0_0_20px_#7dd3fc,inset_0_0_10px_#7dd3fc] opacity-80' },
+    { id: 'border-ectoplasm', name: 'Ectoplasm', category: 'Special', className: 'border-lime-400/60 border-[6px] rounded-lg shadow-[0_0_25px_#a3e635]' },
+
+    // --- ARTISTIC & RETRO ---
+    { id: 'border-comic-pop', name: 'Comic Pop', category: 'Special', className: 'border-black border-4 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]' },
+    { id: 'border-vaporwave', name: 'Vaporwave Sunset', category: 'Special', className: 'border-4 border-t-fuchsia-500 border-r-cyan-400 border-b-purple-500 border-l-yellow-400 shadow-[0_0_15px_#f0abfc]' },
+    { id: 'border-oil-slick', name: 'Oil Slick', category: 'Special', className: 'border-4 border-transparent bg-gradient-to-tr from-indigo-500 via-emerald-400 to-yellow-400' },
+
+    // --- ANIMATED INTERACTIVES ---
+    { id: 'border-heartbeat', name: 'Heartbeat Pulse', category: 'Special', className: 'border-red-500 border-4 animate-[pulse_1s_infinite] shadow-[0_0_15px_rgba(239,68,68,0.5)]' },
+    { id: 'border-warning', name: 'Warning Siren', category: 'Special', className: 'border-yellow-400 border-8 border-double animate-[pulse_0.5s_infinite] bg-black/10' },
+
+    // --- NEON FULL SPECTRUM ---
     { id: 'border-neon-fuchsia', name: 'Neon Fuchsia', category: 'Special', className: 'border-fuchsia-500 border-4 shadow-[0_0_20px_rgba(217,70,239,0.8)]' },
     { id: 'border-neon-cyan', name: 'Neon Cyan', category: 'Special', className: 'border-cyan-500 border-4 shadow-[0_0_20px_rgba(6,182,212,0.8)]' },
     { id: 'border-neon-lime', name: 'Neon Lime', category: 'Special', className: 'border-lime-500 border-4 shadow-[0_0_20px_rgba(132,204,22,0.8)]' },
@@ -537,7 +576,8 @@ export const BORDERS: Border[] = (() => {
     { id: 'border-neon-emerald', name: 'Neon Emerald', category: 'Special', className: 'border-emerald-500 border-4 shadow-[0_0_20px_rgba(16,185,129,0.8)]' },
     { id: 'border-neon-amber', name: 'Neon Amber', category: 'Special', className: 'border-amber-500 border-4 shadow-[0_0_20px_rgba(245,158,11,0.8)]' },
     { id: 'border-cyber-gold', name: 'Cyber Gold', category: 'Special', className: 'border-amber-500 border-4 shadow-[0_0_20px_rgba(245,158,11,0.8)]' },
-    { id: 'border-cyber-silver', name: 'Cyber Silver', category: 'Special', className: 'border-slate-500 border-4 shadow-[0_0_20px_rgba(100,116,139,0.8)]' },
+    { id: 'border-cyber-silver', name: 'Cyber Silver', category: 'Special', className: 'border-slate-500 border-4 shadow-[0_0_20px_rgba(100,116,139,0.8)]' }
   );
+
   return borders;
 })();

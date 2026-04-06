@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Star, X, Trash2, Edit3, Check } from 'lucide-react';
-import { db } from '../firebase';
-import { collection, query, where, onSnapshot, doc, updateDoc, deleteDoc, orderBy } from 'firebase/firestore';
+import { supabase } from '../supabase';
 import { ProfileRating } from '../types';
 import { cn } from '../lib/utils';
 
@@ -18,36 +17,42 @@ export const RatingsList: React.FC<RatingsListProps> = ({ targetUid, currentUser
   const [editComment, setEditComment] = useState('');
 
   useEffect(() => {
-    const q = query(
-      collection(db, 'ratings'),
-      where('targetUid', '==', targetUid)
-    );
+    fetchRatings();
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as ProfileRating[];
-      
-      // Sort client-side to avoid index error
-      data.sort((a, b) => {
-        const timeA = a.timestamp?.toMillis?.() || 0;
-        const timeB = b.timestamp?.toMillis?.() || 0;
-        return timeB - timeA;
-      });
-      
-      setRatings(data);
-    });
+    const channel = supabase.channel('ratings-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'ratings', filter: `targetUid=eq.${targetUid}` }, () => {
+        fetchRatings();
+      })
+      .subscribe();
 
-    return () => unsubscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [targetUid]);
+
+  const fetchRatings = async () => {
+    const { data, error } = await supabase
+      .from('ratings')
+      .select('*')
+      .eq('targetUid', targetUid)
+      .order('timestamp', { ascending: false });
+      
+    if (data) {
+      setRatings(data as ProfileRating[]);
+    }
+  };
 
   const handleUpdate = async (id: string) => {
     try {
-      await updateDoc(doc(db, 'ratings', id), {
-        rating: editRating,
-        comment: editComment
-      });
+      const { error } = await supabase
+        .from('ratings')
+        .update({
+          rating: editRating,
+          comment: editComment
+        })
+        .eq('id', id);
+        
+      if (error) throw error;
       setEditingId(null);
     } catch (err) {
       console.error(err);
@@ -56,7 +61,8 @@ export const RatingsList: React.FC<RatingsListProps> = ({ targetUid, currentUser
 
   const handleDelete = async (id: string) => {
     try {
-      await deleteDoc(doc(db, 'ratings', id));
+      const { error } = await supabase.from('ratings').delete().eq('id', id);
+      if (error) throw error;
     } catch (err) {
       console.error(err);
     }

@@ -4,8 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { UserProfile, RankDefinition } from '../types';
 import { RANKS } from '../constants';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '../firebase';
+import { supabase } from '../supabase';
 
 interface UserOptionsProps {
   targetUser: UserProfile;
@@ -46,8 +45,10 @@ export const UserOptions: React.FC<UserOptionsProps> = ({
   useEffect(() => {
     const fetchCustomRanks = async () => {
       try {
-        const snap = await getDocs(collection(db, 'ranks'));
-        setCustomRanks(snap.docs.map(d => ({ id: d.id, ...d.data() } as RankDefinition)));
+        const { data, error } = await supabase.from('ranks').select('*');
+        if (data) {
+          setCustomRanks(data as RankDefinition[]);
+        }
       } catch (e) {
         console.error(e);
       }

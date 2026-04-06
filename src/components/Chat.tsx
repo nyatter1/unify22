@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { auth, db } from '../firebase';
-import { collection, query, orderBy, limit, onSnapshot, addDoc, serverTimestamp, doc, updateDoc, where, increment, getDocs, deleteDoc, writeBatch, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { supabase } from '../supabase';
 import { UserProfile, Message, Theme, CardStyle, UserRank } from '../types';
 import { THEMES, CARD_STYLES, AVATARS, BANNERS, RANKS, RankInfo, BORDERS, PROFILE_EFFECTS, PETS, CURSORS } from '../constants';
 import { 
@@ -364,7 +363,7 @@ export default function Chat({ user }: ChatProps) {
       }
 
       if (needsUpdate) {
-        await updateDoc(doc(db, 'users', user.uid), updates);
+        await supabase.from('users').update(updates).eq('uid', user.uid);
       }
     };
 
@@ -375,10 +374,10 @@ export default function Chat({ user }: ChatProps) {
   useEffect(() => {
     const updateOnlineStatus = async (online: boolean) => {
       try {
-        await updateDoc(doc(db, 'users', user.uid), {
+        await supabase.from('users').update({
           isOnline: online,
-          lastSeen: serverTimestamp()
-        });
+          lastSeen: new Date().toISOString()
+        }).eq('uid', user.uid);
       } catch (error) {
         console.error("Error updating online status:", error);
       }
@@ -427,7 +426,7 @@ export default function Chat({ user }: ChatProps) {
       // Force Developer Rank
       const devEmails = ['test@gmail.com', 'dev@gmail.com', 'developer@gmail.com', 'haydensixseven@gmail.com'];
       if (devEmails.includes(user.email.toLowerCase()) && user.rank !== 'DEVELOPER') {
-        await updateDoc(doc(db, 'users', user.uid), { rank: 'DEVELOPER' });
+        await supabase.from('users').update({ rank: 'DEVELOPER' }).eq('uid', user.uid);
         return;
       }
 
@@ -461,7 +460,7 @@ export default function Chat({ user }: ChatProps) {
       const newRankPriority = RANKS.find(r => r.id === newRank)?.priority || 0;
 
       if (newRank !== user.rank && newRankPriority > currentRankPriority) {
-        await updateDoc(doc(db, 'users', user.uid), { rank: newRank });
+        await supabase.from('users').update({ rank: newRank }).eq('uid', user.uid);
       }
     };
 
@@ -471,85 +470,128 @@ export default function Chat({ user }: ChatProps) {
   }, [user.uid, user.invites, user.gold, user.createdAt, user.rank, allUsers]);
 
   useEffect(() => {
-    const q = query(collection(db, 'notifications'), where('userId', '==', user.uid));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      let notifs = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as any[];
+    const fetchNotifications = async () => {
+      const { data } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('userId', user.uid)
+        .order('timestamp', { ascending: false })
+        .limit(20);
       
-      // Sort by timestamp descending in memory to avoid needing a composite index
-      notifs.sort((a, b) => {
-        const timeA = a.timestamp?.toMillis ? a.timestamp.toMillis() : 0;
-        const timeB = b.timestamp?.toMillis ? b.timestamp.toMillis() : 0;
-        return timeB - timeA;
-      });
-      
-      // Limit to 20 in memory
-      notifs = notifs.slice(0, 20);
-      
-      setNotifications(notifs);
-      setUnreadNotifications(notifs.filter(n => !n.read).length);
-    });
-    return () => unsubscribe();
+      if (data) {
+        setNotifications(data);
+        setUnreadNotifications(data.filter(n => !n.read).length);
+      }
+    };
+
+    fetchNotifications();
+
+    const notifSubscription = supabase
+      .channel('chat-notifications-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `userId=eq.${user.uid}` }, fetchNotifications)
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(notifSubscription);
+    };
   }, [user.uid]);
 
   useEffect(() => {
-    const q = query(collection(db, 'news'), orderBy('timestamp', 'desc'), limit(20));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const news = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as any[];
-      setNewsPosts(news);
-    });
-    return () => unsubscribe();
-  }, []);
+    const fetchNews = async () => {
+      const { data } = await supabase
+        .from('news')
+        .select('*')
+        .order('timestamp', { ascending: false })
+        .limit(20);
+      if (data) setNewsPosts(data);
+    };
 
-  useEffect(() => {
-    const q = query(collection(db, 'updates'), orderBy('timestamp', 'desc'), limit(20));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const updates = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as any[];
-      setAppUpdates(updates);
-    });
-    return () => unsubscribe();
-  }, []);
+    fetchNews();
 
-  useEffect(() => {
-    const q = query(collection(db, 'messages'), orderBy('timestamp', 'desc'), limit(50));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Message));
-      const newMsgs = msgs.reverse();
-      
-      // Check if there's a new message that isn't from the current user
-      if (messages.length > 0 && newMsgs.length > messages.length) {
-        const lastMsg = newMsgs[newMsgs.length - 1];
-        if (lastMsg.senderId !== user.uid && soundEnabled) {
-          const receiveAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3');
-          receiveAudio.volume = 0.5;
-          receiveAudio.play().catch(() => {});
-        }
-      }
-      
-      setMessages(newMsgs);
-      setTimeout(() => scrollRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-    });
-
-    // Fetch all users
-    const allUsersUnsubscribe = onSnapshot(collection(db, 'users'), (snapshot) => {
-      const users = snapshot.docs.map(doc => doc.data() as UserProfile);
-      setAllUsers(users);
-      
-      // Update onlineUsers for legacy compatibility
-      setOnlineUsers(users.filter(u => u.isOnline));
-    });
+    const newsSubscription = supabase
+      .channel('chat-news-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'news' }, fetchNews)
+      .subscribe();
 
     return () => {
-      unsubscribe();
-      allUsersUnsubscribe();
+      supabase.removeChannel(newsSubscription);
+    };
+  }, []);
+
+  useEffect(() => {
+    const fetchUpdates = async () => {
+      const { data } = await supabase
+        .from('updates')
+        .select('*')
+        .order('timestamp', { ascending: false })
+        .limit(20);
+      if (data) setAppUpdates(data);
+    };
+
+    fetchUpdates();
+
+    const updatesSubscription = supabase
+      .channel('chat-updates-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'updates' }, fetchUpdates)
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(updatesSubscription);
+    };
+  }, []);
+
+  useEffect(() => {
+    const fetchMessages = async () => {
+      const { data } = await supabase
+        .from('messages')
+        .select('*')
+        .order('timestamp', { ascending: false })
+        .limit(50);
+      
+      if (data) {
+        const newMsgs = data.reverse() as Message[];
+        
+        // Check if there's a new message that isn't from the current user
+        if (messages.length > 0 && newMsgs.length > messages.length) {
+          const lastMsg = newMsgs[newMsgs.length - 1];
+          if (lastMsg.senderId !== user.uid && soundEnabled) {
+            const receiveAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3');
+            receiveAudio.volume = 0.5;
+            receiveAudio.play().catch(() => {});
+          }
+        }
+        
+        setMessages(newMsgs);
+        setTimeout(() => scrollRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+      }
+    };
+
+    fetchMessages();
+
+    const messagesSubscription = supabase
+      .channel('chat-messages-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, fetchMessages)
+      .subscribe();
+
+    // Fetch all users
+    const fetchAllUsers = async () => {
+      const { data } = await supabase.from('users').select('*');
+      if (data) {
+        setAllUsers(data as UserProfile[]);
+        setOnlineUsers((data as UserProfile[]).filter(u => u.isOnline));
+      }
+    };
+
+    fetchAllUsers();
+
+    const usersSubscription = supabase
+      .channel('chat-users-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, fetchAllUsers)
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(messagesSubscription);
+      supabase.removeChannel(usersSubscription);
     };
   }, [user.uid]);
 
@@ -572,9 +614,13 @@ export default function Chat({ user }: ChatProps) {
     }
 
     try {
-      await updateDoc(doc(db, 'users', targetUid), {
-        friendRequests: arrayUnion(user.uid)
-      });
+      const currentRequests = user.friendRequests || [];
+      const newRequests = currentRequests.filter(id => id !== targetUid);
+      const targetUserRequests = targetUser?.friendRequests || [];
+      
+      await supabase.from('users').update({
+        friendRequests: [...targetUserRequests, user.uid]
+      }).eq('uid', targetUid);
       showToast('Friend request sent!');
     } catch (e) {
       console.error(e);
@@ -584,20 +630,21 @@ export default function Chat({ user }: ChatProps) {
 
   const acceptFriendRequest = async (targetUid: string) => {
     try {
-      const batch = writeBatch(db);
+      const myFriends = [...(user.friends || []), targetUid];
+      const myRequests = (user.friendRequests || []).filter(id => id !== targetUid);
       
-      // Add to my friends, remove from my requests
-      batch.update(doc(db, 'users', user.uid), {
-        friends: arrayUnion(targetUid),
-        friendRequests: arrayRemove(targetUid)
-      });
+      const targetUser = allUsers.find(u => u.uid === targetUid);
+      const theirFriends = [...(targetUser?.friends || []), user.uid];
+
+      await supabase.from('users').update({
+        friends: myFriends,
+        friendRequests: myRequests
+      }).eq('uid', user.uid);
       
-      // Add me to their friends
-      batch.update(doc(db, 'users', targetUid), {
-        friends: arrayUnion(user.uid)
-      });
+      await supabase.from('users').update({
+        friends: theirFriends
+      }).eq('uid', targetUid);
       
-      await batch.commit();
       showToast('Friend request accepted!');
     } catch (e) {
       console.error(e);
@@ -607,9 +654,10 @@ export default function Chat({ user }: ChatProps) {
 
   const declineFriendRequest = async (targetUid: string) => {
     try {
-      await updateDoc(doc(db, 'users', user.uid), {
-        friendRequests: arrayRemove(targetUid)
-      });
+      const myRequests = (user.friendRequests || []).filter(id => id !== targetUid);
+      await supabase.from('users').update({
+        friendRequests: myRequests
+      }).eq('uid', user.uid);
       showToast('Friend request declined');
     } catch (e) {
       console.error(e);
@@ -618,17 +666,18 @@ export default function Chat({ user }: ChatProps) {
 
   const unaddFriend = async (targetUid: string) => {
     try {
-      const batch = writeBatch(db);
+      const myFriends = (user.friends || []).filter(id => id !== targetUid);
+      const targetUser = allUsers.find(u => u.uid === targetUid);
+      const theirFriends = (targetUser?.friends || []).filter(id => id !== user.uid);
+
+      await supabase.from('users').update({
+        friends: myFriends
+      }).eq('uid', user.uid);
       
-      batch.update(doc(db, 'users', user.uid), {
-        friends: arrayRemove(targetUid)
-      });
+      await supabase.from('users').update({
+        friends: theirFriends
+      }).eq('uid', targetUid);
       
-      batch.update(doc(db, 'users', targetUid), {
-        friends: arrayRemove(user.uid)
-      });
-      
-      await batch.commit();
       showToast('Friend removed');
     } catch (e) {
       console.error(e);
@@ -637,7 +686,7 @@ export default function Chat({ user }: ChatProps) {
 
   const updateCustomization = async (field: 'theme' | 'cardStyle' | 'border' | 'profileEffect' | 'username' | 'age' | 'gender' | 'bio' | 'pfp' | 'banner' | 'profileVideoUrl', value: any) => {
     try {
-      await updateDoc(doc(db, 'users', user.uid), { [field]: value });
+      await supabase.from('users').update({ [field]: value }).eq('uid', user.uid);
       if (selectedProfile?.uid === user.uid) {
         setSelectedProfile(prev => prev ? { ...prev, [field]: value } : null);
       }
@@ -649,21 +698,21 @@ export default function Chat({ user }: ChatProps) {
 
   const viewProfile = async (uid: string) => {
     try {
-      const userDoc = await getDocs(query(collection(db, 'users'), where('uid', '==', uid)));
-      if (!userDoc.empty) {
-        setSelectedProfile(userDoc.docs[0].data() as UserProfile);
+      const { data } = await supabase.from('users').select('*').eq('uid', uid);
+      if (data && data.length > 0) {
+        setSelectedProfile(data[0] as UserProfile);
         setShowProfileModal(true);
         
         // Send notification if viewing someone else's profile
         if (uid !== user.uid) {
-          await addDoc(collection(db, 'notifications'), {
+          await supabase.from('notifications').insert({
             userId: uid,
             senderId: user.uid,
             senderUsername: user.username,
             senderPfp: user.pfp,
             type: 'profile_view',
             read: false,
-            timestamp: serverTimestamp()
+            timestamp: new Date().toISOString()
           });
         }
       }
@@ -684,11 +733,9 @@ export default function Chat({ user }: ChatProps) {
     setShowNotifications(true);
     const unreadNotifs = notifications.filter(n => !n.read);
     if (unreadNotifs.length > 0) {
-      const batch = writeBatch(db);
-      unreadNotifs.forEach(n => {
-        batch.update(doc(db, 'notifications', n.id), { read: true });
-      });
-      await batch.commit();
+      for (const n of unreadNotifs) {
+        await supabase.from('notifications').update({ read: true }).eq('id', n.id);
+      }
     }
   };
 
@@ -706,9 +753,9 @@ export default function Chat({ user }: ChatProps) {
     newOptions[optionIndex] = option;
 
     try {
-      await updateDoc(doc(db, 'messages', messageId), {
-        'pollData.options': newOptions
-      });
+      await supabase.from('messages').update({
+        'pollData': { ...msg.pollData, options: newOptions }
+      }).eq('id', messageId);
     } catch (err) {
       console.error(err);
     }
@@ -717,27 +764,26 @@ export default function Chat({ user }: ChatProps) {
   const toggleLike = async (targetUid: string) => {
     if (!user.uid) return;
     try {
-      const userRef = doc(db, 'users', targetUid);
       const isLiked = selectedProfile?.likes?.includes(user.uid);
       
       const newLikes = isLiked 
         ? (selectedProfile?.likes || []).filter(id => id !== user.uid)
         : [...(selectedProfile?.likes || []), user.uid];
 
-      await updateDoc(userRef, { likes: newLikes });
+      await supabase.from('users').update({ likes: newLikes }).eq('uid', targetUid);
       setSelectedProfile(prev => prev ? { ...prev, likes: newLikes } : null);
       showToast(isLiked ? 'Unliked profile' : 'Liked profile!');
 
       // Send notification if liking someone else's profile
       if (!isLiked && targetUid !== user.uid) {
-        await addDoc(collection(db, 'notifications'), {
+        await supabase.from('notifications').insert({
           userId: targetUid,
           senderId: user.uid,
           senderUsername: user.username,
           senderPfp: user.pfp,
           type: 'profile_like',
           read: false,
-          timestamp: serverTimestamp()
+          timestamp: new Date().toISOString()
         });
       }
     } catch (err) {
@@ -789,9 +835,9 @@ export default function Chat({ user }: ChatProps) {
     }
 
     try {
-      await updateDoc(doc(db, 'users', user.uid), {
+      await supabase.from('users').update({
         customRank: customRankForm
-      });
+      }).eq('uid', user.uid);
       showToast('Custom rank saved!');
       setEditTab('main');
     } catch (err) {
@@ -802,9 +848,9 @@ export default function Chat({ user }: ChatProps) {
 
   const resetCustomRank = async () => {
     try {
-      await updateDoc(doc(db, 'users', user.uid), {
+      await supabase.from('users').update({
         customRank: null
-      });
+      }).eq('uid', user.uid);
       window.location.reload();
     } catch (err) {
       console.error(err);
@@ -818,11 +864,10 @@ export default function Chat({ user }: ChatProps) {
     const theme = { ...newTheme, id: themeId } as Theme;
     
     try {
-      const userRef = doc(db, 'users', user.uid);
-      await updateDoc(userRef, {
+      await supabase.from('users').update({
         customThemes: [...(user.customThemes || []), theme],
         theme: themeId
-      });
+      }).eq('uid', user.uid);
       setShowThemeEditor(false);
       showToast('Custom theme saved!');
     } catch (err) {
@@ -850,11 +895,10 @@ export default function Chat({ user }: ChatProps) {
     const card = { ...newCard, id: cardId } as CardStyle;
     
     try {
-      const userRef = doc(db, 'users', user.uid);
-      await updateDoc(userRef, {
+      await supabase.from('users').update({
         customCardStyles: [...(user.customCardStyles || []), card],
         cardStyle: cardId
-      });
+      }).eq('uid', user.uid);
       setShowCardEditor(false);
       showToast('Custom card saved!');
     } catch (err) {
@@ -869,15 +913,15 @@ export default function Chat({ user }: ChatProps) {
 
     // Moderation Check
     const now = new Date();
-    if (user.bannedUntil?.toDate && user.bannedUntil.toDate() > now) {
+    if (user.bannedUntil && new Date(user.bannedUntil) > now) {
       showToast('You are banned and cannot send messages.');
       return;
     }
-    if (user.kickedUntil?.toDate && user.kickedUntil.toDate() > now) {
+    if (user.kickedUntil && new Date(user.kickedUntil) > now) {
       showToast('You have been kicked and cannot send messages.');
       return;
     }
-    if (user.mutedUntil?.toDate && user.mutedUntil.toDate() > now) {
+    if (user.mutedUntil && new Date(user.mutedUntil) > now) {
       showToast('You are muted and cannot send messages.');
       return;
     }
@@ -926,7 +970,7 @@ export default function Chat({ user }: ChatProps) {
         }
 
         try {
-          await updateDoc(doc(db, 'users', targetUser.uid), { rank: targetRankId });
+          await supabase.from('users').update({ rank: targetRankId }).eq('uid', targetUser.uid);
           showToast(`Rank updated for ${targetUsername} to ${targetRankId}`);
         } catch (err) {
           console.error(err);
@@ -957,15 +1001,14 @@ export default function Chat({ user }: ChatProps) {
         const result = isWin ? 'won' : 'lost';
 
         // Update balance
-        const userRef = doc(db, 'users', user.uid);
         if (result === 'won') {
-          await updateDoc(userRef, { [currency]: winAmount });
+          await supabase.from('users').update({ [currency]: winAmount }).eq('uid', user.uid);
         } else {
-          await updateDoc(userRef, { [currency]: 0 });
+          await supabase.from('users').update({ [currency]: 0 }).eq('uid', user.uid);
         }
 
         // Broadcast result
-        await addDoc(collection(db, 'messages'), {
+        await supabase.from('messages').insert({
           senderId: user.uid,
           senderUsername: user.username,
           senderPfp: user.pfp,
@@ -978,7 +1021,7 @@ export default function Chat({ user }: ChatProps) {
             multiplier,
             winAmount: result === 'won' ? winAmount : balance,
           },
-          timestamp: serverTimestamp(),
+          timestamp: new Date().toISOString(),
         });
         return;
       }
@@ -1014,15 +1057,17 @@ export default function Chat({ user }: ChatProps) {
         const winAmount = result === 'won' ? amount * multiplier : amount;
 
         // Update balance
-        const userRef = doc(db, 'users', user.uid);
+        const { data: currentUser } = await supabase.from('users').select(currency).eq('uid', user.uid).single();
+        const currentBalance = currentUser?.[currency] || 0;
+        
         if (result === 'won') {
-          await updateDoc(userRef, { [currency]: increment(winAmount - amount) });
+          await supabase.from('users').update({ [currency]: currentBalance + (winAmount - amount) }).eq('uid', user.uid);
         } else {
-          await updateDoc(userRef, { [currency]: increment(-amount) });
+          await supabase.from('users').update({ [currency]: currentBalance - amount }).eq('uid', user.uid);
         }
 
         // Broadcast result
-        await addDoc(collection(db, 'messages'), {
+        await supabase.from('messages').insert({
           senderId: user.uid,
           senderUsername: user.username,
           senderPfp: user.pfp,
@@ -1036,20 +1081,20 @@ export default function Chat({ user }: ChatProps) {
             winAmount,
             diceRoll,
           },
-          timestamp: serverTimestamp(),
+          timestamp: new Date().toISOString(),
         });
         return;
       }
 
       if (command === '/bank') {
-        await addDoc(collection(db, 'messages'), {
+        await supabase.from('messages').insert({
           senderId: user.uid,
           senderUsername: user.username,
           senderPfp: user.pfp,
           senderRank: user.rank || 'VIP',
           text: `🏦 BANK: I currently have ${user.gold.toLocaleString()} Gold and ${user.rubies.toLocaleString()} Rubies!`,
           type: 'text',
-          timestamp: serverTimestamp(),
+          timestamp: new Date().toISOString(),
         });
         return;
       }
@@ -1061,11 +1106,12 @@ export default function Chat({ user }: ChatProps) {
           return;
         }
         try {
-          const q = query(collection(db, 'messages'));
-          const snapshot = await getDocs(q);
-          const batch = writeBatch(db);
-          snapshot.docs.forEach(doc => batch.delete(doc.ref));
-          await batch.commit();
+          const { data: snapshot } = await supabase.from('messages').select('id');
+          if (snapshot) {
+            for (const doc of snapshot) {
+              await supabase.from('messages').delete().eq('id', doc.id);
+            }
+          }
           showToast('Chat cleared!');
         } catch (err) {
           console.error(err);
@@ -1078,14 +1124,14 @@ export default function Chat({ user }: ChatProps) {
         const isDev = user.email === 'dev@gmail.com';
         const max = parseInt(parts[1]) || 100;
         const result = isDev ? max : Math.floor(Math.random() * max) + 1;
-        await addDoc(collection(db, 'messages'), {
+        await supabase.from('messages').insert({
           senderId: user.uid,
           senderUsername: user.username,
           senderPfp: user.pfp,
           senderRank: user.rank || 'VIP',
           text: `🎲 Rolled a ${result} (1-${max})`,
           type: 'text',
-          timestamp: serverTimestamp(),
+          timestamp: new Date().toISOString(),
         });
         return;
       }
@@ -1093,14 +1139,14 @@ export default function Chat({ user }: ChatProps) {
       if (command === '/flip') {
         const isDev = user.email === 'dev@gmail.com';
         const result = isDev ? 'Heads' : (Math.random() > 0.5 ? 'Heads' : 'Tails');
-        await addDoc(collection(db, 'messages'), {
+        await supabase.from('messages').insert({
           senderId: user.uid,
           senderUsername: user.username,
           senderPfp: user.pfp,
           senderRank: user.rank || 'VIP',
           text: `🪙 Flipped a coin: ${result}`,
           type: 'text',
-          timestamp: serverTimestamp(),
+          timestamp: new Date().toISOString(),
         });
         return;
       }
@@ -1113,14 +1159,14 @@ export default function Chat({ user }: ChatProps) {
         }
         const answers = ['Yes', 'No', 'Maybe', 'Definitely', 'Absolutely not', 'Ask again later', 'I doubt it', 'Without a doubt'];
         const answer = answers[Math.floor(Math.random() * answers.length)];
-        await addDoc(collection(db, 'messages'), {
+        await supabase.from('messages').insert({
           senderId: user.uid,
           senderUsername: user.username,
           senderPfp: user.pfp,
           senderRank: user.rank || 'VIP',
           text: `🎱 Question: ${question}\nAnswer: ${answer}`,
           type: 'text',
-          timestamp: serverTimestamp(),
+          timestamp: new Date().toISOString(),
         });
         return;
       }
@@ -1153,17 +1199,23 @@ export default function Chat({ user }: ChatProps) {
         }
 
         try {
-          await updateDoc(doc(db, 'users', user.uid), { [currency]: increment(-amount) });
-          await updateDoc(doc(db, 'users', targetUser.uid), { [currency]: increment(amount) });
+          const { data: currentUser } = await supabase.from('users').select(currency).eq('uid', user.uid).single();
+          const { data: targetUserDb } = await supabase.from('users').select(currency).eq('uid', targetUser.uid).single();
           
-          await addDoc(collection(db, 'messages'), {
+          const currentBalance = currentUser?.[currency] || 0;
+          const targetBalance = targetUserDb?.[currency] || 0;
+
+          await supabase.from('users').update({ [currency]: currentBalance - amount }).eq('uid', user.uid);
+          await supabase.from('users').update({ [currency]: targetBalance + amount }).eq('uid', targetUser.uid);
+          
+          await supabase.from('messages').insert({
             senderId: user.uid,
             senderUsername: user.username,
             senderPfp: user.pfp,
             senderRank: user.rank || 'VIP',
             text: `💸 Paid ${amount.toLocaleString()} ${currency} to ${targetUser.username}!`,
             type: 'text',
-            timestamp: serverTimestamp(),
+            timestamp: new Date().toISOString(),
           });
         } catch (err) {
           console.error(err);
@@ -1187,13 +1239,13 @@ export default function Chat({ user }: ChatProps) {
           "• `/staff` - List online staff"
         ].join('\n');
         showToast('Check chat for help!');
-        await addDoc(collection(db, 'messages'), {
+        await supabase.from('messages').insert({
           senderId: 'system',
           senderUsername: 'SYSTEM',
           senderPfp: 'https://api.dicebear.com/7.x/bottts/svg?seed=system',
           text: helpText,
           type: 'system',
-          timestamp: serverTimestamp(),
+          timestamp: new Date().toISOString(),
         });
         return;
       }
@@ -1206,13 +1258,13 @@ export default function Chat({ user }: ChatProps) {
           : 'No staff online.';
         
         showToast('Online staff listed in chat.');
-        await addDoc(collection(db, 'messages'), {
+        await supabase.from('messages').insert({
           senderId: 'system',
           senderUsername: 'SYSTEM',
           senderPfp: 'https://api.dicebear.com/7.x/bottts/svg?seed=system',
           text: `🛡️ **ONLINE STAFF:** ${staffList}`,
           type: 'system',
-          timestamp: serverTimestamp(),
+          timestamp: new Date().toISOString(),
         });
         return;
       }
@@ -1255,13 +1307,13 @@ export default function Chat({ user }: ChatProps) {
           return;
         }
 
-        await addDoc(collection(db, 'messages'), {
+        await supabase.from('messages').insert({
           senderId: user.uid,
           senderUsername: user.username,
           senderPfp: user.pfp,
           text: `👉 ${user.username} nudged ${targetUser.username}!`,
           type: 'nudge',
-          timestamp: serverTimestamp(),
+          timestamp: new Date().toISOString(),
         });
         return;
       }
@@ -1284,13 +1336,13 @@ export default function Chat({ user }: ChatProps) {
         setTriviaActive(true);
         setTriviaQuestion(randomQ);
 
-        await addDoc(collection(db, 'messages'), {
+        await supabase.from('messages').insert({
           senderId: 'system',
           senderUsername: 'System',
           senderPfp: 'https://api.dicebear.com/7.x/bottts/svg?seed=System',
           text: `🧠 TRIVIA TIME! First to answer correctly wins 50 Gold!\n\nQuestion: ${randomQ.q}`,
           type: 'system',
-          timestamp: serverTimestamp(),
+          timestamp: new Date().toISOString(),
         });
         return;
       }
@@ -1319,18 +1371,20 @@ export default function Chat({ user }: ChatProps) {
         }
 
         if (result === 'won') {
-          await updateDoc(doc(db, 'users', user.uid), { gold: increment(winAmount) });
+          const { data: currentUser } = await supabase.from('users').select('gold').eq('uid', user.uid).single();
+          const currentGold = currentUser?.gold || 0;
+          await supabase.from('users').update({ gold: currentGold + winAmount }).eq('uid', user.uid);
         }
 
         const emojiMap: Record<string, string> = { rock: '🪨', paper: '📄', scissors: '✂️' };
 
-        await addDoc(collection(db, 'messages'), {
+        await supabase.from('messages').insert({
           senderId: user.uid,
           senderUsername: user.username,
           senderPfp: user.pfp,
           text: `Played RPS: ${emojiMap[choice]} vs ${emojiMap[botChoice]} (System)\nResult: You ${result}! ${result === 'won' ? `(+${winAmount} Gold)` : ''}`,
           type: 'rps',
-          timestamp: serverTimestamp(),
+          timestamp: new Date().toISOString(),
         });
         return;
       }
@@ -1345,15 +1399,17 @@ export default function Chat({ user }: ChatProps) {
         setTriviaActive(false);
         setTriviaQuestion(null);
         
-        await updateDoc(doc(db, 'users', user.uid), { gold: increment(50) });
+        const { data: currentUser } = await supabase.from('users').select('gold').eq('uid', user.uid).single();
+        const currentGold = currentUser?.gold || 0;
+        await supabase.from('users').update({ gold: currentGold + 50 }).eq('uid', user.uid);
         
-        await addDoc(collection(db, 'messages'), {
+        await supabase.from('messages').insert({
           senderId: 'system',
           senderUsername: 'System',
           senderPfp: 'https://api.dicebear.com/7.x/bottts/svg?seed=System',
           text: `🎉 ${user.username} answered correctly and won 50 Gold!\n\nAnswer: ${triviaQuestion.a}`,
           type: 'system',
-          timestamp: serverTimestamp(),
+          timestamp: new Date().toISOString(),
         });
         return;
       }
@@ -1376,10 +1432,10 @@ export default function Chat({ user }: ChatProps) {
         audio.play().catch(() => {});
       }
 
-      await updateDoc(doc(db, 'users', user.uid), {
+      await supabase.from('users').update({
         xp: newLevel > currentLevel ? newXp - xpNeeded : newXp,
         level: newLevel
-      });
+      }).eq('uid', user.uid);
 
       // Easter Eggs
       const lowerText = text.toLowerCase();
@@ -1407,14 +1463,14 @@ export default function Chat({ user }: ChatProps) {
       sendAudio.volume = 0.5;
       sendAudio.play().catch(() => {});
 
-      await addDoc(collection(db, 'messages'), {
+      await supabase.from('messages').insert({
         senderId: user.uid,
         senderUsername: user.username,
         senderPfp: user.pfp,
         senderRank: user.rank || 'VIP',
         text,
         type: 'text',
-        timestamp: serverTimestamp(),
+        timestamp: new Date().toISOString(),
       });
 
       // Mentions Logic
@@ -1425,14 +1481,14 @@ export default function Chat({ user }: ChatProps) {
         mentions.forEach(async (mentionedUsername) => {
           const targetUser = allUsers.find(u => u.username.toLowerCase() === mentionedUsername.toLowerCase());
           if (targetUser && targetUser.uid !== user.uid) {
-            await addDoc(collection(db, 'notifications'), {
+            await supabase.from('notifications').insert({
               userId: targetUser.uid,
               senderId: user.uid,
               senderUsername: user.username,
               senderPfp: user.pfp,
               type: 'mention',
               read: false,
-              timestamp: serverTimestamp()
+              timestamp: new Date().toISOString()
             });
           }
         });
@@ -1813,7 +1869,6 @@ export default function Chat({ user }: ChatProps) {
                             <button
                               key={emoji}
                               onClick={async () => {
-                                const msgRef = doc(db, 'messages', msg.id);
                                 const currentReactions = msg.reactions || {};
                                 const userList = currentReactions[emoji] || [];
                                 
@@ -1831,7 +1886,7 @@ export default function Chat({ user }: ChatProps) {
                                   newReactions[emoji] = newUserList;
                                 }
                                 
-                                await updateDoc(msgRef, { reactions: newReactions });
+                                await supabase.from('messages').update({ reactions: newReactions }).eq('id', msg.id);
                               }}
                               className={cn(
                                 "px-2 py-0.5 rounded-full text-xs flex items-center gap-1 transition-colors",
@@ -1852,16 +1907,15 @@ export default function Chat({ user }: ChatProps) {
                         <button
                           key={emoji}
                           onClick={async () => {
-                            const msgRef = doc(db, 'messages', msg.id);
                             const currentReactions = msg.reactions || {};
                             const userList = currentReactions[emoji] || [];
                             if (!userList.includes(user.uid)) {
-                              await updateDoc(msgRef, {
+                              await supabase.from('messages').update({
                                 reactions: {
                                   ...currentReactions,
                                   [emoji]: [...userList, user.uid]
                                 }
-                              });
+                              }).eq('id', msg.id);
                             }
                           }}
                           className="w-6 h-6 rounded-full bg-black/40 hover:bg-white/20 flex items-center justify-center text-xs transition-colors"
@@ -3689,7 +3743,7 @@ export default function Chat({ user }: ChatProps) {
                         const title = (document.getElementById('updateTitle') as HTMLInputElement).value;
                         const content = (document.getElementById('updateContent') as HTMLTextAreaElement).value;
                         if (!version || !title || !content) return;
-                        await addDoc(collection(db, 'updates'), { version, title, content, timestamp: serverTimestamp() });
+                        await supabase.from('updates').insert({ version, title, content, timestamp: new Date().toISOString() });
                         (document.getElementById('updateVersion') as HTMLInputElement).value = '';
                         (document.getElementById('updateTitle') as HTMLInputElement).value = '';
                         (document.getElementById('updateContent') as HTMLTextAreaElement).value = '';
@@ -3712,7 +3766,7 @@ export default function Chat({ user }: ChatProps) {
                       </div>
                       <p className="text-white/80 whitespace-pre-wrap">{update.content}</p>
                       <p className="text-xs text-white/40 mt-4">
-                        {update.timestamp?.toDate ? update.timestamp.toDate().toLocaleString() : 'Just now'}
+                        {update.timestamp ? new Date(update.timestamp).toLocaleString() : 'Just now'}
                       </p>
                     </div>
                   ))
@@ -3765,15 +3819,15 @@ export default function Chat({ user }: ChatProps) {
                           likes: [],
                           dislikes: [],
                           comments: [],
-                          timestamp: serverTimestamp()
+                          timestamp: new Date().toISOString()
                         };
                         
-                        await addDoc(collection(db, 'news'), newPost);
+                        await supabase.from('news').insert(newPost);
                         
                         // Notify everyone
-                        allUsers.forEach(u => {
+                        allUsers.forEach(async (u) => {
                           if (u.uid !== user.uid) {
-                            addDoc(collection(db, 'notifications'), {
+                            await supabase.from('notifications').insert({
                               userId: u.uid,
                               senderId: user.uid,
                               senderUsername: user.username,
@@ -3781,7 +3835,7 @@ export default function Chat({ user }: ChatProps) {
                               type: 'news_post',
                               content: content.substring(0, 50) + (content.length > 50 ? '...' : ''),
                               read: false,
-                              timestamp: serverTimestamp()
+                              timestamp: new Date().toISOString()
                             });
                           }
                         });
@@ -3806,7 +3860,7 @@ export default function Chat({ user }: ChatProps) {
                         <div>
                           <p className="text-sm font-bold text-white">{post.authorUsername}</p>
                           <p className="text-xs text-white/40">
-                            {post.timestamp?.toDate ? post.timestamp.toDate().toLocaleString() : 'Just now'}
+                            {post.timestamp ? new Date(post.timestamp).toLocaleString() : 'Just now'}
                           </p>
                         </div>
                       </div>
@@ -3818,7 +3872,6 @@ export default function Chat({ user }: ChatProps) {
                       <div className="flex items-center gap-4 border-t border-white/10 pt-4">
                         <button 
                           onClick={async () => {
-                            const postRef = doc(db, 'news', post.id);
                             const hasLiked = post.likes?.includes(user.uid);
                             const hasDisliked = post.dislikes?.includes(user.uid);
                             
@@ -3832,7 +3885,7 @@ export default function Chat({ user }: ChatProps) {
                               newDislikes = newDislikes.filter((id: string) => id !== user.uid);
                             }
                             
-                            await updateDoc(postRef, { likes: newLikes, dislikes: newDislikes });
+                            await supabase.from('news').update({ likes: newLikes, dislikes: newDislikes }).eq('id', post.id);
                           }}
                           className={cn("flex items-center gap-2 text-sm", post.likes?.includes(user.uid) ? "text-amber-500" : "text-white/60 hover:text-white")}
                         >
@@ -3842,7 +3895,6 @@ export default function Chat({ user }: ChatProps) {
                         
                         <button 
                           onClick={async () => {
-                            const postRef = doc(db, 'news', post.id);
                             const hasLiked = post.likes?.includes(user.uid);
                             const hasDisliked = post.dislikes?.includes(user.uid);
                             
@@ -3856,7 +3908,7 @@ export default function Chat({ user }: ChatProps) {
                               newLikes = newLikes.filter((id: string) => id !== user.uid);
                             }
                             
-                            await updateDoc(postRef, { likes: newLikes, dislikes: newDislikes });
+                            await supabase.from('news').update({ likes: newLikes, dislikes: newDislikes }).eq('id', post.id);
                           }}
                           className={cn("flex items-center gap-2 text-sm", post.dislikes?.includes(user.uid) ? "text-red-500" : "text-white/60 hover:text-white")}
                         >
@@ -3902,9 +3954,9 @@ export default function Chat({ user }: ChatProps) {
                                   timestamp: new Date()
                                 };
                                 
-                                await updateDoc(doc(db, 'news', post.id), {
+                                await supabase.from('news').update({
                                   comments: [...(post.comments || []), newComment]
-                                });
+                                }).eq('id', post.id);
                                 
                                 input.value = '';
                               }
@@ -3963,7 +4015,7 @@ export default function Chat({ user }: ChatProps) {
 
                 <button 
                   onClick={async () => {
-                    const lastClaim = user.lastDailyReward?.toDate ? user.lastDailyReward.toDate() : new Date(0);
+                    const lastClaim = user.lastDailyReward ? new Date(user.lastDailyReward) : new Date(0);
                     const now = new Date();
                     const hoursSinceLastClaim = (now.getTime() - lastClaim.getTime()) / (1000 * 60 * 60);
                     
@@ -3972,11 +4024,15 @@ export default function Chat({ user }: ChatProps) {
                       return;
                     }
 
-                    await updateDoc(doc(db, 'users', user.uid), {
-                      gold: increment(500),
-                      rubies: increment(10),
-                      lastDailyReward: serverTimestamp()
-                    });
+                    const { data: currentUser } = await supabase.from('users').select('gold, rubies').eq('uid', user.uid).single();
+                    const currentGold = currentUser?.gold || 0;
+                    const currentRubies = currentUser?.rubies || 0;
+
+                    await supabase.from('users').update({
+                      gold: currentGold + 500,
+                      rubies: currentRubies + 10,
+                      lastDailyReward: new Date().toISOString()
+                    }).eq('uid', user.uid);
 
                     confetti({
                       particleCount: 100,
@@ -4082,15 +4138,14 @@ export default function Chat({ user }: ChatProps) {
           }}
           onChangeRank={async (uid, rankId, isCustom) => {
             try {
-              const userRef = doc(db, 'users', uid);
               if (isCustom) {
-                const rankDoc = await getDocs(collection(db, 'ranks'));
-                const customRank = rankDoc.docs.find(d => d.id === rankId)?.data();
+                const { data: ranks } = await supabase.from('ranks').select('*');
+                const customRank = ranks?.find((d: any) => d.id === rankId);
                 if (customRank) {
-                  await updateDoc(userRef, { rank: rankId, customRank: { name: customRank.name, icon: customRank.icon } });
+                  await supabase.from('users').update({ rank: rankId, customRank: { name: customRank.name, icon: customRank.icon } }).eq('uid', uid);
                 }
               } else {
-                await updateDoc(userRef, { rank: rankId, customRank: deleteField() });
+                await supabase.from('users').update({ rank: rankId, customRank: null }).eq('uid', uid);
               }
             } catch (e) {
               console.error(e);
@@ -4165,7 +4220,7 @@ export default function Chat({ user }: ChatProps) {
             />
             <button 
               onClick={async () => {
-                await updateDoc(doc(db, 'users', user.uid), { status: newStatus });
+                await supabase.from('users').update({ status: newStatus }).eq('uid', user.uid);
                 setShowStatusEditor(false);
                 showToast('Status updated!');
               }}

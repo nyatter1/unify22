@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { Star, X } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { ProfileRating } from '../types';
-import { db } from '../firebase';
-import { addDoc, collection, serverTimestamp, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { supabase } from '../supabase';
 
 interface RatingModalProps {
   targetUid: string;
@@ -19,15 +18,16 @@ export const RatingModal: React.FC<RatingModalProps> = ({ targetUid, targetUsern
   const handleSubmit = async () => {
     if (!currentUser) return;
     try {
-      await addDoc(collection(db, 'ratings'), {
+      const { error } = await supabase.from('ratings').insert({
         targetUid,
         authorUid: currentUser.uid,
         authorUsername: currentUser.username,
         authorPfp: currentUser.pfp,
         rating,
         comment,
-        timestamp: serverTimestamp()
+        timestamp: new Date().toISOString()
       });
+      if (error) throw error;
       onClose();
     } catch (err) {
       console.error(err);

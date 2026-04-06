@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
-import { db } from '../firebase';
-import { doc, updateDoc } from 'firebase/firestore';
+import { supabase } from '../supabase';
 
 interface AdminModalProps {
   targetUid: string;
@@ -13,20 +12,24 @@ interface AdminModalProps {
 export const AdminModal: React.FC<AdminModalProps> = ({ targetUid, targetUsername, action, onClose }) => {
   const handleAction = async () => {
     try {
-      const userRef = doc(db, 'users', targetUid);
+      let updateData = {};
       if (action === 'mute') {
-        await updateDoc(userRef, { isMuted: true });
+        updateData = { isMuted: true };
       } else if (action === 'unmute') {
-        await updateDoc(userRef, { isMuted: false });
+        updateData = { isMuted: false };
       } else if (action === 'kick') {
-        await updateDoc(userRef, { isKicked: true });
+        updateData = { isKicked: true };
       } else if (action === 'unkick') {
-        await updateDoc(userRef, { isKicked: false });
+        updateData = { isKicked: false };
       } else if (action === 'ban') {
-        await updateDoc(userRef, { isBanned: true });
+        updateData = { isBanned: true };
       } else if (action === 'unban') {
-        await updateDoc(userRef, { isBanned: false });
+        updateData = { isBanned: false };
       }
+      
+      const { error } = await supabase.from('users').update(updateData).eq('uid', targetUid);
+      if (error) throw error;
+      
       onClose();
     } catch (err) {
       console.error(err);

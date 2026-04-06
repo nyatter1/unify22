@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
-import { db } from '../firebase';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { supabase } from '../supabase';
 
 interface PollModalProps {
   onClose: () => void;
@@ -15,7 +14,7 @@ export const PollModal: React.FC<PollModalProps> = ({ onClose, currentUser }) =>
   const handleCreatePoll = async () => {
     if (!question || options.some(o => !o)) return;
     try {
-      await addDoc(collection(db, 'messages'), {
+      const { error } = await supabase.from('messages').insert({
         senderId: currentUser.uid,
         senderUsername: currentUser.username,
         senderPfp: currentUser.pfp,
@@ -25,8 +24,9 @@ export const PollModal: React.FC<PollModalProps> = ({ onClose, currentUser }) =>
           question,
           options: options.map(o => ({ text: o, votes: 0 }))
         },
-        timestamp: serverTimestamp()
+        timestamp: new Date().toISOString()
       });
+      if (error) throw error;
       onClose();
     } catch (err) {
       console.error(err);

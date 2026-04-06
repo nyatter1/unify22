@@ -7,11 +7,7 @@ import {
   ExternalLink, Copy, RefreshCw, Eye, EyeOff, Filter, VolumeX, Slash, Ban
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
-  collection, query, getDocs, doc, updateDoc, deleteDoc, 
-  setDoc, addDoc, serverTimestamp, onSnapshot, where, orderBy, limit 
-} from 'firebase/firestore';
-import { db } from '../firebase';
+import { supabase } from '../supabase';
 import { UserProfile, UserRank, Bot as BotType, BotTrigger, RankDefinition } from '../types';
 import { cn } from '../lib/utils';
 
@@ -51,50 +47,83 @@ export const DeveloperConsole: React.FC<DeveloperConsoleProps> = ({ isOpen, onCl
   useEffect(() => {
     if (!isOpen) return;
 
-    const unsubUsers = onSnapshot(collection(db, 'users'), (snap) => {
-      setUsers(snap.docs.map(d => ({ uid: d.id, ...d.data() } as UserProfile)));
-    });
+    const fetchUsers = async () => {
+      const { data } = await supabase.from('users').select('*');
+      if (data) setUsers(data as UserProfile[]);
+    };
 
-    const unsubBots = onSnapshot(collection(db, 'bots'), (snap) => {
-      setBots(snap.docs.map(d => ({ id: d.id, ...d.data() } as BotType)));
-    });
+    const fetchBots = async () => {
+      const { data } = await supabase.from('bots').select('*');
+      if (data) setBots(data as BotType[]);
+    };
 
-    const unsubRanks = onSnapshot(collection(db, 'ranks'), (snap) => {
-      setRanks(snap.docs.map(d => ({ id: d.id, ...d.data() } as RankDefinition)));
-    });
+    const fetchRanks = async () => {
+      const { data } = await supabase.from('ranks').select('*');
+      if (data) setRanks(data as RankDefinition[]);
+    };
+
+    fetchUsers();
+    fetchBots();
+    fetchRanks();
+
+    const usersSubscription = supabase
+      .channel('dev-users-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, fetchUsers)
+      .subscribe();
+
+    const botsSubscription = supabase
+      .channel('dev-bots-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bots' }, fetchBots)
+      .subscribe();
+
+    const ranksSubscription = supabase
+      .channel('dev-ranks-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'ranks' }, fetchRanks)
+      .subscribe();
 
     setLoading(false);
 
     return () => {
-      unsubUsers();
-      unsubBots();
-      unsubRanks();
+      supabase.removeChannel(usersSubscription);
+      supabase.removeChannel(botsSubscription);
+      supabase.removeChannel(ranksSubscription);
     };
   }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen || activeTab !== 'database') return;
 
-    const unsubDocs = onSnapshot(query(collection(db, selectedCollection), limit(50)), (snap) => {
-      setDocuments(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-    });
+    const fetchDocuments = async () => {
+      const { data } = await supabase.from(selectedCollection).select('*').limit(50);
+      if (data) setDocuments(data);
+    };
 
-    return () => unsubDocs();
+    fetchDocuments();
+
+    const docsSubscription = supabase
+      .channel(`dev-docs-changes-${selectedCollection}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: selectedCollection }, fetchDocuments)
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(docsSubscription);
+    };
   }, [isOpen, activeTab, selectedCollection]);
 
   const handleSendBroadcast = async () => {
     if (!broadcastMessage.trim()) return;
     
     try {
-      await addDoc(collection(db, 'messages'), {
+      const { error } = await supabase.from('messages').insert({
         senderId: 'SYSTEM',
         senderUsername: 'BROADCAST',
         senderPfp: 'https://api.dicebear.com/7.x/bottts/svg?seed=system',
         senderRank: 'DEVELOPER',
         text: `📢 GLOBAL BROADCAST: ${broadcastMessage}`,
-        timestamp: serverTimestamp(),
+        timestamp: new Date().toISOString(),
         type: 'text'
       });
+      if (error) throw error;
       setBroadcastMessage('');
       alert('Broadcast sent successfully!');
     } catch (err) {
@@ -104,7 +133,8 @@ export const DeveloperConsole: React.FC<DeveloperConsoleProps> = ({ isOpen, onCl
 
   const handleUpdateUserRank = async (uid: string, newRank: UserRank) => {
     try {
-      await updateDoc(doc(db, 'users', uid), { rank: newRank });
+      const { error } = await supabase.from('users').update({ rank: newRank }).eq('uid', uid);
+      if (error) throw error;
     } catch (err) {
       console.error(err);
     }
@@ -115,12 +145,12 @@ export const DeveloperConsole: React.FC<DeveloperConsoleProps> = ({ isOpen, onCl
     if (!user) return;
 
     const isCurrentlyModerated = 
-      (action === 'mute' && user.mutedUntil?.toDate && user.mutedUntil.toDate() > new Date()) ||
-      (action === 'kick' && user.kickedUntil?.toDate && user.kickedUntil.toDate() > new Date()) ||
-      (action === 'ban' && user.bannedUntil?.toDate && user.bannedUntil.toDate() > new Date());
+      (action === 'mute' && user.mutedUntil && new Date(user.mutedUntil) > new Date()) ||
+      (action === 'kick' && user.kickedUntil && new Date(user.kickedUntil) > new Date()) ||
+      (action === 'ban' && user.bannedUntil && new Date(user.bannedUntil) > new Date());
 
     const now = new Date();
-    const until = isCurrentlyModerated ? null : new Date(now.getTime() + durationMinutes * 60000);
+    const until = isCurrentlyModerated ? null : new Date(now.getTime() + durationMinutes * 60000).toISOString();
     
     try {
       const update: any = {};
@@ -128,7 +158,8 @@ export const DeveloperConsole: React.FC<DeveloperConsoleProps> = ({ isOpen, onCl
       if (action === 'kick') update.kickedUntil = until;
       if (action === 'ban') update.bannedUntil = until;
       
-      await updateDoc(doc(db, 'users', uid), update);
+      const { error } = await supabase.from('users').update(update).eq('uid', uid);
+      if (error) throw error;
       alert(`User ${isCurrentlyModerated ? 'un' : ''}${action}ed successfully!`);
       setModerationModal(null);
     } catch (err) {
@@ -139,7 +170,8 @@ export const DeveloperConsole: React.FC<DeveloperConsoleProps> = ({ isOpen, onCl
   const handleDeleteUser = async (uid: string) => {
     if (!window.confirm('Are you sure you want to delete this user? This cannot be undone.')) return;
     try {
-      await deleteDoc(doc(db, 'users', uid));
+      const { error } = await supabase.from('users').delete().eq('uid', uid);
+      if (error) throw error;
     } catch (err) {
       console.error(err);
     }
@@ -147,15 +179,16 @@ export const DeveloperConsole: React.FC<DeveloperConsoleProps> = ({ isOpen, onCl
 
   const handleCreateUser = async (userData: any) => {
     try {
-      await setDoc(doc(db, 'users', userData.uid), {
+      const { error } = await supabase.from('users').insert({
         ...userData,
         gold: 1000,
         rubies: 100,
         level: 1,
         isOnline: false,
-        createdAt: serverTimestamp(),
-        lastActive: serverTimestamp()
+        createdAt: new Date().toISOString(),
+        lastActive: new Date().toISOString()
       });
+      if (error) throw error;
       setIsCreatingUser(false);
       alert('User created successfully!');
     } catch (err) {
@@ -167,7 +200,7 @@ export const DeveloperConsole: React.FC<DeveloperConsoleProps> = ({ isOpen, onCl
     const name = template?.name || prompt('Bot Name:');
     if (!name) return;
     try {
-      await addDoc(collection(db, 'bots'), {
+      const { error } = await supabase.from('bots').insert({
         name,
         username: name.toLowerCase().replace(/\s/g, '_') + '_bot',
         pfp: template?.pfp || `https://api.dicebear.com/7.x/bottts/svg?seed=${name}`,
@@ -175,8 +208,9 @@ export const DeveloperConsole: React.FC<DeveloperConsoleProps> = ({ isOpen, onCl
         triggers: template?.triggers || [],
         isActive: true,
         description: template?.description || 'New system bot',
-        createdAt: serverTimestamp()
+        createdAt: new Date().toISOString()
       });
+      if (error) throw error;
       setShowBotTemplates(false);
     } catch (err) {
       console.error(err);
@@ -186,7 +220,8 @@ export const DeveloperConsole: React.FC<DeveloperConsoleProps> = ({ isOpen, onCl
   const handleUpdateDoc = async (collectionName: string, id: string, data: any) => {
     try {
       const { id: _, ...updateData } = data;
-      await updateDoc(doc(db, collectionName, id), updateData);
+      const { error } = await supabase.from(collectionName).update(updateData).eq('id', id);
+      if (error) throw error;
       setEditingDoc(null);
       alert('Document updated successfully!');
     } catch (err) {
@@ -198,7 +233,8 @@ export const DeveloperConsole: React.FC<DeveloperConsoleProps> = ({ isOpen, onCl
   const handleDeleteDoc = async (collectionName: string, id: string) => {
     if (!window.confirm(`Are you sure you want to delete document ${id} from ${collectionName}?`)) return;
     try {
-      await deleteDoc(doc(db, collectionName, id));
+      const { error } = await supabase.from(collectionName).delete().eq('id', id);
+      if (error) throw error;
     } catch (err) {
       console.error(err);
     }
@@ -207,7 +243,8 @@ export const DeveloperConsole: React.FC<DeveloperConsoleProps> = ({ isOpen, onCl
   const handleSaveBot = async (bot: BotType) => {
     try {
       const { id, ...botData } = bot;
-      await updateDoc(doc(db, 'bots', id), botData);
+      const { error } = await supabase.from('bots').update(botData).eq('id', id);
+      if (error) throw error;
       setEditingBot(null);
     } catch (err) {
       console.error(err);
@@ -219,9 +256,11 @@ export const DeveloperConsole: React.FC<DeveloperConsoleProps> = ({ isOpen, onCl
       const { id, ...rankData } = rank;
       if (id === 'new') {
         const newId = rank.name.toUpperCase().replace(/\s/g, '_');
-        await setDoc(doc(db, 'ranks', newId), { ...rankData, id: newId, isCustom: true });
+        const { error } = await supabase.from('ranks').insert({ ...rankData, id: newId, isCustom: true });
+        if (error) throw error;
       } else {
-        await updateDoc(doc(db, 'ranks', id), rankData);
+        const { error } = await supabase.from('ranks').update(rankData).eq('id', id);
+        if (error) throw error;
       }
       setEditingRank(null);
     } catch (err) {
@@ -232,7 +271,8 @@ export const DeveloperConsole: React.FC<DeveloperConsoleProps> = ({ isOpen, onCl
   const handleDeleteRank = async (id: string) => {
     if (!window.confirm('Delete this rank?')) return;
     try {
-      await deleteDoc(doc(db, 'ranks', id));
+      const { error } = await supabase.from('ranks').delete().eq('id', id);
+      if (error) throw error;
     } catch (err) {
       console.error(err);
     }
@@ -714,21 +754,21 @@ export const DeveloperConsole: React.FC<DeveloperConsoleProps> = ({ isOpen, onCl
                   <div className="grid grid-cols-3 gap-6">
                     <div className="bg-zinc-900/50 border border-white/10 rounded-3xl p-6">
                       <h4 className="text-sm font-bold text-white/40 uppercase tracking-widest mb-2">Muted</h4>
-                      <p className="text-3xl font-black text-amber-500">{users.filter(u => u.mutedUntil?.toDate && u.mutedUntil.toDate() > new Date()).length}</p>
+                      <p className="text-3xl font-black text-amber-500">{users.filter(u => u.mutedUntil && new Date(u.mutedUntil) > new Date()).length}</p>
                     </div>
                     <div className="bg-zinc-900/50 border border-white/10 rounded-3xl p-6">
                       <h4 className="text-sm font-bold text-white/40 uppercase tracking-widest mb-2">Kicked</h4>
-                      <p className="text-3xl font-black text-orange-500">{users.filter(u => u.kickedUntil?.toDate && u.kickedUntil.toDate() > new Date()).length}</p>
+                      <p className="text-3xl font-black text-orange-500">{users.filter(u => u.kickedUntil && new Date(u.kickedUntil) > new Date()).length}</p>
                     </div>
                     <div className="bg-zinc-900/50 border border-white/10 rounded-3xl p-6">
                       <h4 className="text-sm font-bold text-white/40 uppercase tracking-widest mb-2">Banned</h4>
-                      <p className="text-3xl font-black text-red-500">{users.filter(u => u.bannedUntil?.toDate && u.bannedUntil.toDate() > new Date()).length}</p>
+                      <p className="text-3xl font-black text-red-500">{users.filter(u => u.bannedUntil && new Date(u.bannedUntil) > new Date()).length}</p>
                     </div>
                   </div>
                   <div className="bg-zinc-900/50 border border-white/10 rounded-3xl p-6">
                     <h3 className="text-lg font-bold text-white mb-6">Moderated Users</h3>
                     <div className="space-y-4">
-                      {users.filter(u => (u.mutedUntil?.toDate && u.mutedUntil.toDate() > new Date()) || (u.kickedUntil?.toDate && u.kickedUntil.toDate() > new Date()) || (u.bannedUntil?.toDate && u.bannedUntil.toDate() > new Date())).map(u => (
+                      {users.filter(u => (u.mutedUntil && new Date(u.mutedUntil) > new Date()) || (u.kickedUntil && new Date(u.kickedUntil) > new Date()) || (u.bannedUntil && new Date(u.bannedUntil) > new Date())).map(u => (
                         <div key={u.uid} className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5">
                           <div className="flex items-center gap-3">
                             <img src={u.pfp} className="w-10 h-10 rounded-xl" alt="" />
@@ -738,9 +778,9 @@ export const DeveloperConsole: React.FC<DeveloperConsoleProps> = ({ isOpen, onCl
                             </div>
                           </div>
                           <div className="flex gap-2">
-                            {u.mutedUntil?.toDate && u.mutedUntil.toDate() > new Date() && <span className="px-2 py-1 rounded-lg bg-amber-500/20 text-amber-500 text-xs font-bold">Muted</span>}
-                            {u.kickedUntil?.toDate && u.kickedUntil.toDate() > new Date() && <span className="px-2 py-1 rounded-lg bg-orange-500/20 text-orange-500 text-xs font-bold">Kicked</span>}
-                            {u.bannedUntil?.toDate && u.bannedUntil.toDate() > new Date() && <span className="px-2 py-1 rounded-lg bg-red-500/20 text-red-500 text-xs font-bold">Banned</span>}
+                            {u.mutedUntil && new Date(u.mutedUntil) > new Date() && <span className="px-2 py-1 rounded-lg bg-amber-500/20 text-amber-500 text-xs font-bold">Muted</span>}
+                            {u.kickedUntil && new Date(u.kickedUntil) > new Date() && <span className="px-2 py-1 rounded-lg bg-orange-500/20 text-orange-500 text-xs font-bold">Kicked</span>}
+                            {u.bannedUntil && new Date(u.bannedUntil) > new Date() && <span className="px-2 py-1 rounded-lg bg-red-500/20 text-red-500 text-xs font-bold">Banned</span>}
                           </div>
                         </div>
                       ))}
@@ -855,12 +895,12 @@ const handleBotTrigger = async (message, bot) => {
   );
 
   if (trigger) {
-    await addDoc(collection(db, 'messages'), {
+    await supabase.from('messages').insert({
       senderId: bot.id,
       senderUsername: bot.name,
       senderPfp: bot.pfp,
       text: \`@\${message.senderUsername} \${trigger.response}\`,
-      timestamp: serverTimestamp()
+      timestamp: new Date().toISOString()
     });
   }
 };`}

@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
-import { auth, db } from '../firebase';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { supabase } from '../supabase';
 import { UserProfile, UserRank } from '../types';
 import { Infinity, Mail, Lock, User, Calendar, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -30,17 +28,17 @@ export default function Auth({ onAuthSuccess }: AuthProps) {
 
     try {
       if (isLogin) {
-        await signInWithEmailAndPassword(auth, email, password);
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
       } else {
         if (!username || !age || !gender) throw new Error('Please fill all fields');
         if (Number(age) < 7) throw new Error('You must be at least 7 years old to join');
         
-        // Check if email is banned (this is tricky without a separate ban list, 
-        // but we can check if a user with this email was previously banned if we had a list.
-        // For now, we'll just handle the login ban check).
-
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
+        const { data, error: signUpError } = await supabase.auth.signUp({ email, password });
+        if (signUpError) throw signUpError;
+        
+        const user = data.user;
+        if (!user) throw new Error('Failed to create user');
 
         let rank: UserRank = 'VIP';
         const devEmails = ['test@gmail.com', 'dev@gmail.com', 'developer@gmail.com', 'haydensixseven@gmail.com'];
@@ -48,8 +46,8 @@ export default function Auth({ onAuthSuccess }: AuthProps) {
           rank = 'DEVELOPER';
         }
 
-        await setDoc(doc(db, 'users', user.uid), {
-          uid: user.uid,
+        const { error: insertError } = await supabase.from('users').insert({
+          uid: user.id,
           username,
           email,
           age: Number(age),
@@ -58,15 +56,17 @@ export default function Auth({ onAuthSuccess }: AuthProps) {
           banner: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809',
           onboardingStep: 1,
           isOnline: true,
-          lastSeen: new Date(),
+          lastSeen: new Date().toISOString(),
           gold: 1000,
           rubies: 10,
           hasReceivedReset: false,
           theme: 'luxury-black',
           cardStyle: 'default',
           rank,
-          createdAt: new Date(),
+          createdAt: new Date().toISOString(),
         });
+        
+        if (insertError) throw insertError;
       }
       onAuthSuccess();
     } catch (err: any) {

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
-import { db } from '../firebase';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { supabase } from '../supabase';
 
 interface ForceSpeakModalProps {
   targetUid: string;
@@ -16,14 +15,15 @@ export const ForceSpeakModal: React.FC<ForceSpeakModalProps> = ({ targetUid, tar
   const handleSend = async () => {
     if (!content) return;
     try {
-      await addDoc(collection(db, 'messages'), {
+      const { error } = await supabase.from('messages').insert({
         senderId: targetUid,
         senderUsername: targetUsername,
         senderPfp: targetPfp,
         text: content,
-        timestamp: serverTimestamp(),
+        timestamp: new Date().toISOString(),
         type: 'text'
       });
+      if (error) throw error;
       onClose();
     } catch (err) {
       console.error(err);

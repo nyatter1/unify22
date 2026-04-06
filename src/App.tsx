@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { auth, db } from './firebase';
-import { onAuthStateChanged } from 'firebase/auth';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { supabase } from './supabase';
 import { UserProfile } from './types';
 import Auth from './components/Auth';
 import Onboarding from './components/Onboarding';
@@ -14,28 +12,52 @@ export default function App() {
   const [authReady, setAuthReady] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setAuthReady(true);
-      if (firebaseUser) {
-        // Listen to user profile
-        const userDoc = doc(db, 'users', firebaseUser.uid);
-        const unsubProfile = onSnapshot(userDoc, (docSnap) => {
-          if (docSnap.exists()) {
-            setUser(docSnap.data() as UserProfile);
-          } else {
-            setUser(null);
-          }
-          setLoading(false);
-        });
-        return () => unsubProfile();
+      if (session?.user) {
+        fetchProfile(session.user.id);
       } else {
         setUser(null);
         setLoading(false);
       }
     });
 
-    return () => unsubscribe();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setAuthReady(true);
+      if (session?.user) {
+        fetchProfile(session.user.id);
+      } else {
+        setUser(null);
+        setLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
+
+  const fetchProfile = async (uid: string) => {
+    const { data, error } = await supabase.from('users').select('*').eq('uid', uid).single();
+    if (data) {
+      setUser(data as UserProfile);
+    } else {
+      setUser(null);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    if (!user) return;
+    
+    const channel = supabase.channel('app-user-changes')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users', filter: `uid=eq.${user.uid}` }, (payload) => {
+        setUser(payload.new as UserProfile);
+      })
+      .subscribe();
+      
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.uid]);
 
   if (!authReady || loading) {
     return (
@@ -64,7 +86,7 @@ export default function App() {
 
   // Ban Check
   const now = new Date();
-  if (user.bannedUntil?.toDate && user.bannedUntil.toDate() > now) {
+  if (user.bannedUntil && new Date(user.bannedUntil) > now) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center text-white p-8">
         <div className="text-center space-y-4">

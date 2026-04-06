@@ -508,23 +508,4 @@ export interface Aura {
   className: string;
 }
 
-export const AURAS: Aura[] = [
-  { id: 'aura-none', name: 'None', category: 'Basic', className: 'aura-none' },
-  { id: 'aura-holy', name: 'Holy Light', category: 'Divine', className: 'aura-holy' },
-  { id: 'aura-demonic', name: 'Demonic Presence', category: 'Dark', className: 'aura-demonic' },
-  { id: 'aura-cyber', name: 'Cyber Pulse', category: 'Cyber', className: 'aura-cyber' },
-  { id: 'aura-cosmic', name: 'Cosmic Energy', category: 'Space', className: 'aura-cosmic' },
-  { id: 'aura-nature', name: 'Nature Spirit', category: 'Elements', className: 'aura-nature' },
-  { id: 'aura-golden', name: 'Golden Radiance', category: 'Divine', className: 'aura-golden' },
-  { id: 'aura-void', name: 'The Void', category: 'Dark', className: 'aura-void' },
-  { id: 'aura-fire', name: 'Inferno', category: 'Elements', className: 'aura-fire' },
-  { id: 'aura-ice', name: 'Frostbite', category: 'Elements', className: 'aura-ice' },
-  { id: 'aura-thunder', name: 'Stormcaller', category: 'Elements', className: 'aura-thunder' },
-  { id: 'aura-wind', name: 'Zephyr', category: 'Elements', className: 'aura-wind' },
-  { id: 'aura-rainbow', name: 'Prismatic', category: 'Special', className: 'aura-rainbow' },
-  { id: 'aura-ghost', name: 'Ethereal', category: 'Special', className: 'aura-ghost' },
-  { id: 'aura-toxic', name: 'Corrosive', category: 'Special', className: 'aura-toxic' },
-  { id: 'aura-love', name: 'Heartfelt', category: 'Special', className: 'aura-love' },
-  { id: 'aura-money', name: 'Wealthy', category: 'Special', className: 'aura-money' },
-  { id: 'aura-star', name: 'Superstar', category: 'Special', className: 'aura-star' },
 ];

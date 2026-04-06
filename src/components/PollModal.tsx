@@ -59,7 +59,6 @@ export const PollModal: React.FC<PollModalProps> = ({ onClose, currentUser, onSe
   const [question, setQuestion] = useState('');
   const [options, setOptions] = useState(['', '']);
   const [selectedBorderId, setSelectedBorderId] = useState('border-neon-pink');
-  const [showThemes, setShowThemes] = useState(false);
   const [isLaunching, setIsLaunching] = useState(false);
 
   const specialBorders = BORDERS.filter(b => b.category === 'Special');
@@ -78,20 +77,32 @@ export const PollModal: React.FC<PollModalProps> = ({ onClose, currentUser, onSe
   };
 
   const handleCreatePoll = async () => {
-    if (!question || options.some(o => !o.trim())) return;
+    // Validation
+    if (!question.trim() || options.some(o => !o.trim())) return;
     
     setIsLaunching(true);
     
+    // Construct the poll object
     const pollData = {
-      question,
-      options: options.map(o => ({ text: o.trim(), votes: 0 })),
+      type: 'poll', // Explicit type for Chat.tsx to identify the message
+      question: question.trim(),
+      options: options.map((o, idx) => ({ 
+        id: `opt-${idx}-${Date.now()}`,
+        text: o.trim(), 
+        votes: [] // Store UIDs of voters to prevent double voting
+      })),
       theme: activeBorder.className,
       createdBy: currentUser?.uid || 'anonymous',
-      createdAt: new Date().toISOString()
+      creatorName: currentUser?.displayName || 'Anonymous',
+      createdAt: new Date().toISOString(),
+      totalVotes: 0
     };
 
+    // Simulate a brief delay for "Launching" effect
     setTimeout(() => {
-      if (onSend) onSend(pollData);
+      if (onSend) {
+        onSend(pollData); // This passes the data to the handleSendMessage or equivalent in Chat.tsx
+      }
       onClose();
     }, 800);
   };
@@ -205,9 +216,9 @@ export const PollModal: React.FC<PollModalProps> = ({ onClose, currentUser, onSe
 
           <button 
             onClick={handleCreatePoll} 
-            disabled={!question || options.some(o => !o.trim()) || isLaunching}
+            disabled={!question.trim() || options.some(o => !o.trim()) || isLaunching}
             className={`group relative w-full py-6 rounded-[2rem] flex items-center justify-center gap-3 font-black uppercase tracking-[0.2em] transition-all overflow-hidden
-              ${(!question || options.some(o => !o.trim()) || isLaunching) 
+              ${(!question.trim() || options.some(o => !o.trim()) || isLaunching) 
                 ? 'bg-zinc-900 text-zinc-700 cursor-not-allowed border border-white/5' 
                 : 'bg-white text-black hover:scale-[1.02] active:scale-95 shadow-[0_20px_40px_rgba(255,255,255,0.1)]'
               }`}

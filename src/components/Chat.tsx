@@ -176,7 +176,7 @@ export default function Chat({ user }: ChatProps) {
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [selectedProfile, setSelectedProfile] = useState<UserProfile | null>(null);
   const [editTab, setEditTab] = useState<'username' | 'info' | 'bio' | 'pfp' | 'banner' | 'main' | 'rank' | 'youtube'>('main');
-  const [customizerTab, setCustomizerTab] = useState<'themes' | 'cards' | 'borders' | 'effects' | 'auras'>('themes');
+  const [customizerTab, setCustomizerTab] = useState<'themes' | 'cards' | 'borders' | 'effects'>('themes');
   const [searchQuery, setSearchQuery] = useState('');
   const [toast, setToast] = useState<string | null>(null);
   const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
@@ -344,7 +344,7 @@ export default function Chat({ user }: ChatProps) {
         needsUpdate = true;
       }
       if (isNaN(user.rubies)) {
-        updates.rubies = 1000; // Prompt said "1000 of that currency" for NaN
+        updates.rubies = 1000;
         needsUpdate = true;
       }
 
@@ -684,7 +684,7 @@ export default function Chat({ user }: ChatProps) {
     }
   };
 
-  const updateCustomization = async (field: 'theme' | 'cardStyle' | 'border' | 'profileEffect' | 'aura' | 'username' | 'age' | 'gender' | 'bio' | 'pfp' | 'banner' | 'profileVideoUrl', value: any) => {
+  const updateCustomization = async (field: 'theme' | 'cardStyle' | 'border' | 'profileEffect' | 'username' | 'age' | 'gender' | 'bio' | 'pfp' | 'banner' | 'profileVideoUrl', value: any) => {
     try {
       await supabase.from('users').update({ [field]: value }).eq('uid', user.uid);
       if (selectedProfile?.uid === user.uid) {
@@ -796,7 +796,7 @@ export default function Chat({ user }: ChatProps) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 1024 * 1024) { // 1MB limit for base64 storage in Firestore
+    if (file.size > 1024 * 1024) {
       showToast('File too large! Max 1MB.');
       return;
     }
@@ -997,8 +997,8 @@ export default function Chat({ user }: ChatProps) {
         // Gamble logic
         const isDev = user.email === 'dev@gmail.com';
         const winChance = Math.random();
-        const isWin = isDev ? true : winChance > 0.7; // 30% win chance (70% loss)
-        const multiplier = isWin ? (isDev ? 100 : Math.floor(Math.random() * 99) + 2) : 0; // 2 to 100 if win
+        const isWin = isDev ? true : winChance > 0.7;
+        const multiplier = isWin ? (isDev ? 100 : Math.floor(Math.random() * 99) + 2) : 0;
         const winAmount = balance * multiplier;
         const result = isWin ? 'won' : 'lost';
 
@@ -1049,7 +1049,7 @@ export default function Chat({ user }: ChatProps) {
         const isDev = user.email === 'dev@gmail.com';
         const diceRoll = isDev ? 6 : Math.floor(Math.random() * 6) + 1;
         const isWin = diceRoll === 6;
-        let multiplier = isDev ? 50 : Math.floor(Math.random() * 50) + 1; // 1 to 50
+        let multiplier = isDev ? 50 : Math.floor(Math.random() * 50) + 1;
         
         // Jackpot logic (1% chance for x1000 if win)
         const isJackpot = isWin && (isDev || Math.random() < 0.01);
@@ -1429,7 +1429,7 @@ export default function Chat({ user }: ChatProps) {
       // Add XP
       const currentXp = user.xp || 0;
       const currentLevel = user.level || 1;
-      const xpGained = Math.floor(Math.random() * 10) + 5; // 5-15 XP per message
+      const xpGained = Math.floor(Math.random() * 10) + 5;
       const newXp = currentXp + xpGained;
       const xpNeeded = currentLevel * 100;
       
@@ -1437,7 +1437,6 @@ export default function Chat({ user }: ChatProps) {
       if (newXp >= xpNeeded) {
         newLevel++;
         showToast(`🎉 Level Up! You are now level ${newLevel}!`);
-        // Level up sound
         const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3');
         audio.play().catch(() => {});
       }
@@ -1503,10 +1502,6 @@ export default function Chat({ user }: ChatProps) {
           }
         });
       }
-
-      // Bot Logic
-      // UniBot is just a player now, no AI response logic.
-
 
     } catch (err) {
       console.error(err);
@@ -1832,19 +1827,15 @@ export default function Chat({ user }: ChatProps) {
                   className={cn("flex gap-4 max-w-[85%] group", isMe ? "ml-auto flex-row-reverse" : "mr-auto")}
                 >
                   <div className="relative flex-shrink-0">
-                    {/* Aura Layer */}
-                    {msgUser?.aura && msgUser.aura !== 'aura-none' && (
-                      <div className={cn("absolute -inset-1.5 z-0 rounded-full", AURAS.find(a => a.id === msgUser.aura)?.className)} />
-                    )}
                     <img 
                       src={msg.senderPfp || allUsers.find(u => u.uid === msg.senderId)?.pfp || DEFAULT_PFP} 
                       onClick={() => handleProfileClick(msg.senderId)}
                       className={cn(
-                        "w-10 h-10 rounded-full object-cover shadow-lg cursor-pointer hover:scale-105 transition-transform relative z-10",
+                        "w-10 h-10 rounded-full object-cover shadow-lg cursor-pointer hover:scale-105 transition-transform",
                         userBorder && userBorder.id !== 'border-none' ? userBorder.className : "border border-white/20"
                       )}
                     />
-                    {msg.senderId === 'admin' && <Shield className="w-3 h-3 text-amber-400 absolute -top-1 -right-1 z-20" />}
+                    {msg.senderId === 'admin' && <Shield className="w-3 h-3 text-amber-400 absolute -top-1 -right-1" />}
                   </div>
                   <div className={cn("space-y-1.5", isMe ? "items-end" : "items-start")}>
                     <div className={cn("flex items-center gap-2 px-1", isMe && "flex-row-reverse")}>
@@ -1859,7 +1850,6 @@ export default function Chat({ user }: ChatProps) {
                           alt="rank"
                         />
                       )}
-                      {/* Removed pet */}
                     </div>
                     <div 
                       className={cn(
@@ -1917,7 +1907,7 @@ export default function Chat({ user }: ChatProps) {
                       )}
                     </div>
                     
-                    {/* Reaction Picker (Simple implementation) */}
+                    {/* Reaction Picker */}
                     <div className={cn("opacity-0 group-hover:opacity-100 transition-opacity flex gap-1", isMe ? "flex-row-reverse" : "flex-row")}>
                       {['👍', '❤️', '😂', '😮', '😢', '🔥'].map(emoji => (
                         <button
@@ -2108,16 +2098,12 @@ export default function Chat({ user }: ChatProps) {
                   }}
                 >
                   <div className="relative">
-                    {/* Aura Layer */}
-                    {u.aura && u.aura !== 'aura-none' && (
-                      <div className={cn("absolute -inset-1.5 z-0 rounded-full", AURAS.find(a => a.id === u.aura)?.className)} />
-                    )}
                     <img 
                       src={u.pfp} 
-                      className="w-10 h-10 rounded-full border border-white/20 object-cover relative z-10" 
+                      className="w-10 h-10 rounded-full border border-white/20 object-cover" 
                     />
                     <div className={cn(
-                      "absolute -bottom-0.5 -right-0.5 w-3 h-3 border-2 border-black rounded-full z-20",
+                      "absolute -bottom-0.5 -right-0.5 w-3 h-3 border-2 border-black rounded-full",
                       u.isOnline ? "bg-green-500" : "bg-zinc-600"
                     )} />
                   </div>
@@ -2129,7 +2115,6 @@ export default function Chat({ user }: ChatProps) {
                         className="w-3.5 h-3.5 object-contain"
                         alt="rank"
                       />
-                      {/* Removed pet */}
                     </div>
                     <p className="text-[10px] opacity-40 uppercase tracking-widest mt-0.5">{u.status || u.rank}</p>
                   </div>
@@ -2144,13 +2129,7 @@ export default function Chat({ user }: ChatProps) {
               <img src={user.banner || DEFAULT_BANNER} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-500" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
               <div className="absolute bottom-3 left-3 flex items-center gap-3">
-                <div className="relative">
-                  {/* Aura Layer */}
-                  {user.aura && user.aura !== 'aura-none' && (
-                    <div className={cn("absolute -inset-2 z-0 rounded-full", AURAS.find(a => a.id === user.aura)?.className)} />
-                  )}
-                  <img src={user.pfp || DEFAULT_PFP} className="w-12 h-12 rounded-full border-2 border-white/30 shadow-2xl object-cover relative z-10" />
-                </div>
+                <img src={user.pfp || DEFAULT_PFP} className="w-12 h-12 rounded-full border-2 border-white/30 shadow-2xl object-cover" />
                 <div className="flex flex-col">
                   <div className="flex items-center gap-1.5">
                     <p className="text-sm font-serif text-white font-bold drop-shadow-md">{user.username}</p>
@@ -2159,7 +2138,6 @@ export default function Chat({ user }: ChatProps) {
                       className="w-3.5 h-3.5 object-contain"
                       alt="rank"
                     />
-                    {/* Removed pet */}
                   </div>
                   <button 
                     onClick={() => setShowStatusEditor(true)}
@@ -2263,15 +2241,6 @@ export default function Chat({ user }: ChatProps) {
                     >
                       Effects
                     </button>
-                    <button 
-                      onClick={() => setCustomizerTab('auras')}
-                      className={cn(
-                        "px-6 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all whitespace-nowrap",
-                        customizerTab === 'auras' ? "bg-white text-black shadow-xl" : "text-white/40 hover:text-white"
-                      )}
-                    >
-                      Auras
-                    </button>
                   </div>
                 </div>
                 <button 
@@ -2293,7 +2262,6 @@ export default function Chat({ user }: ChatProps) {
                     selectedCard={allCardStyles.find(s => s.id === user.cardStyle)}
                     selectedBorder={BORDERS.find(b => b.id === user.border)}
                     selectedEffect={PROFILE_EFFECTS.find(e => e.id === user.profileEffect)}
-                    selectedAura={AURAS.find(a => a.id === user.aura)}
                   />
                 </div>
 
@@ -2474,38 +2442,6 @@ export default function Chat({ user }: ChatProps) {
                       );
                     })}
                   </div>
-                ) : customizerTab === 'auras' ? (
-                  <div className="space-y-12">
-                    {['Basic', 'Divine', 'Dark', 'Cyber', 'Space', 'Elements', 'Special'].map(category => {
-                      const categoryAuras = AURAS.filter(a => a.category === category && a.name.toLowerCase().includes(searchQuery.toLowerCase()));
-                      if (categoryAuras.length === 0) return null;
-
-                      return (
-                        <div key={category} className="space-y-6">
-                          <h3 className="text-sm font-bold text-amber-500 uppercase tracking-[0.3em] pl-2 border-l-2 border-amber-500">{category}</h3>
-                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                            {categoryAuras.map(a => (
-                              <button
-                                key={a.id}
-                                onClick={() => updateCustomization('aura', a.id)}
-                                className={cn(
-                                  "group relative aspect-square rounded-2xl overflow-hidden border-2 transition-all hover:scale-[1.02] active:scale-95 flex flex-col items-center justify-center gap-4 bg-white/5",
-                                  user.aura === a.id ? "border-amber-500 shadow-[0_0_30px_rgba(245,158,11,0.3)]" : "border-white/5 hover:border-white/20"
-                                )}
-                              >
-                                <div className="relative w-16 h-16 rounded-full bg-white/10 flex items-center justify-center">
-                                  <div className={cn("absolute -inset-4 rounded-full", a.className)} />
-                                  <div className="w-8 h-8 rounded-full bg-white/20" />
-                                </div>
-                                <span className="text-[10px] font-bold text-white uppercase tracking-widest text-center px-2 z-10">{a.name}</span>
-                                {user.aura === a.id && <Check className="absolute top-2 right-2 w-4 h-4 text-amber-500 z-10" />}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
                 ) : null}
               </div>
               </div>
@@ -2573,7 +2509,7 @@ export default function Chat({ user }: ChatProps) {
           </div>
         )}
       </AnimatePresence>
-      {/* Theme Editor Modal */}
+      {/* Theme Editor Modal (full version) */}
       <AnimatePresence>
         {showThemeEditor && (
           <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
@@ -3051,21 +2987,16 @@ export default function Chat({ user }: ChatProps) {
                       )}
                       onClick={() => selectedProfile.uid === user.uid && pfpInputRef.current?.click()}
                     >
-                      {/* Aura Layer */}
-                      {selectedProfile.aura && selectedProfile.aura !== 'aura-none' && (
-                        <div className={cn("absolute -inset-4 z-0 rounded-full", AURAS.find(a => a.id === selectedProfile.aura)?.className)} />
-                      )}
-                      
                       <img 
                         src={selectedProfile.pfp || DEFAULT_PFP} 
-                        className="w-32 h-32 rounded-full border-4 border-zinc-900 object-cover shadow-2xl transition-transform group-hover:scale-105 relative z-10"
+                        className="w-32 h-32 rounded-full border-4 border-zinc-900 object-cover shadow-2xl transition-transform group-hover:scale-105"
                       />
                       {selectedProfile.uid === user.uid && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
                           <Camera className="w-6 h-6 text-white" />
                         </div>
                       )}
-                      <div className="absolute bottom-2 right-2 w-6 h-6 bg-green-500 border-4 border-zinc-900 rounded-full z-30" />
+                      <div className="absolute bottom-2 right-2 w-6 h-6 bg-green-500 border-4 border-zinc-900 rounded-full" />
                     </div>
                   
                   <div className="flex items-center gap-4 mb-4">

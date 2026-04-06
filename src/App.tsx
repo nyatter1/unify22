@@ -100,7 +100,7 @@ export default function App() {
   const onboardingStep = user.onboardingStep ?? 1;
 
   if (onboardingStep > 0) {
-    return <Onboarding user={user} onComplete={() => {}} />;
+    return <Onboarding user={user} onComplete={() => fetchProfile(user.uid)} />;
   }
 
   return <Chat user={user} />;

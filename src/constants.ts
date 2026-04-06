@@ -26,6 +26,9 @@ export const RANKS: RankInfo[] = [
   { id: 'VIP', name: 'VIP', icon: 'https://raw.githubusercontent.com/nyatter1/ranks/main/vip.gif', priority: 10 },
 ];
 
+export const DEFAULT_PFP = 'https://api.dicebear.com/7.x/avataaars/svg?seed=human&mood[]=happy';
+export const DEFAULT_BANNER = 'https://images.unsplash.com/photo-1557683316-973673baf926';
+
 export const AVATARS = [
   'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix',
   'https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka',

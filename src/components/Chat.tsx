@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../supabase';
 import { UserProfile, Message, Theme, CardStyle, UserRank } from '../types';
-import { THEMES, CARD_STYLES, AVATARS, BANNERS, RANKS, RankInfo, BORDERS, PROFILE_EFFECTS, PETS, CURSORS } from '../constants';
+import { THEMES, CARD_STYLES, AVATARS, BANNERS, RANKS, RankInfo, BORDERS, PROFILE_EFFECTS, PETS, CURSORS, DEFAULT_PFP, DEFAULT_BANNER } from '../constants';
 import { 
   Send, 
   LogOut, 
@@ -684,7 +684,7 @@ export default function Chat({ user }: ChatProps) {
     }
   };
 
-  const updateCustomization = async (field: 'theme' | 'cardStyle' | 'border' | 'profileEffect' | 'username' | 'age' | 'gender' | 'bio' | 'pfp' | 'banner' | 'profileVideoUrl', value: any) => {
+  const updateCustomization = async (field: 'theme' | 'cardStyle' | 'border' | 'profileEffect' | 'username' | 'age' | 'gender' | 'bio' | 'pfp' | 'banner' | 'profileVideoUrl' | 'pet' | 'cursor', value: any) => {
     try {
       await supabase.from('users').update({ [field]: value }).eq('uid', user.uid);
       if (selectedProfile?.uid === user.uid) {
@@ -1240,9 +1240,9 @@ export default function Chat({ user }: ChatProps) {
         ].join('\n');
         showToast('Check chat for help!');
         await supabase.from('messages').insert({
-          senderId: 'system',
+          senderId: null,
           senderUsername: 'SYSTEM',
-          senderPfp: 'https://api.dicebear.com/7.x/bottts/svg?seed=system',
+          senderPfp: DEFAULT_PFP,
           text: helpText,
           type: 'system',
           timestamp: new Date().toISOString(),
@@ -1259,9 +1259,9 @@ export default function Chat({ user }: ChatProps) {
         
         showToast('Online staff listed in chat.');
         await supabase.from('messages').insert({
-          senderId: 'system',
+          senderId: null,
           senderUsername: 'SYSTEM',
-          senderPfp: 'https://api.dicebear.com/7.x/bottts/svg?seed=system',
+          senderPfp: DEFAULT_PFP,
           text: `🛡️ **ONLINE STAFF:** ${staffList}`,
           type: 'system',
           timestamp: new Date().toISOString(),
@@ -1337,9 +1337,9 @@ export default function Chat({ user }: ChatProps) {
         setTriviaQuestion(randomQ);
 
         await supabase.from('messages').insert({
-          senderId: 'system',
+          senderId: null,
           senderUsername: 'System',
-          senderPfp: 'https://api.dicebear.com/7.x/bottts/svg?seed=System',
+          senderPfp: DEFAULT_PFP,
           text: `🧠 TRIVIA TIME! First to answer correctly wins 50 Gold!\n\nQuestion: ${randomQ.q}`,
           type: 'system',
           timestamp: new Date().toISOString(),
@@ -1404,9 +1404,9 @@ export default function Chat({ user }: ChatProps) {
         await supabase.from('users').update({ gold: currentGold + 50 }).eq('uid', user.uid);
         
         await supabase.from('messages').insert({
-          senderId: 'system',
+          senderId: null,
           senderUsername: 'System',
-          senderPfp: 'https://api.dicebear.com/7.x/bottts/svg?seed=System',
+          senderPfp: DEFAULT_PFP,
           text: `🎉 ${user.username} answered correctly and won 50 Gold!\n\nAnswer: ${triviaQuestion.a}`,
           type: 'system',
           timestamp: new Date().toISOString(),
@@ -1569,7 +1569,7 @@ export default function Chat({ user }: ChatProps) {
                 <span className="text-[9px] text-white/40 uppercase tracking-widest font-bold">{user.status || user.rank}</span>
               </div>
             </div>
-            <img src={user.pfp} className="w-9 h-9 sm:w-11 sm:h-11 rounded-full border-2 border-white/20 object-cover shadow-xl" />
+            <img src={user.pfp || DEFAULT_PFP} className="w-9 h-9 sm:w-11 sm:h-11 rounded-full border-2 border-white/20 object-cover shadow-xl" />
             <button 
               onClick={() => {
                 setShowSidebar(true);
@@ -1585,7 +1585,7 @@ export default function Chat({ user }: ChatProps) {
               <Heart className={cn("w-5 h-5", showFriendsOnly && "fill-current")} />
             </button>
             <button 
-              onClick={() => auth.signOut()}
+              onClick={() => supabase.auth.signOut()}
               className="p-2 rounded-xl bg-white/5 border border-white/10 text-white/40 hover:text-red-500 hover:bg-red-500/10 hover:border-red-500/50 transition-all"
             >
               <LogOut className="w-5 h-5" />
@@ -1790,7 +1790,7 @@ export default function Chat({ user }: ChatProps) {
                 );
               }
 
-              if (msg.type === 'nudge') {
+              if (msg.type === 'nudge' || msg.senderUsername === 'SYSTEM') {
                 return (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
@@ -1798,8 +1798,15 @@ export default function Chat({ user }: ChatProps) {
                     key={msg.id || i}
                     className="flex justify-center my-4"
                   >
-                    <div className="bg-amber-500/20 text-amber-500 px-4 py-2 rounded-full text-sm font-bold animate-bounce shadow-[0_0_15px_rgba(245,158,11,0.3)]">
-                      {msg.text}
+                    <div className={cn(
+                      "px-6 py-3 rounded-2xl text-sm font-bold shadow-[0_0_30px_rgba(245,158,11,0.2)] max-w-[80%] text-center",
+                      (msg.senderUsername === 'SYSTEM' || msg.senderUsername === 'BROADCAST') ? "bg-amber-500/20 text-amber-500 border border-amber-500/30 animate-pulse" : "bg-blue-500/20 text-blue-400 border border-blue-500/30 animate-bounce"
+                    )}>
+                      {(msg.senderUsername === 'SYSTEM' || msg.senderUsername === 'BROADCAST') ? (
+                        <div className="markdown-body">
+                          <Markdown>{msg.text}</Markdown>
+                        </div>
+                      ) : msg.text}
                     </div>
                   </motion.div>
                 );
@@ -1817,7 +1824,7 @@ export default function Chat({ user }: ChatProps) {
                 >
                   <div className="relative flex-shrink-0">
                     <img 
-                      src={msg.senderPfp} 
+                      src={msg.senderPfp || allUsers.find(u => u.uid === msg.senderId)?.pfp || `https://api.dicebear.com/7.x/avataaars/svg?seed=${msg.senderUsername || 'Guest'}`} 
                       onClick={() => handleProfileClick(msg.senderId)}
                       className={cn(
                         "w-10 h-10 rounded-full object-cover shadow-lg cursor-pointer hover:scale-105 transition-transform",
@@ -1834,14 +1841,14 @@ export default function Chat({ user }: ChatProps) {
                       </span>
                       {(msg.senderRank || allUsers.find(u => u.uid === msg.senderId)?.rank) && (
                         <img 
-                          src={allUsers.find(u => u.uid === msg.senderId)?.customRank?.icon || RANKS.find(r => r.id === (msg.senderRank || allUsers.find(u => u.uid === msg.senderId)?.rank || 'VIP'))?.icon} 
+                          src={allUsers.find(u => u.uid === msg.senderId)?.customRank?.icon || RANKS.find(r => r.id === (msg.senderRank || allUsers.find(u => u.uid === msg.senderId)?.rank || 'VIP'))?.icon || ''} 
                           className="w-3.5 h-3.5 object-contain"
                           alt="rank"
                         />
                       )}
                       {allUsers.find(u => u.uid === msg.senderId)?.pet && allUsers.find(u => u.uid === msg.senderId)?.pet !== 'pet-none' && (
                         <span className="text-xs animate-bounce">
-                          {PETS.find(p => p.id === allUsers.find(u => u.uid === msg.senderId)?.pet)?.icon}
+                          {PETS.find(p => p.id === allUsers.find(u => u.uid === msg.senderId)?.pet)?.icon || ''}
                         </span>
                       )}
                     </div>
@@ -2105,13 +2112,13 @@ export default function Chat({ user }: ChatProps) {
                     <div className="flex items-center gap-1.5">
                       <p className={cn("text-sm font-serif truncate", textClass)}>{u.username}</p>
                       <img 
-                        src={u.customRank?.icon || RANKS.find(r => r.id === (u.rank || 'VIP'))?.icon} 
+                        src={u.customRank?.icon || RANKS.find(r => r.id === (u.rank || 'VIP'))?.icon || ''} 
                         className="w-3.5 h-3.5 object-contain"
                         alt="rank"
                       />
                       {u.pet && u.pet !== 'pet-none' && (
                         <span className="text-xs animate-bounce">
-                          {PETS.find(p => p.id === u.pet)?.icon}
+                          {PETS.find(p => p.id === u.pet)?.icon || ''}
                         </span>
                       )}
                     </div>
@@ -2124,22 +2131,22 @@ export default function Chat({ user }: ChatProps) {
 
           {/* User Mini Profile */}
           <div className="p-6 border-t border-white/10 bg-black/60">
-            <div className="relative h-24 rounded-xl overflow-hidden border border-white/10 mb-3">
-              <img src={user.banner} className="w-full h-full object-cover opacity-40" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent" />
-              <div className="absolute bottom-2 left-3 flex items-center gap-2">
-                <img src={user.pfp} className="w-8 h-8 rounded-full border border-white/20" />
+            <div className="relative h-28 rounded-xl overflow-hidden border border-white/10 mb-3 group">
+              <img src={user.banner || DEFAULT_BANNER} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+              <div className="absolute bottom-3 left-3 flex items-center gap-3">
+                <img src={user.pfp || DEFAULT_PFP} className="w-12 h-12 rounded-full border-2 border-white/30 shadow-2xl object-cover" />
                 <div className="flex flex-col">
                   <div className="flex items-center gap-1.5">
-                    <p className="text-xs font-serif text-white">{user.username}</p>
+                    <p className="text-sm font-serif text-white font-bold drop-shadow-md">{user.username}</p>
                     <img 
-                      src={user.customRank?.icon || RANKS.find(r => r.id === (user.rank || 'VIP'))?.icon} 
+                      src={user.customRank?.icon || RANKS.find(r => r.id === (user.rank || 'VIP'))?.icon || ''} 
                       className="w-3.5 h-3.5 object-contain"
                       alt="rank"
                     />
                     {user.pet && user.pet !== 'pet-none' && (
                       <span className="text-xs animate-bounce">
-                        {PETS.find(p => p.id === user.pet)?.icon}
+                        {PETS.find(p => p.id === user.pet)?.icon || ''}
                       </span>
                     )}
                   </div>
@@ -2385,7 +2392,7 @@ export default function Chat({ user }: ChatProps) {
                                   )}
                                 >
                                   <div className={className} style={style}>
-                                    <img src={user.pfp} className="w-10 h-10 rounded-full border border-white/20" />
+                                    <img src={user.pfp || DEFAULT_PFP} className="w-10 h-10 rounded-full border border-white/20" />
                                     <div className="flex-1 min-w-0">
                                       <p className={cn("text-sm font-serif truncate", textClass)}>{user.username}</p>
                                       <p className="text-[9px] opacity-40 uppercase tracking-widest font-bold">{user.age}Y • {user.gender}</p>
@@ -2798,7 +2805,7 @@ export default function Chat({ user }: ChatProps) {
                       fontFamily: newCard.customStyles?.fontFamily === 'serif' ? 'serif' : newCard.customStyles?.fontFamily === 'mono' ? 'monospace' : 'sans-serif'
                     }}
                   >
-                    <img src={user.pfp} className="w-12 h-12 rounded-full border border-white/20" />
+                    <img src={user.pfp || DEFAULT_PFP} className="w-12 h-12 rounded-full border border-white/20" />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <p className={cn("text-lg font-serif truncate", newCard.customStyles?.fontFamily === 'display' && "font-black tracking-tighter")}>{user.username}</p>
@@ -2967,16 +2974,21 @@ export default function Chat({ user }: ChatProps) {
               )}
               style={{ border: !selectedProfile.border && currentTheme.customStyles?.borderStyle ? currentTheme.customStyles.borderStyle : undefined }}
             >
+              {/* Profile Effect Container */}
+              {selectedProfile.profileEffect && (
+                <div className={cn("absolute inset-x-0 bottom-0 top-48 z-0 rounded-b-[3rem] overflow-hidden pointer-events-none", PROFILE_EFFECTS.find(e => e.id === selectedProfile.profileEffect)?.className)} />
+              )}
+
               {/* Banner */}
               <div 
                 className={cn(
-                  "relative h-48 w-full overflow-hidden",
+                  "relative h-48 w-full overflow-hidden z-10",
                   selectedProfile.uid === user.uid && "cursor-pointer group"
                 )}
                 onClick={() => selectedProfile.uid === user.uid && bannerInputRef.current?.click()}
               >
                 <img 
-                  src={selectedProfile.banner || BANNERS[0]} 
+                  src={selectedProfile.banner || DEFAULT_BANNER} 
                   className="w-full h-full object-cover transition-transform group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-transparent to-transparent" />
@@ -2990,7 +3002,7 @@ export default function Chat({ user }: ChatProps) {
                 )}
                 
                 {/* Actions */}
-                <div className="absolute top-6 right-6 flex items-center gap-3 z-20">
+                <div className="absolute top-6 right-6 flex items-center gap-3 z-30">
                   {selectedProfile.uid !== user.uid && (
                     <button 
                       onClick={() => {
@@ -3034,11 +3046,7 @@ export default function Chat({ user }: ChatProps) {
               </div>
 
               {/* Profile Info */}
-              <div className="px-10 pb-10 -mt-16 relative">
-                {/* Profile Effect Container */}
-                {selectedProfile.profileEffect && (
-                  <div className={cn("absolute inset-0 z-0 rounded-b-[3rem] overflow-hidden pointer-events-none", PROFILE_EFFECTS.find(e => e.id === selectedProfile.profileEffect)?.className)} />
-                )}
+              <div className="px-10 pb-10 -mt-16 relative z-20">
                 <div className="relative z-10">
                   <div className="flex items-end justify-between mb-6">
                     <div 
@@ -3049,7 +3057,7 @@ export default function Chat({ user }: ChatProps) {
                       onClick={() => selectedProfile.uid === user.uid && pfpInputRef.current?.click()}
                     >
                       <img 
-                        src={selectedProfile.pfp} 
+                        src={selectedProfile.pfp || DEFAULT_PFP} 
                         className="w-32 h-32 rounded-full border-4 border-zinc-900 object-cover shadow-2xl transition-transform group-hover:scale-105 relative z-10"
                       />
                       {selectedProfile.uid === user.uid && (
@@ -3122,14 +3130,18 @@ export default function Chat({ user }: ChatProps) {
                       {notifications
                         .filter(n => n.type === 'profile_view' && n.userId === selectedProfile.uid)
                         .slice(0, 5)
-                        .map((n, i) => (
-                          <img 
-                            key={i}
-                            src={n.senderPfp} 
-                            title={n.senderUsername}
-                            className="inline-block h-8 w-8 rounded-full ring-2 ring-zinc-900 object-cover" 
-                          />
-                        ))}
+                        .map((n, i) => {
+                          const visitor = allUsers.find(u => u.uid === n.senderId);
+                          const pfp = n.senderPfp || visitor?.pfp || DEFAULT_PFP;
+                          return (
+                            <img 
+                              key={i}
+                              src={pfp} 
+                              title={n.senderUsername}
+                              className="inline-block h-8 w-8 rounded-full ring-2 ring-zinc-900 object-cover" 
+                            />
+                          );
+                        })}
                       {notifications.filter(n => n.type === 'profile_view' && n.userId === selectedProfile.uid).length === 0 && (
                         <p className="text-[10px] text-white/20 italic">No recent visitors</p>
                       )}
@@ -3460,7 +3472,7 @@ export default function Chat({ user }: ChatProps) {
                 ) : editTab === 'pfp' ? (
                   <div className="space-y-6 flex flex-col items-center">
                     <div className="relative">
-                      <img src={user.pfp} className="w-48 h-48 rounded-full border-4 border-amber-500 object-cover shadow-2xl" />
+                      <img src={user.pfp || DEFAULT_PFP} className="w-48 h-48 rounded-full border-4 border-amber-500 object-cover shadow-2xl" />
                       <button 
                         onClick={() => pfpInputRef.current?.click()}
                         className="absolute bottom-2 right-2 p-4 rounded-full bg-amber-500 text-black shadow-xl hover:scale-110 transition-transform"
@@ -3532,7 +3544,7 @@ export default function Chat({ user }: ChatProps) {
                 ) : (
                   <div className="space-y-6 flex flex-col items-center">
                     <div className="relative w-full h-48 rounded-3xl overflow-hidden border-4 border-amber-500 shadow-2xl">
-                      <img src={user.banner} className="w-full h-full object-cover" />
+                      <img src={user.banner || DEFAULT_BANNER} className="w-full h-full object-cover" />
                       <button 
                         onClick={() => bannerInputRef.current?.click()}
                         className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center"

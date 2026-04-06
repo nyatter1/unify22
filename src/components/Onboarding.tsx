@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { supabase } from '../supabase';
 import { UserProfile } from '../types';
-import { AVATARS, BANNERS } from '../constants';
+import { AVATARS, BANNERS, DEFAULT_PFP, DEFAULT_BANNER } from '../constants';
 import { motion, AnimatePresence } from 'motion/react';
 import { Check, ChevronRight, Image as ImageIcon, Sparkles, Upload, Camera } from 'lucide-react';
 import { cn } from '../lib/utils';
@@ -14,8 +14,8 @@ interface OnboardingProps {
 export default function Onboarding({ user, onComplete }: OnboardingProps) {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [selectedPfp, setSelectedPfp] = useState(user.pfp || AVATARS[0]);
-  const [selectedBanner, setSelectedBanner] = useState(user.banner || BANNERS[0]);
+  const [selectedPfp, setSelectedPfp] = useState(user.pfp || DEFAULT_PFP);
+  const [selectedBanner, setSelectedBanner] = useState(user.banner || DEFAULT_BANNER);
   
   const [error, setError] = useState<string | null>(null);
   

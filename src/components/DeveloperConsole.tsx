@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { supabase } from '../supabase';
+import { AVATARS } from '../constants';
 import { UserProfile, UserRank, Bot as BotType, BotTrigger, RankDefinition } from '../types';
 import { cn } from '../lib/utils';
 
@@ -115,9 +116,9 @@ export const DeveloperConsole: React.FC<DeveloperConsoleProps> = ({ isOpen, onCl
     
     try {
       const { error } = await supabase.from('messages').insert({
-        senderId: 'SYSTEM',
+        senderId: null,
         senderUsername: 'BROADCAST',
-        senderPfp: 'https://api.dicebear.com/7.x/bottts/svg?seed=system',
+        senderPfp: AVATARS[0],
         senderRank: 'DEVELOPER',
         text: `📢 GLOBAL BROADCAST: ${broadcastMessage}`,
         timestamp: new Date().toISOString(),
@@ -203,7 +204,7 @@ export const DeveloperConsole: React.FC<DeveloperConsoleProps> = ({ isOpen, onCl
       const { error } = await supabase.from('bots').insert({
         name,
         username: name.toLowerCase().replace(/\s/g, '_') + '_bot',
-        pfp: template?.pfp || `https://api.dicebear.com/7.x/bottts/svg?seed=${name}`,
+        pfp: template?.pfp || AVATARS[0],
         rank: template?.rank || 'MODERATOR',
         triggers: template?.triggers || [],
         isActive: true,
@@ -1231,7 +1232,7 @@ const handleBotTrigger = async (message, bot) => {
                       uid: formData.get('uid'),
                       username: formData.get('username'),
                       email: formData.get('email'),
-                      pfp: `https://api.dicebear.com/7.x/avataaars/svg?seed=${formData.get('username')}`,
+                      pfp: AVATARS[0],
                       rank: formData.get('rank')
                     });
                   }}
@@ -1283,7 +1284,7 @@ const handleBotTrigger = async (message, bot) => {
                       name: 'Question Bot',
                       description: 'Answers common user questions automatically.',
                       rank: 'MODERATOR',
-                      pfp: 'https://api.dicebear.com/7.x/bottts/svg?seed=question',
+                      pfp: AVATARS[0],
                       triggers: [
                         { id: '1', keyword: 'help', response: 'How can I assist you today? Type /rules for guidelines.', type: 'text' },
                         { id: '2', keyword: 'rules', response: '1. Be respectful. 2. No spam. 3. Have fun!', type: 'text' }
@@ -1300,7 +1301,7 @@ const handleBotTrigger = async (message, bot) => {
                       name: 'Welcome Bot',
                       description: 'Greets new users when they join the chat.',
                       rank: 'VIP',
-                      pfp: 'https://api.dicebear.com/7.x/bottts/svg?seed=welcome',
+                      pfp: AVATARS[0],
                       triggers: [
                         { id: '1', keyword: 'hello', response: 'Welcome to Uni-Fy! We are glad to have you here.', type: 'text' }
                       ]

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '../supabase';
 import { UserProfile, UserRank } from '../types';
+import { DEFAULT_PFP, DEFAULT_BANNER } from '../constants';
 import { Infinity, Mail, Lock, User, Calendar, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
@@ -52,8 +53,8 @@ export default function Auth({ onAuthSuccess }: AuthProps) {
           email,
           age: Number(age),
           gender,
-          pfp: `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`,
-          banner: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809',
+          pfp: DEFAULT_PFP,
+          banner: DEFAULT_BANNER,
           onboardingStep: 1,
           isOnline: true,
           lastSeen: new Date().toISOString(),

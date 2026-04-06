@@ -1,10 +1,11 @@
 import React from 'react';
 import { Theme, CardStyle, Border, ProfileEffect, UserProfile } from '../types';
+import { AVATARS, DEFAULT_PFP } from '../constants';
 import { cn } from '../lib/utils';
 
 interface CustomizerPreviewProps {
   user: UserProfile;
-  tab: 'themes' | 'cards' | 'borders' | 'effects';
+  tab: 'themes' | 'cards' | 'borders' | 'effects' | 'pets' | 'cursors';
   selectedTheme?: Theme;
   selectedCard?: CardStyle;
   selectedBorder?: Border;
@@ -42,11 +43,26 @@ export const CustomizerPreview: React.FC<CustomizerPreviewProps> = ({
             selectedCard.bgClass,
             selectedBorder && selectedBorder.id !== 'border-none' ? selectedBorder.className : selectedCard.borderClass
           )}>
-            <img src={user.pfp} className="w-12 h-12 rounded-full" alt="pfp" />
+            <img src={user.pfp || DEFAULT_PFP} className="w-12 h-12 rounded-full" alt="pfp" />
             <div>
               <p className={cn("font-bold", selectedCard.textClass)}>{user.username}</p>
               <p className={cn("text-xs", selectedCard.textClass)}>{user.rank}</p>
             </div>
+          </div>
+        )}
+        {tab === 'pets' && (
+          <div className="p-8 rounded-3xl bg-black/60 backdrop-blur-xl border border-white/10 flex flex-col items-center gap-6 animate-bounce">
+            <span className="text-8xl">{user.pet && user.pet !== 'pet-none' ? '🐾' : '❓'}</span>
+            <p className="text-white font-black uppercase tracking-widest italic">Pet Preview</p>
+          </div>
+        )}
+
+        {tab === 'cursors' && (
+          <div className="p-8 rounded-3xl bg-black/60 backdrop-blur-xl border border-white/10 flex flex-col items-center gap-6">
+            <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center border border-white/20">
+              <span className="text-white text-2xl">🖱️</span>
+            </div>
+            <p className="text-white font-black uppercase tracking-widest italic">Cursor Preview</p>
           </div>
         )}
       </div>

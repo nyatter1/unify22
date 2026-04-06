@@ -55,7 +55,7 @@ interface PollModalProps {
   onSend?: (pollData: any) => void;
 }
 
-export const App: React.FC<PollModalProps> = ({ onClose, currentUser, onSend }) => {
+export const PollModal: React.FC<PollModalProps> = ({ onClose, currentUser, onSend }) => {
   const [question, setQuestion] = useState('');
   const [options, setOptions] = useState(['', '']);
   const [selectedBorderId, setSelectedBorderId] = useState('border-neon-pink');
@@ -97,7 +97,7 @@ export const App: React.FC<PollModalProps> = ({ onClose, currentUser, onSend }) 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-in fade-in duration-500">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-in fade-in duration-500 text-zinc-300">
       <div className={`relative bg-zinc-950 rounded-[2.5rem] p-1.5 w-full max-w-md shadow-[0_0_100px_rgba(0,0,0,0.5)] transition-all duration-700 ease-out ${activeBorder.className} ${isLaunching ? 'scale-95 opacity-50 blur-sm' : 'scale-100'}`}>
         <div className="bg-zinc-950 rounded-[2.3rem] p-8 overflow-hidden relative">
           
@@ -249,4 +249,6 @@ export const App: React.FC<PollModalProps> = ({ onClose, currentUser, onSend }) 
   );
 };
 
-export default App;
+// Fixed export to maintain compatibility with both named and default imports
+export const App = PollModal;
+export default PollModal;

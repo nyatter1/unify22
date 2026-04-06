@@ -501,9 +501,4 @@ export const BORDERS: Border[] = (() => {
   return borders;
 })();
 
-export interface Aura {
-  id: string;
-  name: string;
-  category: string;
-  className: string;
 }

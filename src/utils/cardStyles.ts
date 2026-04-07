@@ -2,27 +2,6 @@ import { UserProfile, CardStyle } from '../types';
 import { CARD_STYLES, BORDERS } from '../constants';
 import { cn } from '../lib/utils';
 
-export interface CardStyle {
-  id: string;
-  name: string;
-  category: string;
-  bgClass: string;
-  borderClass: string;
-  textClass: string;
-  animationClass?: string; // <-- added
-  isCustom?: boolean;
-  customStyles?: {
-    background?: string;
-    border?: string;
-    textColor?: string;
-    effect?: 'none' | 'glow' | 'pulse' | 'glitch' | 'neon' | 'snake' | 'rainbow';
-    badgeIcon?: string;
-    title?: string;
-    titleColor?: string;
-    fontFamily?: 'sans' | 'serif' | 'mono' | 'display';
-  };
-}
-
 export const getCardStyles = (u: UserProfile) => {
   const uCardStyles = [...CARD_STYLES, ...(u.customCardStyles || [])];
   const style = uCardStyles.find(s => s.id === u.cardStyle) || CARD_STYLES[0];
@@ -59,7 +38,8 @@ export const getCardStyles = (u: UserProfile) => {
     className: cn(
       "flex items-center gap-4 group cursor-pointer p-3 rounded-2xl border transition-all",
       style.bgClass,
-      userBorder && userBorder.id !== 'border-none' ? userBorder.className : style.borderClass
+      userBorder && userBorder.id !== 'border-none' ? userBorder.className : style.borderClass,
+      style.animationClass
     ),
     style: {},
     textClass: style.textClass,

@@ -24,6 +24,7 @@ export interface CardStyle {
   bgClass: string;
   borderClass: string;
   textClass: string;
+  animationClass?: string;
   isCustom?: boolean;
   customStyles?: {
     background?: string;

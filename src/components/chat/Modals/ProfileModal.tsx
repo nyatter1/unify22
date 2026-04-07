@@ -86,7 +86,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
           >
             {/* Profile Effect Container */}
             {selectedProfile.profileEffect && (
-              <div className={cn("absolute inset-x-0 bottom-0 top-48 z-0 rounded-b-[3rem] overflow-hidden pointer-events-none", PROFILE_EFFECTS.find(e => e.id === selectedProfile.profileEffect)?.className)} />
+              <div className={cn("absolute inset-0 z-0 rounded-[3rem] overflow-hidden pointer-events-none", PROFILE_EFFECTS.find(e => e.id === selectedProfile.profileEffect)?.className)} />
             )}
 
             {/* Banner */}

@@ -44,7 +44,7 @@ export default function App() {
 
   const fetchProfile = async (uid: string) => {
     try {
-      const { data, error } = await supabase.from('users').select('*').eq('uid', uid).single();
+      const { data, error } = await supabase.from('users').select('*').eq('uid', uid).maybeSingle();
       if (error) {
         console.error("Error fetching profile:", error);
       }

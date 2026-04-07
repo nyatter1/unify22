@@ -229,7 +229,7 @@ export const CustomizerModal = ({
                       </div>
                     </button>
 
-                    {['Custom', 'Elite', 'Fun', 'Street', 'Premium', 'Minimal', 'Extreme'].map(category => {
+                    {['Custom', 'Elite', 'Fun', 'Funny', 'Street', 'Premium', 'Minimal', 'Extreme', 'Special'].map(category => {
                       const categoryCards = allCardStyles.filter(s => s.category === category && s.name.toLowerCase().includes(searchQuery.toLowerCase()));
                       if (categoryCards.length === 0) return null;
 

@@ -198,7 +198,7 @@ export const CARD_STYLES: CardStyle[] = [
   { "id":"guffaw-gala", "name":"Guffaw Gala", "category":"Funny", "bgClass":"bg-purple-50/80", "borderClass":"border-purple-300", "textClass":"text-purple-700 font-extrabold", "animationClass":"animate-bounce-slow" },
   { "id":"quip-quirk", "name":"Quip Quirk", "category":"Funny", "bgClass":"bg-amber-50", "borderClass":"border-amber-300/40", "textClass":"text-amber-800 font-mono", "animationClass":"animate-wobble" },
   { "id":"snort-sheriff", "name":"Snort Sheriff", "category":"Funny", "bgClass":"bg-red-50/80", "borderClass":"border-red-300/40", "textClass":"text-red-700 font-black", "animationClass":"animate-pulse-fast" },
-  { "id":"ha-ha-herald", "name":"Ha-Ha Herald", "category":"Funny", "bgClass":"bg-cyan-50/80", "borderClass":"border-cyan-300", "textClass":"text-cyan-700 font-bold", "animationClass":"animate-tilt" }
+  { "id":"ha-ha-herald", "name":"Ha-Ha Herald", "category":"Funny", "bgClass":"bg-cyan-50/80", "borderClass":"border-cyan-300", "textClass":"text-cyan-700 font-bold", "animationClass":"animate-tilt" },
 
   // Street & Drill
   { id: 'drill-card', name: 'Drill', category: 'Street', bgClass: 'bg-zinc-900', borderClass: 'border-zinc-700 border-2', textClass: 'text-zinc-400 font-black uppercase' },

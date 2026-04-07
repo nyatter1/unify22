@@ -308,10 +308,9 @@ export default function Chat({ user }: ChatProps) {
 
   const onlineCount = allUsers.filter(u => u.isOnline).length;
   const handleProfileClick = (uid: string) => {
-    const user = allUsers.find(u => u.uid === uid);
-    if (user) {
-      setSelectedProfile(user);
-      setShowProfileModal(true);
+    const targetUser = allUsers.find(u => u.uid === uid);
+    if (targetUser) {
+      setSelectedUserForOptions(targetUser);
     }
   };
 
@@ -491,6 +490,19 @@ export default function Chat({ user }: ChatProps) {
         onToggleLike={(uid) => toggleLike(uid, selectedProfile)}
         onBannerClick={() => bannerInputRef.current?.click()}
         onPfpClick={() => pfpInputRef.current?.click()}
+        onRateProfile={(uid) => {
+          const targetUser = allUsers.find(u => u.uid === uid);
+          if (targetUser) {
+            setSelectedUserForRating(targetUser);
+            setShowRatingModal(true);
+          }
+        }}
+        onOpenOptions={(uid) => {
+          const targetUser = allUsers.find(u => u.uid === uid);
+          if (targetUser) {
+            setSelectedUserForOptions(targetUser);
+          }
+        }}
       />
 
       {/* Edit Profile Modal */}
@@ -564,6 +576,54 @@ export default function Chat({ user }: ChatProps) {
         handleBroadcast={handleBroadcast}
         handleGiveGold={handleGiveGold}
         handleGiveRubies={handleGiveRubies}
+        onMute={(uid) => {
+          const targetUser = allUsers.find(u => u.uid === uid);
+          if (targetUser) {
+            setSelectedUserForAdmin(targetUser);
+            setAdminAction('mute');
+            setShowAdminModal(true);
+          }
+        }}
+        onUnmute={(uid) => {
+          const targetUser = allUsers.find(u => u.uid === uid);
+          if (targetUser) {
+            setSelectedUserForAdmin(targetUser);
+            setAdminAction('unmute');
+            setShowAdminModal(true);
+          }
+        }}
+        onKick={(uid) => {
+          const targetUser = allUsers.find(u => u.uid === uid);
+          if (targetUser) {
+            setSelectedUserForAdmin(targetUser);
+            setAdminAction('kick');
+            setShowAdminModal(true);
+          }
+        }}
+        onUnkick={(uid) => {
+          const targetUser = allUsers.find(u => u.uid === uid);
+          if (targetUser) {
+            setSelectedUserForAdmin(targetUser);
+            setAdminAction('unkick');
+            setShowAdminModal(true);
+          }
+        }}
+        onBan={(uid) => {
+          const targetUser = allUsers.find(u => u.uid === uid);
+          if (targetUser) {
+            setSelectedUserForAdmin(targetUser);
+            setAdminAction('ban');
+            setShowAdminModal(true);
+          }
+        }}
+        onUnban={(uid) => {
+          const targetUser = allUsers.find(u => u.uid === uid);
+          if (targetUser) {
+            setSelectedUserForAdmin(targetUser);
+            setAdminAction('unban');
+            setShowAdminModal(true);
+          }
+        }}
       />
 
       {/* Daily Reward Modal */}

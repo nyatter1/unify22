@@ -30,8 +30,10 @@ export const MessageList = ({
 }: MessageListProps) => {
   return (
     <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-8 space-y-8 custom-scrollbar">
-      {messages.map((msg, i) => {
-        const isMe = msg.senderId === user.uid;
+      {messages
+        .filter(msg => !msg.recipientId || msg.recipientId === user.uid || msg.senderId === user.uid)
+        .map((msg, i) => {
+          const isMe = msg.senderId === user.uid;
 
         if (msg.type === 'poll' && msg.pollData) {
           const totalVotes = msg.pollData.options.reduce((acc, o) => acc + o.votes, 0);
@@ -102,7 +104,8 @@ export const MessageList = ({
         }
 
         if (msg.type === 'gamble_allin' || msg.type === 'gamble_dice') {
-          const data = msg.gambleData!;
+          const data = msg.gambleData;
+          if (!data) return null;
           const DiceIcon = data.diceRoll ? DiceIcons[data.diceRoll - 1] : null;
 
           return (
@@ -234,17 +237,6 @@ export const MessageList = ({
                 <div className="text-sm leading-relaxed prose prose-invert max-w-none [&_p]:m-0 [&_pre]:bg-black/20 [&_pre]:p-2 [&_pre]:rounded-lg [&_code]:bg-black/20 [&_code]:px-1 [&_code]:rounded">
                   <Markdown>{msg.text}</Markdown>
                 </div>
-
-                {msg.imageUrl && (
-                  <div className="mt-3 rounded-xl overflow-hidden border border-white/10 bg-black/20">
-                    <img 
-                      src={msg.imageUrl} 
-                      alt="Shared content" 
-                      className="max-w-full h-auto max-h-[400px] object-contain"
-                      referrerPolicy="no-referrer"
-                    />
-                  </div>
-                )}
 
                 {/* Reactions */}
                 {msg.reactions && Object.keys(msg.reactions).length > 0 && (

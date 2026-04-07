@@ -11,6 +11,12 @@ interface AdminPanelModalProps {
   handleBroadcast: (msg: string) => void;
   handleGiveGold: (uid: string, amount: number) => void;
   handleGiveRubies: (uid: string, amount: number) => void;
+  onMute: (uid: string) => void;
+  onKick: (uid: string) => void;
+  onBan: (uid: string) => void;
+  onUnmute: (uid: string) => void;
+  onUnkick: (uid: string) => void;
+  onUnban: (uid: string) => void;
 }
 
 export const AdminPanelModal = ({
@@ -19,7 +25,13 @@ export const AdminPanelModal = ({
   allUsers,
   handleBroadcast,
   handleGiveGold,
-  handleGiveRubies
+  handleGiveRubies,
+  onMute,
+  onKick,
+  onBan,
+  onUnmute,
+  onUnkick,
+  onUnban
 }: AdminPanelModalProps) => {
   const [broadcastMsg, setBroadcastMsg] = React.useState('');
   const [selectedUser, setSelectedUser] = React.useState<string>('');
@@ -91,7 +103,7 @@ export const AdminPanelModal = ({
               <div className="space-y-4">
                 <h3 className="text-xs font-bold text-white/40 uppercase tracking-widest flex items-center gap-2">
                   <Settings className="w-4 h-4" />
-                  Economy Management
+                  User Management
                 </h3>
                 <div className="grid grid-cols-3 gap-4">
                   <select
@@ -109,22 +121,49 @@ export const AdminPanelModal = ({
                     value={amount}
                     onChange={(e) => setAmount(parseInt(e.target.value))}
                     className="bg-white/5 border border-white/10 rounded-2xl p-4 text-white focus:outline-none"
+                    placeholder="Amount..."
                   />
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleGiveGold(selectedUser, amount)}
-                      className="flex-1 rounded-2xl bg-amber-500 text-black font-bold uppercase tracking-widest hover:bg-amber-400 transition-all"
+                      className="flex-1 rounded-2xl bg-amber-500 text-black font-bold uppercase tracking-widest hover:bg-amber-400 transition-all text-[10px]"
                     >
                       Gold
                     </button>
                     <button
                       onClick={() => handleGiveRubies(selectedUser, amount)}
-                      className="flex-1 rounded-2xl bg-purple-500 text-white font-bold uppercase tracking-widest hover:bg-purple-400 transition-all"
+                      className="flex-1 rounded-2xl bg-purple-500 text-white font-bold uppercase tracking-widest hover:bg-purple-400 transition-all text-[10px]"
                     >
                       Rubies
                     </button>
                   </div>
                 </div>
+
+                {selectedUser && (
+                  <div className="grid grid-cols-3 gap-4 pt-4 border-t border-white/5">
+                    <div className="space-y-2">
+                      <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest">Mute</p>
+                      <div className="flex gap-2">
+                        <button onClick={() => onMute(selectedUser)} className="flex-1 py-3 rounded-xl bg-red-500/20 text-red-500 font-bold uppercase tracking-widest hover:bg-red-500/30 transition-all text-[10px]">Mute</button>
+                        <button onClick={() => onUnmute(selectedUser)} className="flex-1 py-3 rounded-xl bg-green-500/20 text-green-500 font-bold uppercase tracking-widest hover:bg-green-500/30 transition-all text-[10px]">Unmute</button>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest">Kick</p>
+                      <div className="flex gap-2">
+                        <button onClick={() => onKick(selectedUser)} className="flex-1 py-3 rounded-xl bg-orange-500/20 text-orange-500 font-bold uppercase tracking-widest hover:bg-orange-500/30 transition-all text-[10px]">Kick</button>
+                        <button onClick={() => onUnkick(selectedUser)} className="flex-1 py-3 rounded-xl bg-green-500/20 text-green-500 font-bold uppercase tracking-widest hover:bg-green-500/30 transition-all text-[10px]">Unkick</button>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest">Ban</p>
+                      <div className="flex gap-2">
+                        <button onClick={() => onBan(selectedUser)} className="flex-1 py-3 rounded-xl bg-red-600/20 text-red-600 font-bold uppercase tracking-widest hover:bg-red-600/30 transition-all text-[10px]">Ban</button>
+                        <button onClick={() => onUnban(selectedUser)} className="flex-1 py-3 rounded-xl bg-green-500/20 text-green-500 font-bold uppercase tracking-widest hover:bg-green-500/30 transition-all text-[10px]">Unban</button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>

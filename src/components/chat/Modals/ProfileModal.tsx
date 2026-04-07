@@ -19,6 +19,8 @@ interface ProfileModalProps {
   onToggleLike: (uid: string) => void;
   onBannerClick: () => void;
   onPfpClick: () => void;
+  onRateProfile: (uid: string) => void;
+  onOpenOptions: (uid: string) => void;
 }
 
 export const ProfileModal: React.FC<ProfileModalProps> = ({
@@ -35,6 +37,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   onToggleLike,
   onBannerClick,
   onPfpClick,
+  onRateProfile,
+  onOpenOptions,
 }) => {
   const getYouTubeId = (url: string) => {
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
@@ -110,26 +114,35 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
               {/* Actions */}
               <div className="absolute top-6 right-6 flex items-center gap-3 z-30">
                 {selectedProfile.uid !== user.uid && (
-                  <button 
-                    onClick={() => {
-                      if (user.friends?.includes(selectedProfile.uid)) {
-                        onUnaddFriend(selectedProfile.uid);
-                      } else {
-                        onSendFriendRequest(selectedProfile.uid);
-                      }
-                    }}
-                    className={cn(
-                      "p-3 rounded-full backdrop-blur-md border transition-all hover:scale-110 active:scale-95",
-                      user.friends?.includes(selectedProfile.uid)
-                        ? "bg-red-500/20 border-red-500/50 text-red-500"
-                        : (selectedProfile.friendRequests?.includes(user.uid) 
-                            ? "bg-amber-500/20 border-amber-500/50 text-amber-500" 
-                            : "bg-black/40 border-white/10 text-white/60 hover:text-white hover:bg-black/60")
-                    )}
-                    title={user.friends?.includes(selectedProfile.uid) ? "Unfriend" : (selectedProfile.friendRequests?.includes(user.uid) ? "Request Sent" : "Add Friend")}
-                  >
-                    {user.friends?.includes(selectedProfile.uid) ? <UserMinus className="w-5 h-5" /> : <UserPlus className="w-5 h-5" />}
-                  </button>
+                  <>
+                    <button 
+                      onClick={() => onOpenOptions(selectedProfile.uid)}
+                      className="p-3 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white/60 hover:text-white hover:bg-black/60 transition-all"
+                      title="User Options"
+                    >
+                      <Shield className="w-5 h-5" />
+                    </button>
+                    <button 
+                      onClick={() => {
+                        if (user.friends?.includes(selectedProfile.uid)) {
+                          onUnaddFriend(selectedProfile.uid);
+                        } else {
+                          onSendFriendRequest(selectedProfile.uid);
+                        }
+                      }}
+                      className={cn(
+                        "p-3 rounded-full backdrop-blur-md border transition-all hover:scale-110 active:scale-95",
+                        user.friends?.includes(selectedProfile.uid)
+                          ? "bg-red-500/20 border-red-500/50 text-red-500"
+                          : (selectedProfile.friendRequests?.includes(user.uid) 
+                              ? "bg-amber-500/20 border-amber-500/50 text-amber-500" 
+                              : "bg-black/40 border-white/10 text-white/60 hover:text-white hover:bg-black/60")
+                      )}
+                      title={user.friends?.includes(selectedProfile.uid) ? "Unfriend" : (selectedProfile.friendRequests?.includes(user.uid) ? "Request Sent" : "Add Friend")}
+                    >
+                      {user.friends?.includes(selectedProfile.uid) ? <UserMinus className="w-5 h-5" /> : <UserPlus className="w-5 h-5" />}
+                    </button>
+                  </>
                 )}
                 {selectedProfile.uid === user.uid && (
                   <button 
@@ -172,6 +185,14 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                   </div>
                 
                 <div className="flex items-center gap-4 mb-4">
+                  {selectedProfile.uid !== user.uid && (
+                    <button 
+                      onClick={() => onRateProfile(selectedProfile.uid)}
+                      className="px-6 py-2 rounded-2xl bg-white/5 border border-white/5 text-white/60 hover:text-white hover:bg-white/10 transition-all text-[10px] font-black uppercase tracking-widest"
+                    >
+                      Rate Profile
+                    </button>
+                  )}
                   <div className="text-center px-6 py-2 rounded-2xl bg-white/5 border border-white/5">
                     <p className="text-amber-500 font-black text-lg">{(selectedProfile.likes || []).length}</p>
                     <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Likes</p>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Send, Volume2, VolumeX, BarChart2 } from 'lucide-react';
+import { Send, Volume2, VolumeX, BarChart2, Image } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 interface ChatInputProps {
@@ -9,6 +9,7 @@ interface ChatInputProps {
   soundEnabled: boolean;
   setSoundEnabled: (s: boolean) => void;
   setShowPollModal: (s: boolean) => void;
+  handleImageUpload: (file: File) => void;
 }
 
 export const ChatInput = ({
@@ -17,8 +18,18 @@ export const ChatInput = ({
   handleSendMessage,
   soundEnabled,
   setSoundEnabled,
-  setShowPollModal
+  setShowPollModal,
+  handleImageUpload
 }: ChatInputProps) => {
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleImageUpload(file);
+    }
+  };
+
   return (
     <div className="p-8 pt-0">
       <form
@@ -32,6 +43,21 @@ export const ChatInput = ({
           placeholder="Share your thoughts or try /roll..."
           className="flex-1 bg-transparent px-6 py-3 focus:outline-none text-white placeholder:text-white/20 text-sm"
         />
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          onChange={onFileChange} 
+          accept="image/*" 
+          className="hidden" 
+        />
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className="px-4 text-white/40 hover:text-white transition-colors"
+          title="Upload image or GIF"
+        >
+          <Image className="w-5 h-5" />
+        </button>
         <button
           type="button"
           onClick={() => setSoundEnabled(!soundEnabled)}

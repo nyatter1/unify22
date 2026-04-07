@@ -1,0 +1,58 @@
+# Project Tutorial: Adding New Features
+
+This project is a full-stack chat application built with React, Vite, Tailwind CSS, and Supabase.
+
+## 1. Project Structure
+- `src/components/Chat.tsx`: The main chat component that orchestrates everything.
+- `src/components/chat/Modals/`: Contains all the modal components (Profile, Customizer, Admin, etc.).
+- `src/hooks/useChatHandlers.ts`: Contains the logic for handling chat actions, database updates, and friend requests.
+- `src/commandHandler.ts`: Centralized logic for chat commands (e.g., /admin, /ban, /gold).
+- `src/types.ts`: TypeScript interfaces for the entire project.
+- `src/constants.ts`: Static data like ranks, default themes, and card styles.
+
+## 2. Adding a New Chat Command
+To add a new command (e.g., `/hug`):
+1. Open `src/commandHandler.ts`.
+2. Find the `handleCommand` function.
+3. Add a new `case` to the switch statement:
+   ```typescript
+   case 'hug':
+     const targetUser = args[0]?.replace('@', '');
+     if (!targetUser) {
+       showToast('Who do you want to hug?');
+       return true;
+     }
+     await sendMessage(`*hugs @${targetUser} tightly*`);
+     return true;
+   ```
+
+## 3. Adding a New Theme or Card Style
+1. Open `src/constants.ts`.
+2. Add your new theme to the `THEMES` array or new card style to `CARD_STYLES`.
+3. If it's a theme, ensure you provide `id`, `name`, `background`, `textColor`, and `accentColor`.
+
+## 4. Adding a New Modal
+1. Create a new component in `src/components/chat/Modals/`.
+2. Use `motion/react` for animations (AnimatePresence and motion.div).
+3. Import and render the modal in `src/components/Chat.tsx`.
+4. Add a state variable in `Chat.tsx` to control its visibility (e.g., `const [showMyModal, setShowMyModal] = useState(false)`).
+
+## 5. Database Updates
+This project uses Supabase. To add a new field to the user profile:
+1. Update the `UserProfile` interface in `src/types.ts`.
+2. Ensure the field exists in your Supabase `users` table.
+3. Use `updateCustomization` in `useChatHandlers.ts` to update fields:
+   ```typescript
+   updateCustomization('my_new_field', newValue);
+   ```
+
+## 6. Real-time Features
+The app uses Supabase Realtime.
+- Messages are synced via the `messages` table subscription in `Chat.tsx`.
+- User profiles are synced via the `users` table subscription in `App.tsx`.
+
+## 7. Tips for Development
+- **Styling**: Use Tailwind CSS utility classes. For complex glassmorphism, check `currentTheme.customStyles`.
+- **Icons**: Use `lucide-react`.
+- **Animations**: Use `motion/react` (formerly framer-motion).
+- **Toasts**: Use the `showToast` function available in `Chat.tsx` or `useChatHandlers.ts`.

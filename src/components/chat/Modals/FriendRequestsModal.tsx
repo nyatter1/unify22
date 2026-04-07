@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { X, Check } from 'lucide-react';
 import { cn } from '../../../lib/utils';
 import { UserProfile, Theme } from '../../../types';

@@ -145,7 +145,7 @@ export interface AppNotification {
   senderId: string;
   senderUsername: string;
   senderPfp: string;
-  type: 'profile_view' | 'profile_like' | 'news_post' | 'mention' | 'custom_admin';
+  type: 'profile_view' | 'profile_like' | 'news_post' | 'mention' | 'custom_admin' | 'global_notification';
   content?: string;
   read: boolean;
   timestamp: any;

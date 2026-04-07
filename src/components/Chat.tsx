@@ -468,13 +468,9 @@ export default function Chat({ user }: ChatProps) {
       <CardEditorModal
         showCardEditor={showCardEditor}
         setShowCardEditor={setShowCardEditor}
-        user={user}
         customCardInput={newCard}
         setCustomCardInput={setNewCard}
         saveCustomCard={() => saveCustomCard(newCard)}
-      />
-        setNewCard={setNewCard}
-        onSave={saveCustomCard}
       />
 
       {/* Profile Modal */}
@@ -576,7 +572,7 @@ export default function Chat({ user }: ChatProps) {
         onClose={() => setShowDailyReward(false)}
         user={user}
         currentTheme={currentTheme}
-        showToast={showToast}
+        onShowToast={showToast}
       />
 
 
@@ -728,10 +724,8 @@ export default function Chat({ user }: ChatProps) {
       <StatusEditorModal
         isOpen={showStatusEditor}
         onClose={() => setShowStatusEditor(false)}
-        newStatus={newStatus}
-        setNewStatus={setNewStatus}
         user={user}
-        showToast={showToast}
+        onShowToast={showToast}
       />
     </div>
   );

@@ -1,8 +1,8 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { X, Camera, UserPlus, UserMinus, Edit3, Heart, Shield, Coins, Gem } from 'lucide-react';
 import { cn } from '../../../lib/utils';
-import { UserProfile, Theme, Border, ProfileEffect, Rank, AppNotification } from '../../../types';
+import { UserProfile, Theme, Border, ProfileEffect, AppNotification } from '../../../types';
 import { DEFAULT_PFP, DEFAULT_BANNER, BORDERS, PROFILE_EFFECTS, RANKS } from '../../../constants';
 
 interface ProfileModalProps {

@@ -235,6 +235,17 @@ export const MessageList = ({
                   <Markdown>{msg.text}</Markdown>
                 </div>
 
+                {msg.imageUrl && (
+                  <div className="mt-3 rounded-xl overflow-hidden border border-white/10 bg-black/20">
+                    <img 
+                      src={msg.imageUrl} 
+                      alt="Shared content" 
+                      className="max-w-full h-auto max-h-[400px] object-contain"
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
+                )}
+
                 {/* Reactions */}
                 {msg.reactions && Object.keys(msg.reactions).length > 0 && (
                   <div className="flex flex-wrap gap-1 mt-2">

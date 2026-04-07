@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Check, Palette, Infinity } from 'lucide-react';
 import { UserProfile } from '../../../types';
 import { BORDERS, PROFILE_EFFECTS } from '../../../constants';
 import { cn } from '../../../lib/utils';
-import { CustomizerPreview } from '../../CustomizerPreview';
+import { CustomizerPreview } from '../CustomizerPreview';
 
 interface CustomizerModalProps {
   showCustomizer: boolean;
@@ -41,6 +41,28 @@ export const CustomizerModal = ({
   getCardStyles,
   DEFAULT_PFP
 }: CustomizerModalProps) => {
+  const [previewTheme, setPreviewTheme] = useState(user.theme);
+  const [previewCard, setPreviewCard] = useState(user.cardStyle);
+  const [previewBorder, setPreviewBorder] = useState(user.border);
+  const [previewEffect, setPreviewEffect] = useState(user.profileEffect);
+
+  useEffect(() => {
+    if (showCustomizer) {
+      setPreviewTheme(user.theme);
+      setPreviewCard(user.cardStyle);
+      setPreviewBorder(user.border);
+      setPreviewEffect(user.profileEffect);
+    }
+  }, [showCustomizer, user.theme, user.cardStyle, user.border, user.profileEffect]);
+
+  const handleUpdate = (field: string, value: any) => {
+    if (field === 'theme') setPreviewTheme(value);
+    if (field === 'cardStyle') setPreviewCard(value);
+    if (field === 'border') setPreviewBorder(value);
+    if (field === 'profileEffect') setPreviewEffect(value);
+    updateCustomization(field, value);
+  };
+
   return (
     <AnimatePresence>
       {showCustomizer && (
@@ -122,10 +144,10 @@ export const CustomizerModal = ({
                 <CustomizerPreview
                   user={user}
                   tab={customizerTab}
-                  selectedTheme={allThemes.find(t => t.id === user.theme)}
-                  selectedCard={allCardStyles.find(s => s.id === user.cardStyle)}
-                  selectedBorder={BORDERS.find(b => b.id === user.border)}
-                  selectedEffect={PROFILE_EFFECTS.find(e => e.id === user.profileEffect)}
+                  selectedTheme={allThemes.find(t => t.id === previewTheme)}
+                  selectedCard={allCardStyles.find(s => s.id === previewCard)}
+                  selectedBorder={BORDERS.find(b => b.id === previewBorder)}
+                  selectedEffect={PROFILE_EFFECTS.find(e => e.id === previewEffect)}
                 />
               </div>
 
@@ -167,10 +189,10 @@ export const CustomizerModal = ({
                             {categoryThemes.map(t => (
                               <button
                                 key={t.id}
-                                onClick={() => updateCustomization('theme', t.id)}
+                                onClick={() => handleUpdate('theme', t.id)}
                                 className={cn(
                                   "group relative aspect-video rounded-2xl overflow-hidden border-2 transition-all hover:scale-[1.02] active:scale-95",
-                                  user.theme === t.id ? "border-amber-500 shadow-[0_0_30px_rgba(245,158,11,0.3)]" : "border-white/5 hover:border-white/20"
+                                  previewTheme === t.id ? "border-amber-500 shadow-[0_0_30px_rgba(245,158,11,0.3)]" : "border-white/5 hover:border-white/20"
                                 )}
                               >
                                 <div
@@ -182,7 +204,7 @@ export const CustomizerModal = ({
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                                 <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
                                   <span className="text-xs font-bold text-white uppercase tracking-widest">{t.name}</span>
-                                  {user.theme === t.id && <Check className="w-4 h-4 text-amber-500" />}
+                                  {previewTheme === t.id && <Check className="w-4 h-4 text-amber-500" />}
                                 </div>
                               </button>
                             ))}
@@ -220,10 +242,10 @@ export const CustomizerModal = ({
                               return (
                                 <button
                                   key={s.id}
-                                  onClick={() => updateCustomization('cardStyle', s.id)}
+                                  onClick={() => handleUpdate('cardStyle', s.id)}
                                   className={cn(
                                     "group relative p-4 rounded-2xl border-2 transition-all hover:scale-[1.02] active:scale-95 text-left",
-                                    user.cardStyle === s.id ? "border-amber-500 shadow-[0_0_30px_rgba(245,158,11,0.3)]" : "border-white/5 hover:border-white/20"
+                                    previewCard === s.id ? "border-amber-500 shadow-[0_0_30px_rgba(245,158,11,0.3)]" : "border-white/5 hover:border-white/20"
                                   )}
                                 >
                                   <div className={className} style={style}>
@@ -232,7 +254,7 @@ export const CustomizerModal = ({
                                       <p className={cn("text-sm font-serif truncate", textClass)}>{user.username}</p>
                                       <p className="text-[9px] opacity-40 uppercase tracking-widest font-bold">{user.age}Y • {user.gender}</p>
                                     </div>
-                                    {user.cardStyle === s.id && <Check className="w-4 h-4 text-amber-500" />}
+                                    {previewCard === s.id && <Check className="w-4 h-4 text-amber-500" />}
                                   </div>
                                   <div className="mt-3 flex items-center justify-between px-1">
                                     <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">{s.name}</span>
@@ -258,15 +280,15 @@ export const CustomizerModal = ({
                             {categoryBorders.map(b => (
                               <button
                                 key={b.id}
-                                onClick={() => updateCustomization('border', b.id)}
+                                onClick={() => handleUpdate('border', b.id)}
                                 className={cn(
                                   "group relative aspect-square rounded-2xl overflow-hidden border-2 transition-all hover:scale-[1.02] active:scale-95 flex flex-col items-center justify-center gap-4 bg-white/5",
-                                  user.border === b.id ? "border-amber-500 shadow-[0_0_30px_rgba(245,158,11,0.3)]" : "border-white/5 hover:border-white/20"
+                                  previewBorder === b.id ? "border-amber-500 shadow-[0_0_30px_rgba(245,158,11,0.3)]" : "border-white/5 hover:border-white/20"
                                 )}
                               >
                                 <div className={cn("w-16 h-16 rounded-full", b.className)} />
                                 <span className="text-[10px] font-bold text-white uppercase tracking-widest text-center px-2">{b.name}</span>
-                                {user.border === b.id && <Check className="absolute top-2 right-2 w-4 h-4 text-amber-500" />}
+                                {previewBorder === b.id && <Check className="absolute top-2 right-2 w-4 h-4 text-amber-500" />}
                               </button>
                             ))}
                           </div>
@@ -287,17 +309,17 @@ export const CustomizerModal = ({
                             {categoryEffects.map(e => (
                               <button
                                 key={e.id}
-                                onClick={() => updateCustomization('profileEffect', e.id)}
+                                onClick={() => handleUpdate('profileEffect', e.id)}
                                 className={cn(
                                   "group relative aspect-video rounded-2xl overflow-hidden border-2 transition-all hover:scale-[1.02] active:scale-95 bg-zinc-900",
-                                  user.profileEffect === e.id ? "border-amber-500 shadow-[0_0_30px_rgba(245,158,11,0.3)]" : "border-white/5 hover:border-white/20"
+                                  previewEffect === e.id ? "border-amber-500 shadow-[0_0_30px_rgba(245,158,11,0.3)]" : "border-white/5 hover:border-white/20"
                                 )}
                               >
                                 <div className={cn("absolute inset-0", e.className)} />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                                 <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
                                   <span className="text-xs font-bold text-white uppercase tracking-widest">{e.name}</span>
-                                  {user.profileEffect === e.id && <Check className="w-4 h-4 text-amber-500" />}
+                                  {previewEffect === e.id && <Check className="w-4 h-4 text-amber-500" />}
                                 </div>
                               </button>
                             ))}

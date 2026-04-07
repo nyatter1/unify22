@@ -12,7 +12,10 @@ export default function App() {
   const [authReady, setAuthReady] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.error("Auth session error:", error);
+      }
       setAuthReady(true);
       if (session?.user) {
         fetchProfile(session.user.id);
@@ -20,6 +23,10 @@ export default function App() {
         setUser(null);
         setLoading(false);
       }
+    }).catch(err => {
+      console.error("Failed to get session:", err);
+      setAuthReady(true);
+      setLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -36,13 +43,22 @@ export default function App() {
   }, []);
 
   const fetchProfile = async (uid: string) => {
-    const { data, error } = await supabase.from('users').select('*').eq('uid', uid).single();
-    if (data) {
-      setUser(data as UserProfile);
-    } else {
+    try {
+      const { data, error } = await supabase.from('users').select('*').eq('uid', uid).single();
+      if (error) {
+        console.error("Error fetching profile:", error);
+      }
+      if (data) {
+        setUser(data as UserProfile);
+      } else {
+        setUser(null);
+      }
+    } catch (err) {
+      console.error("Failed to fetch profile:", err);
       setUser(null);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {

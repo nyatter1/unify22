@@ -71,7 +71,11 @@ export default function Auth({ onAuthSuccess }: AuthProps) {
       }
       onAuthSuccess();
     } catch (err: any) {
-      setError(err.message);
+      if (err.message === 'Failed to fetch') {
+        setError('Network error: Could not connect to the database. The project might be paused or your connection is blocked.');
+      } else {
+        setError(err.message);
+      }
     } finally {
       setLoading(false);
     }

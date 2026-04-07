@@ -137,7 +137,7 @@ export const CARD_STYLES: CardStyle[] = [
   { id: 'toxic-card', name: 'Toxic', category: 'Fun', bgClass: 'bg-lime-500/10', borderClass: 'border-lime-400/60 shadow-[0_0_25px_rgba(163,230,53,0.5)]', textClass: 'text-lime-400 font-bold' },
   { id: 'bubblegum-card', name: 'Bubblegum', category: 'Fun', bgClass: 'bg-pink-500/10', borderClass: 'border-pink-300/40 rounded-full', textClass: 'text-pink-300 font-medium' },
   // funny
-  [
+  
   { "id":"punny-pro", "name":"Punny Pro", "category":"Funny", "bgClass":"bg-yellow-50", "borderClass":"border-yellow-300 shadow-[0_6px_20px_rgba(250,204,21,0.12)]", "textClass":"text-yellow-600 font-bold", "animationClass":"animate-bounce-slow" },
   { "id":"lol-master", "name":"LOL Master", "category":"Funny", "bgClass":"bg-pink-50", "borderClass":"border-pink-300/60 shadow-[0_8px_30px_rgba(236,72,153,0.12)]", "textClass":"text-pink-500 font-black uppercase", "animationClass":"animate-spin-slow" },
   { "id":"giggle-god", "name":"Giggle God", "category":"Funny", "bgClass":"bg-emerald-50", "borderClass":"border-emerald-300 shadow-[0_6px_18px_rgba(16,185,129,0.08)]", "textClass":"text-emerald-600 font-semibold italic", "animationClass":"animate-pulse-slow" },

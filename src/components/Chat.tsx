@@ -54,7 +54,13 @@ import {
   Pin,
   PinOff,
   Volume2,
-  VolumeX
+  VolumeX,
+  Dices,
+  Bomb,
+  TowerControl as Tower,
+  Gamepad2,
+  Sword,
+  UserCog
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
@@ -91,7 +97,6 @@ import { EditProfileModal } from './chat/Modals/EditProfileModal';
 import { NewsModal } from './chat/Modals/NewsModal';
 import { UpdatesModal } from './chat/Modals/UpdatesModal';
 import { RulesModal } from './chat/Modals/RulesModal';
-import { AdminPanelModal } from './chat/Modals/AdminPanelModal';
 
 // Existing Shared Modals
 import { UserOptions } from './UserOptions';
@@ -147,7 +152,6 @@ export default function Chat({ user }: ChatProps) {
   const [showRules, setShowRules] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showFriendRequests, setShowFriendRequests] = useState(false);
-  const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [showDailyReward, setShowDailyReward] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<UserProfile | null>(null);
   const [editTab, setEditTab] = useState<'username' | 'info' | 'bio' | 'pfp' | 'banner' | 'main' | 'rank' | 'youtube'>('main');
@@ -378,7 +382,6 @@ export default function Chat({ user }: ChatProps) {
           setShowNews={setShowNews}
           setShowUpdates={setShowUpdates}
           setShowRules={setShowRules}
-          setShowAdminPanel={setShowAdminPanel}
           unreadNotifications={unreadNotifications}
           currentTheme={currentTheme}
         />
@@ -566,64 +569,6 @@ export default function Chat({ user }: ChatProps) {
         newsPosts={newsPosts}
         allUsers={allUsers}
         currentTheme={currentTheme}
-      />
-
-      {/* Admin Panel Modal */}
-      <AdminPanelModal
-        showAdminPanel={showAdminPanel}
-        setShowAdminPanel={setShowAdminPanel}
-        allUsers={allUsers}
-        handleBroadcast={handleBroadcast}
-        handleGiveGold={handleGiveGold}
-        handleGiveRubies={handleGiveRubies}
-        onMute={(uid) => {
-          const targetUser = allUsers.find(u => u.uid === uid);
-          if (targetUser) {
-            setSelectedUserForAdmin(targetUser);
-            setAdminAction('mute');
-            setShowAdminModal(true);
-          }
-        }}
-        onUnmute={(uid) => {
-          const targetUser = allUsers.find(u => u.uid === uid);
-          if (targetUser) {
-            setSelectedUserForAdmin(targetUser);
-            setAdminAction('unmute');
-            setShowAdminModal(true);
-          }
-        }}
-        onKick={(uid) => {
-          const targetUser = allUsers.find(u => u.uid === uid);
-          if (targetUser) {
-            setSelectedUserForAdmin(targetUser);
-            setAdminAction('kick');
-            setShowAdminModal(true);
-          }
-        }}
-        onUnkick={(uid) => {
-          const targetUser = allUsers.find(u => u.uid === uid);
-          if (targetUser) {
-            setSelectedUserForAdmin(targetUser);
-            setAdminAction('unkick');
-            setShowAdminModal(true);
-          }
-        }}
-        onBan={(uid) => {
-          const targetUser = allUsers.find(u => u.uid === uid);
-          if (targetUser) {
-            setSelectedUserForAdmin(targetUser);
-            setAdminAction('ban');
-            setShowAdminModal(true);
-          }
-        }}
-        onUnban={(uid) => {
-          const targetUser = allUsers.find(u => u.uid === uid);
-          if (targetUser) {
-            setSelectedUserForAdmin(targetUser);
-            setAdminAction('unban');
-            setShowAdminModal(true);
-          }
-        }}
       />
 
       {/* Daily Reward Modal */}

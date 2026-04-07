@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { BarChart2, Shield, Volume2, VolumeX, Send, Coins, Gem } from 'lucide-react';
+import { BarChart2, Shield, Volume2, VolumeX, Send, Coins, Gem, Dices, Bomb, TowerControl as Tower, Gamepad2, Sword, UserCog, Rocket, Ticket, Spade, Circle, ArrowUp } from 'lucide-react';
 import Markdown from 'react-markdown';
 import { Message, UserProfile } from '../../types';
 import { RANKS, BORDERS, DEFAULT_PFP } from '../../constants';
@@ -103,9 +103,28 @@ export const MessageList = ({
           );
         }
 
-        if (msg.type === 'gamble_allin' || msg.type === 'gamble_dice') {
+        if (msg.type?.startsWith('gamble_')) {
           const data = msg.gambleData;
           if (!data) return null;
+          
+          const getGambleIcon = () => {
+            switch (msg.type) {
+              case 'gamble_dice': return <Dices className="w-12 h-12 text-amber-500" />;
+              case 'gamble_allin': return <Rocket className="w-12 h-12 text-amber-500" />;
+              case 'gamble_slots': return <Gamepad2 className="w-12 h-12 text-amber-500" />;
+              case 'gamble_coinflip': return <Coins className="w-12 h-12 text-amber-500" />;
+              case 'gamble_blackjack': return <Spade className="w-12 h-12 text-amber-500" />;
+              case 'gamble_roulette': return <Circle className="w-12 h-12 text-amber-500" />;
+              case 'gamble_crash': return <Rocket className="w-12 h-12 text-amber-500" />;
+              case 'gamble_highlow': return <ArrowUp className="w-12 h-12 text-amber-500" />;
+              case 'gamble_scratch': return <Ticket className="w-12 h-12 text-amber-500" />;
+              case 'gamble_plinko': return <Circle className="w-12 h-12 text-amber-500" />;
+              case 'gamble_mines': return <Bomb className="w-12 h-12 text-amber-500" />;
+              case 'gamble_tower': return <Tower className="w-12 h-12 text-amber-500" />;
+              default: return <Coins className="w-12 h-12 text-amber-500" />;
+            }
+          };
+
           const DiceIcon = data.diceRoll ? DiceIcons[data.diceRoll - 1] : null;
 
           return (
@@ -121,18 +140,16 @@ export const MessageList = ({
               )}
               style={{ border: currentTheme.customStyles?.borderStyle || undefined }}
             >
-              <p className="text-xs font-bold text-amber-500 uppercase tracking-[0.3em]">{msg.senderUsername} did {msg.type === 'gamble_allin' ? '/allin' : '/dice'}</p>
+              <p className="text-xs font-bold text-amber-500 uppercase tracking-[0.3em]">{msg.senderUsername} did {msg.type?.replace('gamble_', '/')}</p>
               <img
                 src={msg.senderPfp}
                 onClick={() => handleProfileClick(msg.senderId)}
                 className="w-20 h-20 rounded-full border-2 border-white/20 shadow-2xl cursor-pointer hover:scale-105 transition-transform"
               />
 
-              {DiceIcon && (
-                <div className="p-4 bg-black/40 rounded-2xl border border-white/10">
-                  <DiceIcon className="w-12 h-12 text-amber-500" />
-                </div>
-              )}
+              <div className="p-4 bg-black/40 rounded-2xl border border-white/10">
+                {DiceIcon ? <DiceIcon className="w-12 h-12 text-amber-500" /> : getGambleIcon()}
+              </div>
 
               <div className={cn(
                 "text-3xl font-serif italic tracking-wider uppercase",
@@ -143,7 +160,7 @@ export const MessageList = ({
 
               <div className="flex flex-col items-center gap-1">
                 <div className="flex items-center gap-2 text-white/60 text-sm">
-                  <span>All-in:</span>
+                  <span>Bet:</span>
                   <span className="font-bold">{data.amount.toLocaleString()}</span>
                   {data.currency === 'gold' ? <Coins className="w-4 h-4" /> : <Gem className="w-4 h-4" />}
                 </div>
@@ -159,6 +176,9 @@ export const MessageList = ({
                     Multiplier: x{data.multiplier}
                   </div>
                 )}
+                <div className="text-[10px] text-white/40 mt-2 italic">
+                  {msg.text}
+                </div>
               </div>
             </motion.div>
           );

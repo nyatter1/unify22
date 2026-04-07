@@ -124,7 +124,7 @@ export interface Message {
   recipientId?: string;
   text: string;
   timestamp: any;
-  type?: 'text' | 'gamble_allin' | 'gamble_dice' | 'poll' | 'rps' | 'trivia' | 'nudge' | 'system';
+  type?: 'text' | 'gamble_allin' | 'gamble_dice' | 'gamble_slots' | 'gamble_coinflip' | 'gamble_blackjack' | 'gamble_roulette' | 'gamble_crash' | 'gamble_highlow' | 'gamble_scratch' | 'gamble_plinko' | 'gamble_mines' | 'gamble_tower' | 'poll' | 'rps' | 'trivia' | 'nudge' | 'system';
   reactions?: Record<string, string[]>; // emoji -> array of userIds
   gambleData?: {
     currency: 'gold' | 'rubies';

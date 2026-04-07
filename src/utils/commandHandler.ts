@@ -306,7 +306,7 @@ export const handleCommand = async (
       const diceRoll = Math.floor(Math.random() * 6) + 1;
       const won = diceRoll >= 4;
       const multiplier = won ? 2 : 0;
-      const winAmount = won ? amount : amount; // winAmount is the change
+      const winAmount = won ? amount : amount;
 
       try {
         const newBalance = won ? balance + amount : balance - amount;
@@ -317,7 +317,7 @@ export const handleCommand = async (
           senderUsername: user.username,
           senderPfp: user.pfp,
           senderRank: user.rank || 'VIP',
-          text: `🎲 Rolled a ${diceRoll}!`,
+          text: `Rolled a ${diceRoll}!`,
           type: 'gamble_dice',
           gambleData: {
             currency: currency as 'gold' | 'rubies',
@@ -350,7 +350,7 @@ export const handleCommand = async (
         return;
       }
 
-      const won = Math.random() > 0.6; // 40% win rate for all-in
+      const won = Math.random() > 0.6;
       const multiplier = won ? 2 : 0;
 
       try {
@@ -362,7 +362,7 @@ export const handleCommand = async (
           senderUsername: user.username,
           senderPfp: user.pfp,
           senderRank: user.rank || 'VIP',
-          text: `🔥 GOING ALL IN!`,
+          text: `GOING ALL IN!`,
           type: 'gamble_allin',
           gambleData: {
             currency: currency as 'gold' | 'rubies',
@@ -420,8 +420,15 @@ export const handleCommand = async (
           senderUsername: user.username,
           senderPfp: user.pfp,
           senderRank: user.rank || 'VIP',
-          text: `🎰 SLOTS: [ ${s1} | ${s2} | ${s3} ]\n${won ? `🎉 WON ${winAmount.toLocaleString()} ${currency}!` : `💀 LOST ${amount.toLocaleString()} ${currency}`}`,
-          type: 'text',
+          text: `[ ${s1} | ${s2} | ${s3} ]`,
+          type: 'gamble_slots',
+          gambleData: {
+            currency: currency as 'gold' | 'rubies',
+            amount,
+            result: won ? 'won' : 'lost',
+            multiplier,
+            winAmount: won ? winAmount : amount
+          },
           timestamp: new Date().toISOString(),
         });
       } catch (err) {
@@ -460,8 +467,15 @@ export const handleCommand = async (
           senderUsername: user.username,
           senderPfp: user.pfp,
           senderRank: user.rank || 'VIP',
-          text: `🪙 COINFLIP: It was ${result.toUpperCase()}! ${won ? `🎉 WON ${amount.toLocaleString()} ${currency}!` : `💀 LOST ${amount.toLocaleString()} ${currency}`}`,
-          type: 'text',
+          text: `It was ${result.toUpperCase()}!`,
+          type: 'gamble_coinflip',
+          gambleData: {
+            currency: currency as 'gold' | 'rubies',
+            amount,
+            result: won ? 'won' : 'lost',
+            multiplier: won ? 2 : 0,
+            winAmount: amount
+          },
           timestamp: new Date().toISOString(),
         });
       } catch (err) {
@@ -487,8 +501,8 @@ export const handleCommand = async (
         return;
       }
 
-      const playerVal = Math.floor(Math.random() * 10) + 12; // 12-21
-      const dealerVal = Math.floor(Math.random() * 10) + 12; // 12-21
+      const playerVal = Math.floor(Math.random() * 10) + 12;
+      const dealerVal = Math.floor(Math.random() * 10) + 12;
       
       let result = 'lost';
       if (playerVal > 21) result = 'bust';
@@ -507,8 +521,15 @@ export const handleCommand = async (
           senderUsername: user.username,
           senderPfp: user.pfp,
           senderRank: user.rank || 'VIP',
-          text: `🃏 BLACKJACK: You: ${playerVal} | Dealer: ${dealerVal}\n${won ? `🎉 WON ${amount.toLocaleString()} ${currency}!` : (push ? `🤝 PUSH (Refunded)` : `💀 LOST ${amount.toLocaleString()} ${currency}`)}`,
-          type: 'text',
+          text: `You: ${playerVal} | Dealer: ${dealerVal}`,
+          type: 'gamble_blackjack',
+          gambleData: {
+            currency: currency as 'gold' | 'rubies',
+            amount,
+            result: won ? 'won' : 'lost',
+            multiplier: won ? 2 : (push ? 1 : 0),
+            winAmount: push ? 0 : amount
+          },
           timestamp: new Date().toISOString(),
         });
       } catch (err) {
@@ -560,8 +581,15 @@ export const handleCommand = async (
           senderUsername: user.username,
           senderPfp: user.pfp,
           senderRank: user.rank || 'VIP',
-          text: `🎡 ROULETTE: Landed on ${number} (${color.toUpperCase()})!\n${won ? `🎉 WON ${winAmount.toLocaleString()} ${currency}!` : `💀 LOST ${amount.toLocaleString()} ${currency}`}`,
-          type: 'text',
+          text: `Landed on ${number} (${color.toUpperCase()})!`,
+          type: 'gamble_roulette',
+          gambleData: {
+            currency: currency as 'gold' | 'rubies',
+            amount,
+            result: won ? 'won' : 'lost',
+            multiplier,
+            winAmount: won ? winAmount : amount
+          },
           timestamp: new Date().toISOString(),
         });
       } catch (err) {
@@ -600,8 +628,15 @@ export const handleCommand = async (
           senderUsername: user.username,
           senderPfp: user.pfp,
           senderRank: user.rank || 'VIP',
-          text: `🚀 CRASH: Rocket crashed at ${crashPoint}x!\n${won ? `🎉 WON ${winAmount.toLocaleString()} ${currency}!` : `💀 LOST ${amount.toLocaleString()} ${currency}`}`,
-          type: 'text',
+          text: `Rocket crashed at ${crashPoint}x!`,
+          type: 'gamble_crash',
+          gambleData: {
+            currency: currency as 'gold' | 'rubies',
+            amount,
+            result: won ? 'won' : 'lost',
+            multiplier: crashPoint,
+            winAmount: won ? winAmount : amount
+          },
           timestamp: new Date().toISOString(),
         });
       } catch (err) {
@@ -641,8 +676,15 @@ export const handleCommand = async (
           senderUsername: user.username,
           senderPfp: user.pfp,
           senderRank: user.rank || 'VIP',
-          text: `🃏 HIGHLOW: Base: ${baseCard} | Next: ${nextCard}\n${won ? `🎉 WON ${amount.toLocaleString()} ${currency}!` : `💀 LOST ${amount.toLocaleString()} ${currency}`}`,
-          type: 'text',
+          text: `Base: ${baseCard} | Next: ${nextCard}`,
+          type: 'gamble_highlow',
+          gambleData: {
+            currency: currency as 'gold' | 'rubies',
+            amount,
+            result: won ? 'won' : 'lost',
+            multiplier: won ? 2 : 0,
+            winAmount: amount
+          },
           timestamp: new Date().toISOString(),
         });
       } catch (err) {
@@ -680,8 +722,15 @@ export const handleCommand = async (
           senderUsername: user.username,
           senderPfp: user.pfp,
           senderRank: user.rank || 'VIP',
-          text: `🎫 SCRATCH: ${win ? `💰 BIG WIN! (+${winAmount} ${currency})` : '❌ Better luck next time!'}`,
-          type: 'text',
+          text: win ? `💰 BIG WIN!` : '❌ Better luck next time!',
+          type: 'gamble_scratch',
+          gambleData: {
+            currency: currency as 'gold' | 'rubies',
+            amount,
+            result: win ? 'won' : 'lost',
+            multiplier: win ? 3 : 0,
+            winAmount: win ? winAmount : amount
+          },
           timestamp: new Date().toISOString(),
         });
       } catch (err) {
@@ -720,8 +769,15 @@ export const handleCommand = async (
           senderUsername: user.username,
           senderPfp: user.pfp,
           senderRank: user.rank || 'VIP',
-          text: `🔵 PLINKO: Ball dropped and hit x${multiplier}!\n${multiplier >= 1 ? `🎉 WON ${winAmount.toLocaleString()} ${currency}!` : `💀 LOST ${amount.toLocaleString()} ${currency}`}`,
-          type: 'text',
+          text: `Ball hit x${multiplier}!`,
+          type: 'gamble_plinko',
+          gambleData: {
+            currency: currency as 'gold' | 'rubies',
+            amount,
+            result: multiplier >= 1 ? 'won' : 'lost',
+            multiplier,
+            winAmount: multiplier >= 1 ? winAmount : amount
+          },
           timestamp: new Date().toISOString(),
         });
       } catch (err) {
@@ -761,8 +817,15 @@ export const handleCommand = async (
           senderUsername: user.username,
           senderPfp: user.pfp,
           senderRank: user.rank || 'VIP',
-          text: `💣 MINES: ${hitMine ? '💥 BOOM! You hit a mine!' : `💎 SAFE! You found a diamond! (x${multiplier.toFixed(2)})`}\n${!hitMine ? `🎉 WON ${winAmount.toLocaleString()} ${currency}!` : `💀 LOST ${amount.toLocaleString()} ${currency}`}`,
-          type: 'text',
+          text: hitMine ? '💥 BOOM!' : `💎 SAFE!`,
+          type: 'gamble_mines',
+          gambleData: {
+            currency: currency as 'gold' | 'rubies',
+            amount,
+            result: hitMine ? 'lost' : 'won',
+            multiplier,
+            winAmount: hitMine ? amount : winAmount
+          },
           timestamp: new Date().toISOString(),
         });
       } catch (err) {
@@ -788,7 +851,7 @@ export const handleCommand = async (
         return;
       }
 
-      const floor = Math.floor(Math.random() * 5); // 0-4
+      const floor = Math.floor(Math.random() * 5);
       const multipliers = [0, 1.5, 2.5, 5, 10];
       const multiplier = multipliers[floor];
       const winAmount = Math.floor(amount * multiplier);
@@ -802,8 +865,15 @@ export const handleCommand = async (
           senderUsername: user.username,
           senderPfp: user.pfp,
           senderRank: user.rank || 'VIP',
-          text: `🏰 TOWER: You climbed to floor ${floor}!\n${floor > 0 ? `🎉 WON ${winAmount.toLocaleString()} ${currency}!` : `💀 FELL! LOST ${amount.toLocaleString()} ${currency}`}`,
-          type: 'text',
+          text: floor > 0 ? `Climbed to floor ${floor}!` : `Fell!`,
+          type: 'gamble_tower',
+          gambleData: {
+            currency: currency as 'gold' | 'rubies',
+            amount,
+            result: floor > 0 ? 'won' : 'lost',
+            multiplier,
+            winAmount: floor > 0 ? winAmount : amount
+          },
           timestamp: new Date().toISOString(),
         });
       } catch (err) {
@@ -812,18 +882,195 @@ export const handleCommand = async (
       }
       break;
     }
-    case '/bank': {
-      const { data: latestUser } = await supabase.from('users').select('gold, rubies').eq('uid', user.uid).single();
-      const gold = latestUser?.gold ?? user.gold;
-      const rubies = latestUser?.rubies ?? user.rubies;
-      
-      showToast(`Bank: ${gold.toLocaleString()} Gold | ${rubies.toLocaleString()} Rubies`);
+    case '/setgold':
+    case '/setrubies': {
+      const isAdmin = user.rank === 'DEVELOPER' || user.rank === 'ADMINISTRATION' || user.rank === 'FOUNDER';
+      if (!isAdmin) {
+        showToast('Only high-ranking staff can use this command.');
+        return;
+      }
+      const targetUsername = parts[1];
+      const amount = parseInt(parts[2]);
+      const currency = command === '/setgold' ? 'gold' : 'rubies';
+
+      if (!targetUsername || isNaN(amount)) {
+        showToast(`Usage: ${command} [username] [amount]`);
+        return;
+      }
+
+      const targetUser = allUsers.find(u => u.username.toLowerCase() === targetUsername.toLowerCase());
+      if (!targetUser) {
+        showToast('User not found.');
+        return;
+      }
+
+      await supabase.from('users').update({ [currency]: amount }).eq('uid', targetUser.uid);
+      showToast(`Set ${targetUser.username}'s ${currency} to ${amount.toLocaleString()}`);
+      break;
+    }
+    case '/setrank': {
+      const isAdmin = user.rank === 'DEVELOPER' || user.rank === 'FOUNDER';
+      if (!isAdmin) {
+        showToast('Only Developers/Founders can use this command.');
+        return;
+      }
+      const targetUsername = parts[1];
+      const rank = parts[2]?.toUpperCase();
+
+      if (!targetUsername || !rank) {
+        showToast('Usage: /setrank [username] [rank]');
+        return;
+      }
+
+      const targetUser = allUsers.find(u => u.username.toLowerCase() === targetUsername.toLowerCase());
+      if (!targetUser) {
+        showToast('User not found.');
+        return;
+      }
+
+      await supabase.from('users').update({ rank }).eq('uid', targetUser.uid);
+      showToast(`Set ${targetUser.username}'s rank to ${rank}`);
+      break;
+    }
+    case '/announce': {
+      const isAdmin = user.rank === 'DEVELOPER' || user.rank === 'ADMINISTRATION' || user.rank === 'FOUNDER' || user.rank === 'MODERATOR';
+      if (!isAdmin) return;
+      const msg = parts.slice(1).join(' ');
+      if (!msg) return;
+
+      await supabase.from('messages').insert({
+        senderId: 'SYSTEM',
+        senderUsername: 'BROADCAST',
+        senderPfp: 'https://cdn-icons-png.flaticon.com/512/1786/1786631.png',
+        text: `📢 **ANNOUNCEMENT:** ${msg}`,
+        type: 'system',
+        timestamp: new Date().toISOString(),
+      });
+      break;
+    }
+    case '/love': {
+      const target = parts[1] || 'everyone';
+      const percent = Math.floor(Math.random() * 101);
       await supabase.from('messages').insert({
         senderId: user.uid,
+        senderUsername: user.username,
+        senderPfp: user.pfp,
+        text: `❤️ ${user.username} loves ${target} ${percent}%!`,
+        type: 'text',
+        timestamp: new Date().toISOString(),
+      });
+      break;
+    }
+    case '/hug': {
+      const target = parts[1];
+      if (!target) return;
+      await supabase.from('messages').insert({
+        senderId: user.uid,
+        senderUsername: user.username,
+        senderPfp: user.pfp,
+        text: `🫂 ${user.username} gave ${target} a big hug!`,
+        type: 'text',
+        timestamp: new Date().toISOString(),
+      });
+      break;
+    }
+    case '/slap': {
+      const target = parts[1];
+      if (!target) return;
+      await supabase.from('messages').insert({
+        senderId: user.uid,
+        senderUsername: user.username,
+        senderPfp: user.pfp,
+        text: `🖐️ ${user.username} slapped ${target} across the face!`,
+        type: 'text',
+        timestamp: new Date().toISOString(),
+      });
+      break;
+    }
+    case '/kill': {
+      const target = parts[1];
+      if (!target) return;
+      const methods = ['with a giant spoon', 'by tickling them to death', 'with a laser beam', 'by throwing a piano at them'];
+      const method = methods[Math.floor(Math.random() * methods.length)];
+      await supabase.from('messages').insert({
+        senderId: user.uid,
+        senderUsername: user.username,
+        senderPfp: user.pfp,
+        text: `💀 ${user.username} killed ${target} ${method}!`,
+        type: 'text',
+        timestamp: new Date().toISOString(),
+      });
+      break;
+    }
+    case '/dance': {
+      await supabase.from('messages').insert({
+        senderId: user.uid,
+        senderUsername: user.username,
+        senderPfp: user.pfp,
+        text: `💃 ${user.username} is busting some moves! 🕺`,
+        type: 'text',
+        timestamp: new Date().toISOString(),
+      });
+      break;
+    }
+    case '/weather': {
+      const city = parts.slice(1).join(' ') || 'the world';
+      const temps = ['Sunny ☀️', 'Rainy 🌧️', 'Cloudy ☁️', 'Snowing ❄️', 'Stormy ⛈️'];
+      const temp = temps[Math.floor(Math.random() * temps.length)];
+      await supabase.from('messages').insert({
+        senderId: user.uid,
+        senderUsername: user.username,
+        senderPfp: user.pfp,
+        text: `🌡️ Weather in ${city}: ${temp} (${Math.floor(Math.random() * 35)}°C)`,
+        type: 'text',
+        timestamp: new Date().toISOString(),
+      });
+      break;
+    }
+    case '/joke': {
+      const jokes = [
+        "Why don't scientists trust atoms? Because they make up everything!",
+        "What do you call a fake noodle? An impasta!",
+        "Why did the scarecrow win an award? Because he was outstanding in his field!",
+        "How does a penguin build its house? Igloos it together!"
+      ];
+      const joke = jokes[Math.floor(Math.random() * jokes.length)];
+      await supabase.from('messages').insert({
+        senderId: user.uid,
+        senderUsername: user.username,
+        senderPfp: user.pfp,
+        text: `🤡 ${joke}`,
+        type: 'text',
+        timestamp: new Date().toISOString(),
+      });
+      break;
+    }
+    case '/fact': {
+      const facts = [
+        "Honey never spoils.",
+        "A day on Venus is longer than a year on Venus.",
+        "Bananas are berries, but strawberries aren't.",
+        "Octopuses have three hearts."
+      ];
+      const fact = facts[Math.floor(Math.random() * facts.length)];
+      await supabase.from('messages').insert({
+        senderId: user.uid,
+        senderUsername: user.username,
+        senderPfp: user.pfp,
+        text: `💡 FACT: ${fact}`,
+        type: 'text',
+        timestamp: new Date().toISOString(),
+      });
+      break;
+    }
+    case '/ping': {
+      const start = Date.now();
+      await supabase.from('messages').insert({
+        senderId: 'SYSTEM',
         senderUsername: 'SYSTEM',
         senderPfp: 'https://cdn-icons-png.flaticon.com/512/1786/1786631.png',
         recipientId: user.uid,
-        text: `🏦 **YOUR BANK:**\n💰 Gold: ${gold.toLocaleString()}\n💎 Rubies: ${rubies.toLocaleString()}`,
+        text: `🏓 Pong! Latency: ${Date.now() - start}ms`,
         type: 'system',
         timestamp: new Date().toISOString(),
       });
@@ -836,29 +1083,27 @@ export const handleCommand = async (
         "• `/bank` - Check your balance",
         "• `/pay {user} {amt} {gold|rubies}` - Pay someone",
         "• `/dice {gold|rubies} {amt}` - Roll dice (4+ wins)",
-        "• `/allin {gold|rubies}` - Gamble everything (40% win)",
+        "• `/allin {gold|rubies}` - Gamble everything",
         "• `/slots {gold|rubies} {amt}` - Play slots",
         "• `/coinflip {gold|rubies} {amt} {h|t}` - Flip a coin",
-        "• `/blackjack {gold|rubies} {amt}` - Simplified blackjack",
-        "• `/roulette {gold|rubies} {amt} {bet}` - Play roulette",
-        "• `/crash {gold|rubies} {amt}` - Rocket crash game",
-        "• `/highlow {gold|rubies} {amt} {h|l}` - Guess next card",
+        "• `/blackjack {gold|rubies} {amt}` - Blackjack",
+        "• `/roulette {gold|rubies} {amt} {bet}` - Roulette",
+        "• `/crash {gold|rubies} {amt}` - Crash game",
+        "• `/highlow {gold|rubies} {amt} {h|l}` - High/Low",
         "• `/scratch {gold|rubies} {amt}` - Scratch card",
-        "• `/plinko {gold|rubies} {amt}` - Plinko ball drop",
-        "• `/mines {gold|rubies} {amt} {mines}` - Minesweeper gamble",
-        "• `/tower {gold|rubies} {amt}` - Climb the tower",
-        "• `/roll {max}` - Roll 1 to max",
-        "• `/flip` - Flip heads/tails",
-        "• `/8ball {q}` - Magic 8-ball",
-        "• `/nudge {user}` - Nudge a user",
-        "• `/trivia` - Start a trivia question",
-        "• `/rps {r|p|s}` - Rock Paper Scissors",
-        "• `/staff` - See online staff",
-        "• `/clear` - Clear chat (Admins only)"
+        "• `/plinko {gold|rubies} {amt}` - Plinko",
+        "• `/mines {gold|rubies} {amt} {mines}` - Mines",
+        "• `/tower {gold|rubies} {amt}` - Tower",
+        "• `/love {user}` | `/hug {user}` | `/slap {user}` | `/kill {user}`",
+        "• `/joke` | `/fact` | `/weather {city}` | `/dance`",
+        "• `/ping` | `/staff` | `/roll {max}` | `/flip` | `/8ball {q}`",
+        "• `/nudge {user}` | `/trivia` | `/rps {r|p|s}`",
+        "• `/announce {msg}` (Staff) | `/clear` (Staff)",
+        "• `/setgold {user} {amt}` (Admin) | `/setrank {user} {rank}` (Admin)"
       ].join('\n');
       
       await supabase.from('messages').insert({
-        senderId: user.uid,
+        senderId: 'SYSTEM',
         senderUsername: 'SYSTEM',
         senderPfp: 'https://cdn-icons-png.flaticon.com/512/1786/1786631.png',
         recipientId: user.uid,

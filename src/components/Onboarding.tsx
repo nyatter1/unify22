@@ -26,9 +26,10 @@ export default function Onboarding({ user, onComplete }: OnboardingProps) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 500000) { // 500KB limit for safety
-      setError('File is too large. Please choose an image under 500KB.');
+    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      setError('File is too large. Please choose an image under 5MB.');
       setTimeout(() => setError(null), 3000);
+      e.target.value = '';
       return;
     }
 
@@ -37,6 +38,7 @@ export default function Onboarding({ user, onComplete }: OnboardingProps) {
       const base64String = reader.result as string;
       if (type === 'pfp') setSelectedPfp(base64String);
       else setSelectedBanner(base64String);
+      e.target.value = '';
     };
     reader.readAsDataURL(file);
   };

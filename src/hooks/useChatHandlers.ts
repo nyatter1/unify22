@@ -422,8 +422,9 @@ export const useChatHandlers = (
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 1024 * 1024) {
-      showToast('File too large! Max 1MB.');
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('File too large! Max 5MB.');
+      e.target.value = '';
       return;
     }
 
@@ -432,6 +433,7 @@ export const useChatHandlers = (
       const base64String = reader.result as string;
       updateCustomization(field, base64String);
       showToast(`${field.toUpperCase()} updated!`);
+      e.target.value = '';
     };
     reader.readAsDataURL(file);
   };
@@ -442,6 +444,7 @@ export const useChatHandlers = (
 
     if (file.size > 1024 * 1024) {
       showToast('File too large! Max 1MB.');
+      e.target.value = '';
       return;
     }
 
@@ -450,6 +453,7 @@ export const useChatHandlers = (
       const base64String = reader.result as string;
       setCustomRankForm({ ...customRankForm, icon: base64String });
       showToast('Rank icon uploaded!');
+      e.target.value = '';
     };
     reader.readAsDataURL(file);
   };
@@ -520,11 +524,12 @@ export const useChatHandlers = (
     }
   };
 
-  const handleImageUpload = async (file: File) => {
+  const handleImageUpload = async (file: File, e?: React.ChangeEvent<HTMLInputElement>) => {
     if (!file) return;
 
-    if (file.size > 1024 * 1024) {
-      showToast('File too large! Max 1MB.');
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('File too large! Max 5MB.');
+      if (e) e.target.value = '';
       return;
     }
 
@@ -545,6 +550,7 @@ export const useChatHandlers = (
         console.error(err);
         showToast('Failed to send image');
       }
+      if (e) e.target.value = '';
     };
     reader.readAsDataURL(file);
   };

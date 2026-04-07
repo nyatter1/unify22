@@ -532,6 +532,21 @@ export default function Chat({ user }: ChatProps) {
         resetCustomRank={resetCustomRank}
       />
 
+      <input 
+        type="file" 
+        ref={pfpInputRef} 
+        onChange={(e) => handleFileUploadHandler(e, 'pfp')} 
+        accept="image/*" 
+        className="hidden" 
+      />
+      <input 
+        type="file" 
+        ref={bannerInputRef} 
+        onChange={(e) => handleFileUploadHandler(e, 'banner')} 
+        accept="image/*" 
+        className="hidden" 
+      />
+
       {/* Notifications Modal */}
       <NotificationsModal
         isOpen={showNotifications}

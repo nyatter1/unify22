@@ -159,7 +159,7 @@ export const EditProfileModal = ({
                   </div>
                   <div className="text-center space-y-2">
                     <p className="text-white font-bold uppercase tracking-widest text-sm">Profile Picture</p>
-                    <p className="text-white/40 text-xs">Recommended: Square image, max 1MB</p>
+                    <p className="text-white/40 text-xs">Recommended: Square image, max 5MB</p>
                   </div>
                   <button 
                     onClick={() => pfpInputRef.current?.click()}
@@ -186,7 +186,7 @@ export const EditProfileModal = ({
                   </div>
                   <div className="text-center space-y-2">
                     <p className="text-white font-bold uppercase tracking-widest text-sm">Profile Banner</p>
-                    <p className="text-white/40 text-xs">Recommended: 1500x500px, max 1MB</p>
+                    <p className="text-white/40 text-xs">Recommended: 1500x500px, max 5MB</p>
                   </div>
                   <button 
                     onClick={() => bannerInputRef.current?.click()}

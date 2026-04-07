@@ -9,7 +9,7 @@ interface ChatInputProps {
   soundEnabled: boolean;
   setSoundEnabled: (s: boolean) => void;
   setShowPollModal: (s: boolean) => void;
-  handleImageUpload: (file: File) => void;
+  handleImageUpload: (file: File, e?: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 export const ChatInput = ({
@@ -26,7 +26,7 @@ export const ChatInput = ({
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      handleImageUpload(file);
+      handleImageUpload(file, e);
     }
   };
 
@@ -47,14 +47,14 @@ export const ChatInput = ({
           type="file" 
           ref={fileInputRef} 
           onChange={onFileChange} 
-          accept="image/*" 
+          accept="image/*,video/*,audio/*" 
           className="hidden" 
         />
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
           className="px-4 text-white/40 hover:text-white transition-colors"
-          title="Upload image or GIF"
+          title="Upload media (Image, GIF, MP4, MP3)"
         >
           <Image className="w-5 h-5" />
         </button>

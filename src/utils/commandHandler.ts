@@ -22,6 +22,70 @@ export const handleCommand = async (
   const { user, allUsers, showToast } = context;
 
   switch (command) {
+    case '/allin': {
+      const currency = parts[1]?.toLowerCase() as 'gold' | 'rubies';
+
+      if (currency !== 'gold' && currency !== 'rubies') {
+        showToast('Usage: /allin [gold|rubies]');
+        return;
+      }
+
+      // Fetch latest balance from DB to prevent exploits
+      const { data: latestUser } = await supabase
+        .from('users')
+        .select('gold, rubies')
+        .eq('uid', user.uid)
+        .single();
+      
+      const balance = currency === 'gold' ? (latestUser?.gold ?? user.gold) : (latestUser?.rubies ?? user.rubies);
+
+      if (!balance || balance <= 0) {
+        showToast(`You have no ${currency} to go all in with!`);
+        return;
+      }
+
+      // Gamble Logic
+      const roll = Math.random() * 100;
+      let multiplier = 0;
+
+      if (roll > 99.9) multiplier = 1000;      // 0.1% Jackpot
+      else if (roll > 98) multiplier = 10;     // 2% chance
+      else if (roll > 90) multiplier = 5;      // 8% chance
+      else if (roll > 70) multiplier = 2;      // 20% chance
+      else if (roll > 45) multiplier = 1;      // 25% chance (Break even)
+      else multiplier = 0;                     // 44.9% chance (Loss)
+
+      const isWin = multiplier >= 1;
+      const winAmount = Math.floor(balance * multiplier);
+      const resultStatus = isWin ? 'WON' : 'LOST';
+      
+      try {
+        // Update database: Replace old balance with the result of the gamble
+        await supabase.from('users').update({ [currency]: winAmount }).eq('uid', user.uid);
+
+        // Broadcast Message with the specific format requested
+        await supabase.from('messages').insert({
+          senderId: user.uid,
+          senderUsername: user.username,
+          senderPfp: user.pfp,
+          senderRank: user.rank || 'VIP',
+          text: `🎰 **ALL IN GAMBLE**\n\n` +
+                `👤 **User:** ${user.username}\n` +
+                `💰 **Stake:** ${balance.toLocaleString()} ${currency}\n` +
+                `✨ **Result:** ${resultStatus}!\n` +
+                `📈 **Multiplier:** x${multiplier}\n` +
+                `${isWin ? '🎊' : '💀'} **Total:** ${winAmount.toLocaleString()} ${currency}`,
+          type: 'gamble_allin',
+          timestamp: new Date().toISOString(),
+        });
+
+      } catch (err) {
+        console.error(err);
+        showToast('The casino is currently closed (Database Error).');
+      }
+      break;
+    }
+
     case '/clear':
     case '/clearchat': {
       const isAdmin = user.rank === 'DEVELOPER' || user.rank === 'ADMINISTRATION' || user.rank === 'STAR' || user.rank === 'FOUNDER';
@@ -43,6 +107,7 @@ export const handleCommand = async (
       }
       break;
     }
+
     case '/roll': {
       const isDev = user.email === 'dev@gmail.com';
       const max = parseInt(parts[1]) || 100;
@@ -58,6 +123,7 @@ export const handleCommand = async (
       });
       break;
     }
+
     case '/flip': {
       const isDev = user.email === 'dev@gmail.com';
       const result = isDev ? 'Heads' : (Math.random() > 0.5 ? 'Heads' : 'Tails');
@@ -72,6 +138,7 @@ export const handleCommand = async (
       });
       break;
     }
+
     case '/8ball': {
       const question = parts.slice(1).join(' ');
       if (!question) {
@@ -91,6 +158,7 @@ export const handleCommand = async (
       });
       break;
     }
+
     case '/give':
     case '/pay': {
       const targetUsername = parts[1];
@@ -146,6 +214,7 @@ export const handleCommand = async (
       }
       break;
     }
+
     case '/staff': {
       const staffRanks = ['DEVELOPER', 'ADMINISTRATION', 'STAR', 'FOUNDER', 'MODERATOR'];
       const onlineStaff = allUsers.filter(u => u.isOnline && staffRanks.includes(u.rank || ''));
@@ -164,6 +233,7 @@ export const handleCommand = async (
       });
       break;
     }
+
     case '/mute':
     case '/unmute':
     case '/kick':
@@ -188,12 +258,12 @@ export const handleCommand = async (
         return;
       }
 
-      // Need to handle admin modal via context
       context.setters.setSelectedUserForAdmin(targetUser);
       context.setters.setAdminAction(command.substring(1) as any);
       context.setters.setShowAdminModal(true);
       break;
     }
+
     case '/nudge': {
       const targetUsername = parts[1];
       if (!targetUsername) {
@@ -217,6 +287,7 @@ export const handleCommand = async (
       });
       break;
     }
+
     case '/trivia': {
       if (context.triviaState.triviaActive) {
         showToast('Trivia is already active!');
@@ -245,6 +316,7 @@ export const handleCommand = async (
       });
       break;
     }
+
     case '/rps': {
       const choice = parts[1]?.toLowerCase();
       if (!['rock', 'paper', 'scissors'].includes(choice)) {
@@ -286,6 +358,7 @@ export const handleCommand = async (
       });
       break;
     }
+
     case '/help': {
       const helpText = [
         "📜 **COMMANDS:**",
@@ -311,6 +384,7 @@ export const handleCommand = async (
       });
       break;
     }
+
     default:
       showToast('Invalid command!');
       break;

@@ -103,6 +103,7 @@ import { UserOptions } from './UserOptions';
 import { RatingModal } from './RatingModal';
 import { ForceSpeakModal } from './ForceSpeakModal';
 import { AdminModal } from './AdminModal';
+import { CommandsModal } from './CommandsModal';
 import { DeveloperConsole } from './DeveloperConsole';
 import { RatingsList } from './RatingsList';
 
@@ -132,6 +133,7 @@ export default function Chat({ user }: ChatProps) {
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [showForceSpeakModal, setShowForceSpeakModal] = useState(false);
   const [showAdminModal, setShowAdminModal] = useState(false);
+  const [showCommandsModal, setShowCommandsModal] = useState(false);
   const [showPollModal, setShowPollModal] = useState(false);
   const [showStatusEditor, setShowStatusEditor] = useState(false);
   const [newStatus, setNewStatus] = useState(user.status || '');
@@ -245,7 +247,8 @@ export default function Chat({ user }: ChatProps) {
     saveCustomRank,
     resetCustomRank,
     saveCustomTheme,
-    saveCustomCard
+    saveCustomCard,
+    handleImageUpload
   } = useChatHandlers(
     user, allUsers, messages, notifications, showToast,
     {
@@ -253,7 +256,7 @@ export default function Chat({ user }: ChatProps) {
       setShowThemeEditor, setShowCardEditor, setShowDailyReward,
       setEditTab, setShowEditProfile, setNewMessage, setCustomRankForm,
       setNewTheme, setNewCard, setSelectedUserForAdmin, setAdminAction, setShowAdminModal,
-      setMessages
+      setMessages, setShowCommandsModal
     }
   );
 
@@ -383,6 +386,7 @@ export default function Chat({ user }: ChatProps) {
           setShowNews={setShowNews}
           setShowUpdates={setShowUpdates}
           setShowRules={setShowRules}
+          setShowCommandsModal={setShowCommandsModal}
           unreadNotifications={unreadNotifications}
           currentTheme={currentTheme}
         />
@@ -407,6 +411,7 @@ export default function Chat({ user }: ChatProps) {
             soundEnabled={soundEnabled}
             setSoundEnabled={setSoundEnabled}
             setShowPollModal={setShowPollModal}
+            handleImageUpload={handleImageUpload}
           />
         </div>
 
@@ -708,6 +713,13 @@ export default function Chat({ user }: ChatProps) {
           targetUsername={selectedUserForAdmin.username}
           action={adminAction}
           onClose={() => setShowAdminModal(false)}
+        />
+      )}
+
+      {showCommandsModal && (
+        <CommandsModal
+          onClose={() => setShowCommandsModal(false)}
+          isAdmin={user.rank === 'DEVELOPER' || user.rank === 'ADMINISTRATION' || user.rank === 'STAR' || user.rank === 'FOUNDER'}
         />
       )}
 

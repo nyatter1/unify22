@@ -92,17 +92,24 @@ export const useChatData = (user: UserProfile, soundEnabled: boolean) => {
       if (data) {
         const newMsgs = data.reverse() as Message[];
         
-        // Check if there's a new message that isn't from the current user
-        if (messages.length > 0 && newMsgs.length > messages.length) {
-          const lastMsg = newMsgs[newMsgs.length - 1];
-          if (lastMsg.senderId !== user.uid && soundEnabled) {
-            const receiveAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3');
-            receiveAudio.volume = 0.5;
-            receiveAudio.play().catch(() => {});
+        setMessages(prev => {
+          // Check if there's a new message that isn't from the current user
+          // We only want to play sound for actual new database messages
+          const prevDbMsgs = prev.filter(m => !m.id.startsWith('local-'));
+          if (prevDbMsgs.length > 0 && newMsgs.length > prevDbMsgs.length) {
+            const lastMsg = newMsgs[newMsgs.length - 1];
+            if (lastMsg.senderId !== user.uid && soundEnabled) {
+              const receiveAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3');
+              receiveAudio.volume = 0.5;
+              receiveAudio.play().catch(() => {});
+            }
           }
-        }
-        
-        setMessages(newMsgs);
+
+          const localMsgs = prev.filter(m => m.id.startsWith('local-'));
+          const combined = [...newMsgs, ...localMsgs];
+          combined.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+          return combined;
+        });
       }
     };
 
@@ -131,7 +138,7 @@ export const useChatData = (user: UserProfile, soundEnabled: boolean) => {
       supabase.removeChannel(messagesSubscription);
       supabase.removeChannel(usersSubscription);
     };
-  }, [user.uid, soundEnabled, messages.length]);
+  }, [user.uid, soundEnabled]);
 
   return {
     messages,

@@ -27,6 +27,7 @@ export const useChatHandlers = (
     setAdminAction: (a: 'mute' | 'unmute' | 'kick' | 'unkick' | 'ban' | 'unban') => void,
     setShowAdminModal: (s: boolean) => void,
     setMessages: (m: any) => void,
+    setShowCommandsModal: (s: boolean) => void,
   }
 ) => {
   const {
@@ -34,7 +35,7 @@ export const useChatHandlers = (
     setShowThemeEditor, setShowCardEditor, setShowDailyReward,
     setEditTab, setShowEditProfile, setNewMessage, setCustomRankForm,
     setNewTheme, setNewCard, setSelectedUserForAdmin, setAdminAction, setShowAdminModal,
-    setMessages
+    setMessages, setShowCommandsModal
   } = setters;
 
   const sendFriendRequest = async (targetUid: string) => {
@@ -303,7 +304,7 @@ export const useChatHandlers = (
           setShowThemeEditor, setShowCardEditor, setShowDailyReward,
           setEditTab, setShowEditProfile, setNewMessage, setCustomRankForm,
           setNewTheme, setNewCard, setSelectedUserForAdmin, setAdminAction, setShowAdminModal,
-          setMessages
+          setMessages, setShowCommandsModal
         },
         triviaState: {
           triviaActive: triviaState.triviaActive,
@@ -519,6 +520,35 @@ export const useChatHandlers = (
     }
   };
 
+  const handleImageUpload = async (file: File) => {
+    if (!file) return;
+
+    if (file.size > 1024 * 1024) {
+      showToast('File too large! Max 1MB.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64String = reader.result as string;
+      try {
+        await supabase.from('messages').insert({
+          senderId: user.uid,
+          senderUsername: user.username,
+          senderPfp: user.pfp,
+          text: '',
+          imageUrl: base64String,
+          type: 'text',
+          timestamp: new Date().toISOString()
+        });
+      } catch (err) {
+        console.error(err);
+        showToast('Failed to send image');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   return {
     sendFriendRequest,
     acceptFriendRequest,
@@ -538,6 +568,7 @@ export const useChatHandlers = (
     saveCustomRank,
     resetCustomRank,
     saveCustomTheme,
-    saveCustomCard
+    saveCustomCard,
+    handleImageUpload
   };
 };

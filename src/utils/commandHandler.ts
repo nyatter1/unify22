@@ -1138,42 +1138,7 @@ export const handleCommand = async (
     }
     case '/cmds':
     case '/commands': {
-      const cmds = [
-        "📜 **ALL COMMANDS:**",
-        "• `/bank` - Check your balance",
-        "• `/pay {user} {amt} {gold|rubies}` - Pay someone",
-        "• `/dice {gold|rubies} {amt}` - Roll dice (4+ wins)",
-        "• `/allin {gold|rubies}` - Gamble everything",
-        "• `/slots {gold|rubies} {amt}` - Play slots",
-        "• `/coinflip {gold|rubies} {amt} {h|t}` - Flip a coin",
-        "• `/blackjack {gold|rubies} {amt}` - Blackjack",
-        "• `/roulette {gold|rubies} {amt} {bet}` - Roulette",
-        "• `/crash {gold|rubies} {amt}` - Crash game",
-        "• `/highlow {gold|rubies} {amt} {h|l}` - High/Low",
-        "• `/scratch {gold|rubies} {amt}` - Scratch card",
-        "• `/plinko {gold|rubies} {amt}` - Plinko",
-        "• `/mines {gold|rubies} {amt} {mines}` - Mines",
-        "• `/tower {gold|rubies} {amt}` - Tower",
-        "• `/love {user}` | `/hug {user}` | `/slap {user}` | `/kill {user}`",
-        "• `/joke` | `/fact` | `/weather {city}` | `/dance`",
-        "• `/ping` | `/staff` | `/roll {max}` | `/flip` | `/8ball {q}`",
-        "• `/nudge {user}` | `/trivia` | `/rps {r|p|s}`",
-        "• `/announce {msg}` (Staff) | `/clear` (Staff)",
-        "• `/setgold {user} {amt}` (Admin) | `/setrank {user} {rank}` (Admin)",
-        "• `/rigged {user}` (Admin) | `/unrigg {user}` (Admin)"
-      ].join('\n');
-      
-      const localMsg: Message = {
-        id: `local-${Date.now()}`,
-        senderId: 'SYSTEM',
-        senderUsername: 'SYSTEM',
-        senderPfp: 'https://cdn-icons-png.flaticon.com/512/1786/1786631.png',
-        recipientId: user.uid,
-        text: cmds,
-        type: 'system',
-        timestamp: new Date().toISOString(),
-      };
-      context.setters.setMessages((prev: Message[]) => [...prev, localMsg]);
+      context.setters.setShowCommandsModal(true);
       break;
     }
     default:

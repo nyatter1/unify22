@@ -28,6 +28,7 @@ interface LeftSidebarProps {
   setShowNews: (s: boolean) => void;
   setShowUpdates: (s: boolean) => void;
   setShowRules: (s: boolean) => void;
+  setShowCommandsModal: (s: boolean) => void;
   unreadNotifications: number;
   currentTheme: any;
 }
@@ -45,6 +46,7 @@ export const LeftSidebar = ({
   setShowNews,
   setShowUpdates,
   setShowRules,
+  setShowCommandsModal,
   unreadNotifications,
   currentTheme
 }: LeftSidebarProps) => {
@@ -103,6 +105,7 @@ export const LeftSidebar = ({
         <SidebarItem icon={<Newspaper className="w-5 h-5" />} label="News" onClick={() => setShowNews(true)} expanded={isLeftSidebarPinned || showLeftSidebar} />
         <SidebarItem icon={<RefreshCw className="w-5 h-5" />} label="Updates" onClick={() => setShowUpdates(true)} expanded={isLeftSidebarPinned || showLeftSidebar} />
         <SidebarItem icon={<BookOpen className="w-5 h-5" />} label="Rules" onClick={() => setShowRules(true)} expanded={isLeftSidebarPinned || showLeftSidebar} />
+        <SidebarItem icon={<Terminal className="w-5 h-5" />} label="Commands" onClick={() => setShowCommandsModal(true)} expanded={isLeftSidebarPinned || showLeftSidebar} />
       </div>
     </aside>
   );

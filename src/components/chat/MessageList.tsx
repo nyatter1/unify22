@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { BarChart2, Shield, Volume2, VolumeX, Send, Coins, Gem, Dices, Bomb, TowerControl as Tower, Gamepad2, Sword, UserCog, Rocket, Ticket, Spade, Circle, ArrowUp } from 'lucide-react';
+import { BarChart2, Shield, Volume2, VolumeX, Send, Coins, Gem, Dices, Bomb, TowerControl as Tower, Gamepad2, Sword, UserCog, Rocket, Ticket, Spade, Circle, ArrowUp, Terminal, Heart, ShieldAlert } from 'lucide-react';
 import Markdown from 'react-markdown';
 import { Message, UserProfile } from '../../types';
 import { RANKS, BORDERS, DEFAULT_PFP } from '../../constants';
@@ -178,6 +178,123 @@ export const MessageList = ({
                 )}
                 <div className="text-[10px] text-white/40 mt-2 italic">
                   {msg.text}
+                </div>
+              </div>
+            </motion.div>
+          );
+        }
+
+        if (msg.type === 'commands_list') {
+          return (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              key={msg.id || i}
+              className="flex justify-center my-6 w-full"
+            >
+              <div className="w-full max-w-3xl bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-2xl overflow-hidden relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-pink-500/10 pointer-events-none" />
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
+                
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-3 bg-indigo-500/20 rounded-xl border border-indigo-500/30">
+                    <Terminal className="w-6 h-6 text-indigo-400" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">
+                      Command Center
+                    </h2>
+                    <p className="text-sm text-gray-400">Explore all available commands</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
+                  {/* Economy */}
+                  <div className="bg-white/5 border border-white/10 rounded-2xl p-4 hover:bg-white/10 transition-colors">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Coins className="w-5 h-5 text-yellow-400" />
+                      <h3 className="font-bold text-yellow-400">Economy</h3>
+                    </div>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between"><code className="text-yellow-200 bg-yellow-500/20 px-2 py-0.5 rounded">/bank</code><span className="text-gray-400">Check balance</span></div>
+                      <div className="flex justify-between"><code className="text-yellow-200 bg-yellow-500/20 px-2 py-0.5 rounded">/pay [user] [amt]</code><span className="text-gray-400">Send funds</span></div>
+                    </div>
+                  </div>
+
+                  {/* Gambling */}
+                  <div className="bg-white/5 border border-white/10 rounded-2xl p-4 hover:bg-white/10 transition-colors">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Dices className="w-5 h-5 text-red-400" />
+                      <h3 className="font-bold text-red-400">Gambling</h3>
+                    </div>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between"><code className="text-red-200 bg-red-500/20 px-2 py-0.5 rounded">/dice [amt]</code><span className="text-gray-400">Roll 4+ to win</span></div>
+                      <div className="flex justify-between"><code className="text-red-200 bg-red-500/20 px-2 py-0.5 rounded">/slots [amt]</code><span className="text-gray-400">Spin the slots</span></div>
+                      <div className="flex justify-between"><code className="text-red-200 bg-red-500/20 px-2 py-0.5 rounded">/blackjack [amt]</code><span className="text-gray-400">Play 21</span></div>
+                      <div className="flex justify-between"><code className="text-red-200 bg-red-500/20 px-2 py-0.5 rounded">/roulette [amt] [bet]</code><span className="text-gray-400">Spin the wheel</span></div>
+                      <div className="flex justify-between"><code className="text-red-200 bg-red-500/20 px-2 py-0.5 rounded">/crash [amt]</code><span className="text-gray-400">Cash out early</span></div>
+                      <div className="flex justify-between"><code className="text-red-200 bg-red-500/20 px-2 py-0.5 rounded">/mines [amt] [1-24]</code><span className="text-gray-400">Avoid the bombs</span></div>
+                      <div className="flex justify-between"><code className="text-red-200 bg-red-500/20 px-2 py-0.5 rounded">/tower [amt]</code><span className="text-gray-400">Climb for multipliers</span></div>
+                      <div className="flex justify-between"><code className="text-red-200 bg-red-500/20 px-2 py-0.5 rounded">/plinko [amt]</code><span className="text-gray-400">Drop the ball</span></div>
+                      <div className="flex justify-between"><code className="text-red-200 bg-red-500/20 px-2 py-0.5 rounded">/scratch [amt]</code><span className="text-gray-400">Scratch card</span></div>
+                      <div className="flex justify-between"><code className="text-red-200 bg-red-500/20 px-2 py-0.5 rounded">/highlow [amt] [h|l]</code><span className="text-gray-400">Guess next card</span></div>
+                      <div className="flex justify-between"><code className="text-red-200 bg-red-500/20 px-2 py-0.5 rounded">/coinflip [amt] [h|t]</code><span className="text-gray-400">Heads or tails</span></div>
+                      <div className="flex justify-between"><code className="text-red-200 bg-red-500/20 px-2 py-0.5 rounded">/allin</code><span className="text-gray-400">Risk it all</span></div>
+                    </div>
+                  </div>
+
+                  {/* Social & Fun */}
+                  <div className="bg-white/5 border border-white/10 rounded-2xl p-4 hover:bg-white/10 transition-colors">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Heart className="w-5 h-5 text-pink-400" />
+                      <h3 className="font-bold text-pink-400">Social & Fun</h3>
+                    </div>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between"><code className="text-pink-200 bg-pink-500/20 px-2 py-0.5 rounded">/love [user]</code><span className="text-gray-400">Show affection</span></div>
+                      <div className="flex justify-between"><code className="text-pink-200 bg-pink-500/20 px-2 py-0.5 rounded">/hug [user]</code><span className="text-gray-400">Give a hug</span></div>
+                      <div className="flex justify-between"><code className="text-pink-200 bg-pink-500/20 px-2 py-0.5 rounded">/slap [user]</code><span className="text-gray-400">Playful slap</span></div>
+                      <div className="flex justify-between"><code className="text-pink-200 bg-pink-500/20 px-2 py-0.5 rounded">/kill [user]</code><span className="text-gray-400">Virtual murder</span></div>
+                      <div className="flex justify-between"><code className="text-pink-200 bg-pink-500/20 px-2 py-0.5 rounded">/nudge [user]</code><span className="text-gray-400">Get attention</span></div>
+                      <div className="flex justify-between"><code className="text-pink-200 bg-pink-500/20 px-2 py-0.5 rounded">/joke</code><span className="text-gray-400">Tell a joke</span></div>
+                      <div className="flex justify-between"><code className="text-pink-200 bg-pink-500/20 px-2 py-0.5 rounded">/fact</code><span className="text-gray-400">Random fact</span></div>
+                      <div className="flex justify-between"><code className="text-pink-200 bg-pink-500/20 px-2 py-0.5 rounded">/dance</code><span className="text-gray-400">Bust a move</span></div>
+                    </div>
+                  </div>
+
+                  {/* Games & Utility */}
+                  <div className="bg-white/5 border border-white/10 rounded-2xl p-4 hover:bg-white/10 transition-colors">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Gamepad2 className="w-5 h-5 text-green-400" />
+                      <h3 className="font-bold text-green-400">Games & Utility</h3>
+                    </div>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between"><code className="text-green-200 bg-green-500/20 px-2 py-0.5 rounded">/trivia</code><span className="text-gray-400">Start trivia</span></div>
+                      <div className="flex justify-between"><code className="text-green-200 bg-green-500/20 px-2 py-0.5 rounded">/rps [r|p|s]</code><span className="text-gray-400">Rock paper scissors</span></div>
+                      <div className="flex justify-between"><code className="text-green-200 bg-green-500/20 px-2 py-0.5 rounded">/8ball [q]</code><span className="text-gray-400">Ask the magic ball</span></div>
+                      <div className="flex justify-between"><code className="text-green-200 bg-green-500/20 px-2 py-0.5 rounded">/roll [max]</code><span className="text-gray-400">Roll a number</span></div>
+                      <div className="flex justify-between"><code className="text-green-200 bg-green-500/20 px-2 py-0.5 rounded">/flip</code><span className="text-gray-400">Flip a coin</span></div>
+                      <div className="flex justify-between"><code className="text-green-200 bg-green-500/20 px-2 py-0.5 rounded">/weather [city]</code><span className="text-gray-400">Check weather</span></div>
+                      <div className="flex justify-between"><code className="text-green-200 bg-green-500/20 px-2 py-0.5 rounded">/ping</code><span className="text-gray-400">Check latency</span></div>
+                      <div className="flex justify-between"><code className="text-green-200 bg-green-500/20 px-2 py-0.5 rounded">/staff</code><span className="text-gray-400">List online staff</span></div>
+                    </div>
+                  </div>
+
+                  {/* Admin */}
+                  <div className="md:col-span-2 bg-white/5 border border-white/10 rounded-2xl p-4 hover:bg-white/10 transition-colors">
+                    <div className="flex items-center gap-2 mb-3">
+                      <ShieldAlert className="w-5 h-5 text-purple-400" />
+                      <h3 className="font-bold text-purple-400">Admin & Staff</h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-sm">
+                      <div className="flex justify-between"><code className="text-purple-200 bg-purple-500/20 px-2 py-0.5 rounded">/announce [msg]</code><span className="text-gray-400">Global alert</span></div>
+                      <div className="flex justify-between"><code className="text-purple-200 bg-purple-500/20 px-2 py-0.5 rounded">/clear</code><span className="text-gray-400">Clear chat</span></div>
+                      <div className="flex justify-between"><code className="text-purple-200 bg-purple-500/20 px-2 py-0.5 rounded">/setgold [user] [amt]</code><span className="text-gray-400">Set balance</span></div>
+                      <div className="flex justify-between"><code className="text-purple-200 bg-purple-500/20 px-2 py-0.5 rounded">/setrank [user] [rank]</code><span className="text-gray-400">Set rank</span></div>
+                      <div className="flex justify-between"><code className="text-purple-200 bg-purple-500/20 px-2 py-0.5 rounded">/rigged [user]</code><span className="text-gray-400">Enable max luck</span></div>
+                      <div className="flex justify-between"><code className="text-purple-200 bg-purple-500/20 px-2 py-0.5 rounded">/unrigg [user]</code><span className="text-gray-400">Disable max luck</span></div>
+                    </div>
+                  </div>
+
                 </div>
               </div>
             </motion.div>

@@ -286,6 +286,38 @@ export const handleCommand = async (
       });
       break;
     }
+    case '/rigged': {
+      const isAdmin = user.rank === 'DEVELOPER' || user.rank === 'ADMINISTRATION' || user.rank === 'FOUNDER';
+      if (!isAdmin) return showToast('Only admins can use this!');
+      const targetUsername = parts[1];
+      if (!targetUsername) return showToast('Usage: /rigged {username}');
+      const target = allUsers.find(u => u.username.toLowerCase() === targetUsername.toLowerCase());
+      if (!target) return showToast('User not found!');
+      try {
+        await supabase.from('users').update({ isRigged: true }).eq('uid', target.uid);
+        showToast(`${target.username} is now RIGGED! 😈`);
+      } catch (err) {
+        console.error(err);
+        showToast('Failed to rig user');
+      }
+      break;
+    }
+    case '/unrigg': {
+      const isAdmin = user.rank === 'DEVELOPER' || user.rank === 'ADMINISTRATION' || user.rank === 'FOUNDER';
+      if (!isAdmin) return showToast('Only admins can use this!');
+      const targetUsername = parts[1];
+      if (!targetUsername) return showToast('Usage: /unrigg {username}');
+      const target = allUsers.find(u => u.username.toLowerCase() === targetUsername.toLowerCase());
+      if (!target) return showToast('User not found!');
+      try {
+        await supabase.from('users').update({ isRigged: false }).eq('uid', target.uid);
+        showToast(`${target.username} is no longer rigged.`);
+      } catch (err) {
+        console.error(err);
+        showToast('Failed to unrig user');
+      }
+      break;
+    }
     case '/dice': {
       const currency = parts[1]?.toLowerCase() || 'gold';
       const amount = parseInt(parts[2]);
@@ -295,24 +327,25 @@ export const handleCommand = async (
         return;
       }
 
-      const { data: latestUser } = await supabase.from('users').select('gold, rubies').eq('uid', user.uid).single();
+      const { data: latestUser } = await supabase.from('users').select('gold, rubies, isRigged').eq('uid', user.uid).single();
       const balance = currency === 'gold' ? (latestUser?.gold ?? user.gold) : (latestUser?.rubies ?? user.rubies);
+      const isRigged = latestUser?.isRigged || false;
 
       if (amount > balance) {
         showToast(`Insufficient ${currency}!`);
         return;
       }
 
-      const diceRoll = Math.floor(Math.random() * 6) + 1;
+      const diceRoll = isRigged ? 6 : Math.floor(Math.random() * 6) + 1;
       const won = diceRoll >= 4;
       const multiplier = won ? 2 : 0;
-      const winAmount = won ? amount : amount;
+      const winAmount = won ? amount * 2 : 0;
 
       try {
-        const newBalance = won ? balance + amount : balance - amount;
+        const newBalance = balance - amount + winAmount;
         await supabase.from('users').update({ [currency]: newBalance }).eq('uid', user.uid);
 
-        await supabase.from('messages').insert({
+        const { error } = await supabase.from('messages').insert({
           senderId: user.uid,
           senderUsername: user.username,
           senderPfp: user.pfp,
@@ -324,11 +357,12 @@ export const handleCommand = async (
             amount,
             result: won ? 'won' : 'lost',
             multiplier,
-            winAmount: amount,
+            winAmount,
             diceRoll
           },
           timestamp: new Date().toISOString(),
         });
+        if (error) throw error;
       } catch (err) {
         console.error(err);
         showToast('Gamble failed');
@@ -342,22 +376,23 @@ export const handleCommand = async (
         return;
       }
 
-      const { data: latestUser } = await supabase.from('users').select('gold, rubies').eq('uid', user.uid).single();
+      const { data: latestUser } = await supabase.from('users').select('gold, rubies, isRigged').eq('uid', user.uid).single();
       const balance = currency === 'gold' ? (latestUser?.gold ?? user.gold) : (latestUser?.rubies ?? user.rubies);
+      const isRigged = latestUser?.isRigged || false;
 
       if (balance <= 0) {
         showToast(`You have no ${currency} to go all-in!`);
         return;
       }
 
-      const won = Math.random() > 0.6;
+      const won = isRigged ? true : Math.random() > 0.6;
       const multiplier = won ? 2 : 0;
+      const winAmount = won ? balance * 2 : 0;
 
       try {
-        const newBalance = won ? balance * 2 : 0;
-        await supabase.from('users').update({ [currency]: newBalance }).eq('uid', user.uid);
+        await supabase.from('users').update({ [currency]: winAmount }).eq('uid', user.uid);
 
-        await supabase.from('messages').insert({
+        const { error } = await supabase.from('messages').insert({
           senderId: user.uid,
           senderUsername: user.username,
           senderPfp: user.pfp,
@@ -373,6 +408,7 @@ export const handleCommand = async (
           },
           timestamp: new Date().toISOString(),
         });
+        if (error) throw error;
       } catch (err) {
         console.error(err);
         showToast('All-in failed');
@@ -388,8 +424,9 @@ export const handleCommand = async (
         return;
       }
 
-      const { data: latestUser } = await supabase.from('users').select('gold, rubies').eq('uid', user.uid).single();
+      const { data: latestUser } = await supabase.from('users').select('gold, rubies, isRigged').eq('uid', user.uid).single();
       const balance = currency === 'gold' ? (latestUser?.gold ?? user.gold) : (latestUser?.rubies ?? user.rubies);
+      const isRigged = latestUser?.isRigged || false;
 
       if (amount > balance) {
         showToast(`Insufficient ${currency}!`);
@@ -397,9 +434,9 @@ export const handleCommand = async (
       }
 
       const symbols = ['🍒', '🍋', '🔔', '💎', '7️⃣'];
-      const s1 = symbols[Math.floor(Math.random() * symbols.length)];
-      const s2 = symbols[Math.floor(Math.random() * symbols.length)];
-      const s3 = symbols[Math.floor(Math.random() * symbols.length)];
+      const s1 = isRigged ? '💎' : symbols[Math.floor(Math.random() * symbols.length)];
+      const s2 = isRigged ? '💎' : symbols[Math.floor(Math.random() * symbols.length)];
+      const s3 = isRigged ? '💎' : symbols[Math.floor(Math.random() * symbols.length)];
 
       let multiplier = 0;
       if (s1 === s2 && s2 === s3) {
@@ -447,22 +484,24 @@ export const handleCommand = async (
         return;
       }
 
-      const { data: latestUser } = await supabase.from('users').select('gold, rubies').eq('uid', user.uid).single();
+      const { data: latestUser } = await supabase.from('users').select('gold, rubies, isRigged').eq('uid', user.uid).single();
       const balance = currency === 'gold' ? (latestUser?.gold ?? user.gold) : (latestUser?.rubies ?? user.rubies);
+      const isRigged = latestUser?.isRigged || false;
 
       if (amount > balance) {
         showToast(`Insufficient ${currency}!`);
         return;
       }
 
-      const result = Math.random() > 0.5 ? 'heads' : 'tails';
+      const result = isRigged ? choice : (Math.random() > 0.5 ? 'heads' : 'tails');
       const won = choice === result;
+      const winAmount = won ? amount * 2 : 0;
 
       try {
-        const newBalance = won ? balance + amount : balance - amount;
+        const newBalance = balance - amount + winAmount;
         await supabase.from('users').update({ [currency]: newBalance }).eq('uid', user.uid);
 
-        await supabase.from('messages').insert({
+        const { error } = await supabase.from('messages').insert({
           senderId: user.uid,
           senderUsername: user.username,
           senderPfp: user.pfp,
@@ -474,10 +513,11 @@ export const handleCommand = async (
             amount,
             result: won ? 'won' : 'lost',
             multiplier: won ? 2 : 0,
-            winAmount: amount
+            winAmount
           },
           timestamp: new Date().toISOString(),
         });
+        if (error) throw error;
       } catch (err) {
         console.error(err);
         showToast('Coinflip failed');
@@ -493,16 +533,17 @@ export const handleCommand = async (
         return;
       }
 
-      const { data: latestUser } = await supabase.from('users').select('gold, rubies').eq('uid', user.uid).single();
+      const { data: latestUser } = await supabase.from('users').select('gold, rubies, isRigged').eq('uid', user.uid).single();
       const balance = currency === 'gold' ? (latestUser?.gold ?? user.gold) : (latestUser?.rubies ?? user.rubies);
+      const isRigged = latestUser?.isRigged || false;
 
       if (amount > balance) {
         showToast(`Insufficient ${currency}!`);
         return;
       }
 
-      const playerVal = Math.floor(Math.random() * 10) + 12;
-      const dealerVal = Math.floor(Math.random() * 10) + 12;
+      const playerVal = isRigged ? 21 : Math.floor(Math.random() * 10) + 12;
+      const dealerVal = isRigged ? 17 : Math.floor(Math.random() * 10) + 12;
       
       let result = 'lost';
       if (playerVal > 21) result = 'bust';
@@ -511,12 +552,13 @@ export const handleCommand = async (
 
       const won = result === 'won';
       const push = result === 'push';
+      const winAmount = won ? amount * 2 : (push ? amount : 0);
 
       try {
-        const newBalance = won ? balance + amount : (push ? balance : balance - amount);
+        const newBalance = balance - amount + winAmount;
         await supabase.from('users').update({ [currency]: newBalance }).eq('uid', user.uid);
 
-        await supabase.from('messages').insert({
+        const { error } = await supabase.from('messages').insert({
           senderId: user.uid,
           senderUsername: user.username,
           senderPfp: user.pfp,
@@ -548,15 +590,16 @@ export const handleCommand = async (
         return;
       }
 
-      const { data: latestUser } = await supabase.from('users').select('gold, rubies').eq('uid', user.uid).single();
+      const { data: latestUser } = await supabase.from('users').select('gold, rubies, isRigged').eq('uid', user.uid).single();
       const balance = currency === 'gold' ? (latestUser?.gold ?? user.gold) : (latestUser?.rubies ?? user.rubies);
+      const isRigged = latestUser?.isRigged || false;
 
       if (amount > balance) {
         showToast(`Insufficient ${currency}!`);
         return;
       }
 
-      const number = Math.floor(Math.random() * 37);
+      const number = isRigged ? (bet === 'red' ? 1 : (bet === 'black' ? 2 : (bet === 'green' ? 0 : parseInt(bet)))) : Math.floor(Math.random() * 37);
       const color = number === 0 ? 'green' : (number % 2 === 0 ? 'black' : 'red');
       
       let won = false;
@@ -570,13 +613,13 @@ export const handleCommand = async (
         multiplier = 35;
       }
 
-      const winAmount = won ? Math.floor(amount * (multiplier - 1)) : amount;
+      const winAmount = won ? Math.floor(amount * multiplier) : 0;
 
       try {
-        const newBalance = won ? balance + winAmount : balance - amount;
+        const newBalance = balance - amount + winAmount;
         await supabase.from('users').update({ [currency]: newBalance }).eq('uid', user.uid);
 
-        await supabase.from('messages').insert({
+        const { error } = await supabase.from('messages').insert({
           senderId: user.uid,
           senderUsername: user.username,
           senderPfp: user.pfp,
@@ -588,10 +631,11 @@ export const handleCommand = async (
             amount,
             result: won ? 'won' : 'lost',
             multiplier,
-            winAmount: won ? winAmount : amount
+            winAmount
           },
           timestamp: new Date().toISOString(),
         });
+        if (error) throw error;
       } catch (err) {
         console.error(err);
         showToast('Roulette failed');
@@ -607,23 +651,24 @@ export const handleCommand = async (
         return;
       }
 
-      const { data: latestUser } = await supabase.from('users').select('gold, rubies').eq('uid', user.uid).single();
+      const { data: latestUser } = await supabase.from('users').select('gold, rubies, isRigged').eq('uid', user.uid).single();
       const balance = currency === 'gold' ? (latestUser?.gold ?? user.gold) : (latestUser?.rubies ?? user.rubies);
+      const isRigged = latestUser?.isRigged || false;
 
       if (amount > balance) {
         showToast(`Insufficient ${currency}!`);
         return;
       }
 
-      const crashPoint = Math.max(1, (Math.random() * 5).toFixed(2) as any);
+      const crashPoint = isRigged ? (Math.random() * 5 + 5) : Math.max(1, (Math.random() * 5).toFixed(2) as any);
       const won = crashPoint > 1.5;
-      const winAmount = won ? Math.floor(amount * (crashPoint - 1)) : amount;
+      const winAmount = won ? Math.floor(amount * crashPoint) : 0;
 
       try {
-        const newBalance = won ? balance + winAmount : balance - amount;
+        const newBalance = balance - amount + winAmount;
         await supabase.from('users').update({ [currency]: newBalance }).eq('uid', user.uid);
 
-        await supabase.from('messages').insert({
+        const { error } = await supabase.from('messages').insert({
           senderId: user.uid,
           senderUsername: user.username,
           senderPfp: user.pfp,
@@ -635,10 +680,11 @@ export const handleCommand = async (
             amount,
             result: won ? 'won' : 'lost',
             multiplier: crashPoint,
-            winAmount: won ? winAmount : amount
+            winAmount
           },
           timestamp: new Date().toISOString(),
         });
+        if (error) throw error;
       } catch (err) {
         console.error(err);
         showToast('Crash failed');
@@ -655,8 +701,9 @@ export const handleCommand = async (
         return;
       }
 
-      const { data: latestUser } = await supabase.from('users').select('gold, rubies').eq('uid', user.uid).single();
+      const { data: latestUser } = await supabase.from('users').select('gold, rubies, isRigged').eq('uid', user.uid).single();
       const balance = currency === 'gold' ? (latestUser?.gold ?? user.gold) : (latestUser?.rubies ?? user.rubies);
+      const isRigged = latestUser?.isRigged || false;
 
       if (amount > balance) {
         showToast(`Insufficient ${currency}!`);
@@ -664,14 +711,15 @@ export const handleCommand = async (
       }
 
       const baseCard = Math.floor(Math.random() * 13) + 1;
-      const nextCard = Math.floor(Math.random() * 13) + 1;
+      const nextCard = isRigged ? (bet === 'high' ? 13 : 1) : Math.floor(Math.random() * 13) + 1;
       const won = (bet === 'high' && nextCard > baseCard) || (bet === 'low' && nextCard < baseCard);
+      const winAmount = won ? amount * 2 : 0;
 
       try {
-        const newBalance = won ? balance + amount : balance - amount;
+        const newBalance = balance - amount + winAmount;
         await supabase.from('users').update({ [currency]: newBalance }).eq('uid', user.uid);
 
-        await supabase.from('messages').insert({
+        const { error } = await supabase.from('messages').insert({
           senderId: user.uid,
           senderUsername: user.username,
           senderPfp: user.pfp,
@@ -683,10 +731,11 @@ export const handleCommand = async (
             amount,
             result: won ? 'won' : 'lost',
             multiplier: won ? 2 : 0,
-            winAmount: amount
+            winAmount
           },
           timestamp: new Date().toISOString(),
         });
+        if (error) throw error;
       } catch (err) {
         console.error(err);
         showToast('Highlow failed');
@@ -702,22 +751,24 @@ export const handleCommand = async (
         return;
       }
 
-      const { data: latestUser } = await supabase.from('users').select('gold, rubies').eq('uid', user.uid).single();
+      const { data: latestUser } = await supabase.from('users').select('gold, rubies, isRigged').eq('uid', user.uid).single();
       const balance = currency === 'gold' ? (latestUser?.gold ?? user.gold) : (latestUser?.rubies ?? user.rubies);
+      const isRigged = latestUser?.isRigged || false;
 
       if (amount > balance) {
         showToast(`Insufficient ${currency}!`);
         return;
       }
 
-      const win = Math.random() > 0.7;
-      const winAmount = win ? amount * 3 : 0;
+      const win = isRigged ? true : Math.random() > 0.7;
+      const multiplier = win ? (isRigged ? 10 : 3) : 0;
+      const winAmount = Math.floor(amount * multiplier);
 
       try {
         const newBalance = balance - amount + winAmount;
         await supabase.from('users').update({ [currency]: newBalance }).eq('uid', user.uid);
 
-        await supabase.from('messages').insert({
+        const { error } = await supabase.from('messages').insert({
           senderId: user.uid,
           senderUsername: user.username,
           senderPfp: user.pfp,
@@ -728,11 +779,12 @@ export const handleCommand = async (
             currency: currency as 'gold' | 'rubies',
             amount,
             result: win ? 'won' : 'lost',
-            multiplier: win ? 3 : 0,
-            winAmount: win ? winAmount : amount
+            multiplier,
+            winAmount
           },
           timestamp: new Date().toISOString(),
         });
+        if (error) throw error;
       } catch (err) {
         console.error(err);
         showToast('Scratch failed');
@@ -748,8 +800,9 @@ export const handleCommand = async (
         return;
       }
 
-      const { data: latestUser } = await supabase.from('users').select('gold, rubies').eq('uid', user.uid).single();
+      const { data: latestUser } = await supabase.from('users').select('gold, rubies, isRigged').eq('uid', user.uid).single();
       const balance = currency === 'gold' ? (latestUser?.gold ?? user.gold) : (latestUser?.rubies ?? user.rubies);
+      const isRigged = latestUser?.isRigged || false;
 
       if (amount > balance) {
         showToast(`Insufficient ${currency}!`);
@@ -757,14 +810,14 @@ export const handleCommand = async (
       }
 
       const multipliers = [0.2, 0.5, 1, 1.5, 2, 5, 10];
-      const multiplier = multipliers[Math.floor(Math.random() * multipliers.length)];
+      const multiplier = isRigged ? 10 : multipliers[Math.floor(Math.random() * multipliers.length)];
       const winAmount = Math.floor(amount * multiplier);
 
       try {
         const newBalance = balance - amount + winAmount;
         await supabase.from('users').update({ [currency]: newBalance }).eq('uid', user.uid);
 
-        await supabase.from('messages').insert({
+        const { error } = await supabase.from('messages').insert({
           senderId: user.uid,
           senderUsername: user.username,
           senderPfp: user.pfp,
@@ -776,10 +829,11 @@ export const handleCommand = async (
             amount,
             result: multiplier >= 1 ? 'won' : 'lost',
             multiplier,
-            winAmount: multiplier >= 1 ? winAmount : amount
+            winAmount
           },
           timestamp: new Date().toISOString(),
         });
+        if (error) throw error;
       } catch (err) {
         console.error(err);
         showToast('Plinko failed');
@@ -796,15 +850,16 @@ export const handleCommand = async (
         return;
       }
 
-      const { data: latestUser } = await supabase.from('users').select('gold, rubies').eq('uid', user.uid).single();
+      const { data: latestUser } = await supabase.from('users').select('gold, rubies, isRigged').eq('uid', user.uid).single();
       const balance = currency === 'gold' ? (latestUser?.gold ?? user.gold) : (latestUser?.rubies ?? user.rubies);
+      const isRigged = latestUser?.isRigged || false;
 
       if (amount > balance) {
         showToast(`Insufficient ${currency}!`);
         return;
       }
 
-      const hitMine = Math.random() < (minesCount / 25);
+      const hitMine = isRigged ? false : Math.random() < (minesCount / 25);
       const multiplier = hitMine ? 0 : (1 + (minesCount * 0.5));
       const winAmount = Math.floor(amount * multiplier);
 
@@ -812,7 +867,7 @@ export const handleCommand = async (
         const newBalance = balance - amount + winAmount;
         await supabase.from('users').update({ [currency]: newBalance }).eq('uid', user.uid);
 
-        await supabase.from('messages').insert({
+        const { error } = await supabase.from('messages').insert({
           senderId: user.uid,
           senderUsername: user.username,
           senderPfp: user.pfp,
@@ -824,10 +879,11 @@ export const handleCommand = async (
             amount,
             result: hitMine ? 'lost' : 'won',
             multiplier,
-            winAmount: hitMine ? amount : winAmount
+            winAmount
           },
           timestamp: new Date().toISOString(),
         });
+        if (error) throw error;
       } catch (err) {
         console.error(err);
         showToast('Mines failed');
@@ -843,15 +899,16 @@ export const handleCommand = async (
         return;
       }
 
-      const { data: latestUser } = await supabase.from('users').select('gold, rubies').eq('uid', user.uid).single();
+      const { data: latestUser } = await supabase.from('users').select('gold, rubies, isRigged').eq('uid', user.uid).single();
       const balance = currency === 'gold' ? (latestUser?.gold ?? user.gold) : (latestUser?.rubies ?? user.rubies);
+      const isRigged = latestUser?.isRigged || false;
 
       if (amount > balance) {
         showToast(`Insufficient ${currency}!`);
         return;
       }
 
-      const floor = Math.floor(Math.random() * 5);
+      const floor = isRigged ? 4 : Math.floor(Math.random() * 5);
       const multipliers = [0, 1.5, 2.5, 5, 10];
       const multiplier = multipliers[floor];
       const winAmount = Math.floor(amount * multiplier);
@@ -860,7 +917,7 @@ export const handleCommand = async (
         const newBalance = balance - amount + winAmount;
         await supabase.from('users').update({ [currency]: newBalance }).eq('uid', user.uid);
 
-        await supabase.from('messages').insert({
+        const { error } = await supabase.from('messages').insert({
           senderId: user.uid,
           senderUsername: user.username,
           senderPfp: user.pfp,
@@ -872,10 +929,11 @@ export const handleCommand = async (
             amount,
             result: floor > 0 ? 'won' : 'lost',
             multiplier,
-            winAmount: floor > 0 ? winAmount : amount
+            winAmount
           },
           timestamp: new Date().toISOString(),
         });
+        if (error) throw error;
       } catch (err) {
         console.error(err);
         showToast('Tower failed');
@@ -1099,18 +1157,25 @@ export const handleCommand = async (
         "• `/ping` | `/staff` | `/roll {max}` | `/flip` | `/8ball {q}`",
         "• `/nudge {user}` | `/trivia` | `/rps {r|p|s}`",
         "• `/announce {msg}` (Staff) | `/clear` (Staff)",
-        "• `/setgold {user} {amt}` (Admin) | `/setrank {user} {rank}` (Admin)"
+        "• `/setgold {user} {amt}` (Admin) | `/setrank {user} {rank}` (Admin)",
+        "• `/rigged {user}` (Admin) | `/unrigg {user}` (Admin)"
       ].join('\n');
       
-      await supabase.from('messages').insert({
-        senderId: 'SYSTEM',
-        senderUsername: 'SYSTEM',
-        senderPfp: 'https://cdn-icons-png.flaticon.com/512/1786/1786631.png',
-        recipientId: user.uid,
-        text: cmds,
-        type: 'system',
-        timestamp: new Date().toISOString(),
-      });
+      try {
+        const { error } = await supabase.from('messages').insert({
+          senderId: 'SYSTEM',
+          senderUsername: 'SYSTEM',
+          senderPfp: 'https://cdn-icons-png.flaticon.com/512/1786/1786631.png',
+          recipientId: user.uid,
+          text: cmds,
+          type: 'system',
+          timestamp: new Date().toISOString(),
+        });
+        if (error) throw error;
+      } catch (err) {
+        console.error(err);
+        showToast('Failed to show commands');
+      }
       break;
     }
     default:

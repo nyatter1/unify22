@@ -113,6 +113,7 @@ export interface UserProfile {
   isBanned?: boolean;
   isKicked?: boolean;
   profileSong?: string;
+  isRigged?: boolean;
 }
 
 export interface Message {

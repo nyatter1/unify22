@@ -1123,7 +1123,8 @@ export const handleCommand = async (
     }
     case '/ping': {
       const start = Date.now();
-      await supabase.from('messages').insert({
+      const localMsg: Message = {
+        id: `local-${Date.now()}`,
         senderId: 'SYSTEM',
         senderUsername: 'SYSTEM',
         senderPfp: 'https://cdn-icons-png.flaticon.com/512/1786/1786631.png',
@@ -1131,7 +1132,8 @@ export const handleCommand = async (
         text: `🏓 Pong! Latency: ${Date.now() - start}ms`,
         type: 'system',
         timestamp: new Date().toISOString(),
-      });
+      };
+      context.setters.setMessages((prev: Message[]) => [...prev, localMsg]);
       break;
     }
     case '/cmds':
@@ -1161,21 +1163,17 @@ export const handleCommand = async (
         "• `/rigged {user}` (Admin) | `/unrigg {user}` (Admin)"
       ].join('\n');
       
-      try {
-        const { error } = await supabase.from('messages').insert({
-          senderId: 'SYSTEM',
-          senderUsername: 'SYSTEM',
-          senderPfp: 'https://cdn-icons-png.flaticon.com/512/1786/1786631.png',
-          recipientId: user.uid,
-          text: cmds,
-          type: 'system',
-          timestamp: new Date().toISOString(),
-        });
-        if (error) throw error;
-      } catch (err) {
-        console.error(err);
-        showToast('Failed to show commands');
-      }
+      const localMsg: Message = {
+        id: `local-${Date.now()}`,
+        senderId: 'SYSTEM',
+        senderUsername: 'SYSTEM',
+        senderPfp: 'https://cdn-icons-png.flaticon.com/512/1786/1786631.png',
+        recipientId: user.uid,
+        text: cmds,
+        type: 'system',
+        timestamp: new Date().toISOString(),
+      };
+      context.setters.setMessages((prev: Message[]) => [...prev, localMsg]);
       break;
     }
     default:

@@ -252,7 +252,8 @@ export default function Chat({ user }: ChatProps) {
       setSelectedProfile, setShowProfileModal, setShowNotifications,
       setShowThemeEditor, setShowCardEditor, setShowDailyReward,
       setEditTab, setShowEditProfile, setNewMessage, setCustomRankForm,
-      setNewTheme, setNewCard, setSelectedUserForAdmin, setAdminAction, setShowAdminModal
+      setNewTheme, setNewCard, setSelectedUserForAdmin, setAdminAction, setShowAdminModal,
+      setMessages
     }
   );
 

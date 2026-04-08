@@ -153,8 +153,8 @@ export const handleCommand = async (
         return;
       }
       
-      const { data: bannedData } = await supabase.from('users').select('bannedWords').eq('uid', user.uid).single();
-      const words = bannedData?.bannedWords || [];
+      const { data: bannedData } = await supabase.from('ranks').select('permissions').eq('id', 'BANNED_WORDS').maybeSingle();
+      const words = bannedData?.permissions || [];
       const wordList = words.length > 0 ? words.join(', ') : 'No banned words set.';
       
       await supabase.from('messages').insert({
@@ -165,6 +165,60 @@ export const handleCommand = async (
         type: 'system',
         timestamp: new Date().toISOString(),
       });
+      break;
+    }
+    case '/addword': {
+      const isAdmin = user.rank === 'DEVELOPER' || user.rank === 'ADMINISTRATION' || user.rank === 'STAR' || user.rank === 'FOUNDER';
+      if (!isAdmin) {
+        showToast('Only admins can add banned words.');
+        return;
+      }
+      const word = parts.slice(1).join(' ').trim();
+      if (!word) {
+        showToast('Usage: /addword [word]');
+        return;
+      }
+      try {
+        const { data: bannedData } = await supabase.from('ranks').select('permissions').eq('id', 'BANNED_WORDS').maybeSingle();
+        const words = bannedData?.permissions || [];
+        if (words.includes(word)) {
+          showToast(`"${word}" is already in banned words.`);
+          return;
+        }
+        const newWords = [...words, word];
+        await supabase.from('ranks').update({ permissions: newWords }).eq('id', 'BANNED_WORDS');
+        showToast(`Added "${word}" to banned words.`);
+      } catch (err) {
+        console.error(err);
+        showToast('Failed to add banned word.');
+      }
+      break;
+    }
+    case '/removeword': {
+      const isAdmin = user.rank === 'DEVELOPER' || user.rank === 'ADMINISTRATION' || user.rank === 'STAR' || user.rank === 'FOUNDER';
+      if (!isAdmin) {
+        showToast('Only admins can remove banned words.');
+        return;
+      }
+      const word = parts.slice(1).join(' ').trim();
+      if (!word) {
+        showToast('Usage: /removeword [word]');
+        return;
+      }
+      try {
+        const { data: bannedData } = await supabase.from('ranks').select('permissions').eq('id', 'BANNED_WORDS').maybeSingle();
+        const words = bannedData?.permissions || [];
+        if (!words.includes(word)) {
+          showToast(`"${word}" is not in banned words.`);
+          return;
+        }
+        const newWords = words.filter((w: string) => w !== word);
+        await supabase.from('ranks').update({ permissions: newWords }).eq('id', 'BANNED_WORDS');
+        showToast(`Removed "${word}" from banned words.`);
+      } catch (err) {
+        console.error(err);
+        showToast('Failed to remove banned word.');
+      }
       break;
     }
     case '/staff': {

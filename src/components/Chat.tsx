@@ -735,7 +735,7 @@ export default function Chat({ user, onReplayIntegration }: ChatProps) {
         currentTheme={currentTheme}
       />
 
-      {showAdminPanel && user.email === 'dev@gmail.com' && (
+      {showAdminPanel && RANKS.find(r => r.id === user.rank)?.priority >= 60 && (
         <AdminPanelModal
           showAdminPanel={showAdminPanel}
           setShowAdminPanel={setShowAdminPanel}
@@ -756,6 +756,7 @@ export default function Chat({ user, onReplayIntegration }: ChatProps) {
           onUpdateUserField={handleUpdateUserField}
           onToggleMaintenance={handleToggleMaintenance}
           onSetGlobalTheme={handleSetGlobalTheme}
+          bannedWords={bannedWords}
         />
       )}
 

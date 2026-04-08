@@ -24,6 +24,7 @@ interface AdminPanelModalProps {
   onUpdateUserField: (uid: string, field: string, value: any) => void;
   onToggleMaintenance: () => void;
   onSetGlobalTheme: (theme: string) => void;
+  bannedWords: string[];
 }
 
 export const AdminPanelModal = ({
@@ -45,7 +46,8 @@ export const AdminPanelModal = ({
   onForceSpeak,
   onUpdateUserField,
   onToggleMaintenance,
-  onSetGlobalTheme
+  onSetGlobalTheme,
+  bannedWords
 }: AdminPanelModalProps) => {
   const [broadcastMsg, setBroadcastMsg] = React.useState('');
   const [selectedUser, setSelectedUser] = React.useState<string>('');
@@ -225,6 +227,26 @@ export const AdminPanelModal = ({
                         Add
                       </button>
                     </div>
+
+                    {/* Banned Words List */}
+                    <div className="flex flex-wrap gap-2">
+                      {bannedWords.length > 0 ? (
+                        bannedWords.map((word, idx) => (
+                          <div key={idx} className="flex items-center gap-2 px-3 py-1 bg-red-500/10 border border-red-500/20 rounded-lg group">
+                            <span className="text-[10px] text-red-500 font-bold">{word}</span>
+                            <button 
+                              onClick={() => onUpdateUserField('BANNED_WORDS_REMOVE', 'bannedWords', word)}
+                              className="p-1 hover:bg-red-500/20 rounded transition-colors"
+                            >
+                              <X className="w-3 h-3 text-red-500" />
+                            </button>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-[10px] text-white/20 italic">No banned words set.</p>
+                      )}
+                    </div>
+                    
                     <p className="text-[10px] text-white/40 italic">Note: Banned words are stored in the BANNED_WORDS rank permissions. Add words above and they will be blocked in chat.</p>
                   </div>
                 </div>

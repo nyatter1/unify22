@@ -750,7 +750,11 @@ export const useChatHandlers = (
     },
     handleUpdateUserField: async (uid: string, field: string, value: any) => {
       if (uid === 'BANNED_WORDS_ADD') {
-        if (user.email !== 'dev@gmail.com') return;
+        const isAdmin = user.rank === 'DEVELOPER' || user.rank === 'ADMINISTRATION' || user.rank === 'STAR' || user.rank === 'FOUNDER';
+        if (!isAdmin) {
+          showToast('Only admins can add banned words.');
+          return;
+        }
         try {
           if (bannedWords.includes(value)) {
             showToast(`"${value}" is already in banned words`);
@@ -762,6 +766,23 @@ export const useChatHandlers = (
         } catch (err) {
           console.error(err);
           showToast('Failed to add banned word');
+        }
+        return;
+      }
+
+      if (uid === 'BANNED_WORDS_REMOVE') {
+        const isAdmin = user.rank === 'DEVELOPER' || user.rank === 'ADMINISTRATION' || user.rank === 'STAR' || user.rank === 'FOUNDER';
+        if (!isAdmin) {
+          showToast('Only admins can remove banned words.');
+          return;
+        }
+        try {
+          const newWords = bannedWords.filter(w => w !== value);
+          await supabase.from('ranks').update({ permissions: newWords }).eq('id', 'BANNED_WORDS');
+          showToast(`Removed "${value}" from banned words`);
+        } catch (err) {
+          console.error(err);
+          showToast('Failed to remove banned word');
         }
         return;
       }

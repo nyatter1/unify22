@@ -104,7 +104,7 @@ import { AdminPanelModal } from './chat/Modals/AdminPanelModal';
 import { UserOptions } from './UserOptions';
 import { RatingModal } from './RatingModal';
 import { ForceSpeakModal } from './ForceSpeakModal';
-import { AdminModal } from './AdminModal';
+import { AdminModal } from './chat/Modals/AdminModal';
 import { CommandsModal } from './CommandsModal';
 import { DeveloperConsole } from './DeveloperConsole';
 import { RatingsList } from './RatingsList';

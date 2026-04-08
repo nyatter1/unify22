@@ -269,7 +269,11 @@ export const MessageList = ({
                 <div className="text-sm leading-relaxed prose prose-invert max-w-none [&_p]:m-0 [&_pre]:bg-black/20 [&_pre]:p-2 [&_pre]:rounded-lg [&_code]:bg-black/20 [&_code]:px-1 [&_code]:rounded relative z-10">
                   {msg.text && (
                     <div className="space-y-2">
-                      <Markdown>{msg.text}</Markdown>
+                      <div className="markdown-body">
+                        <Markdown>
+                          {msg.text.replace(/(https?:\/\/[^\s]+\.(?:jpeg|jpg|gif|png|webp|mp4|webm|mp3|wav|ogg))/gi, '').trim()}
+                        </Markdown>
+                      </div>
                       {/* Media Link Parsing */}
                       {msg.text.match(/(https?:\/\/[^\s]+)/g)?.filter(url => url.match(/\.(jpeg|jpg|gif|png|webp|mp4|webm|mp3|wav|ogg)$/i)).map((url, idx) => (
                         <div key={idx} className="mt-2 rounded-xl overflow-hidden max-w-sm border border-white/10">
@@ -278,7 +282,7 @@ export const MessageList = ({
                           ) : url.match(/\.(mp3|wav|ogg)$/i) ? (
                             <audio src={url} controls className="w-full" />
                           ) : (
-                            <img src={url} alt="media" className="w-full h-auto max-h-64 object-contain" />
+                            <img src={url} alt="media" className="w-full h-auto max-h-64 object-contain" referrerPolicy="no-referrer" />
                           )}
                         </div>
                       ))}

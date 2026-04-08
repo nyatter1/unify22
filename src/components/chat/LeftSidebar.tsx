@@ -10,7 +10,8 @@ import {
   RefreshCw, 
   BookOpen, 
   Terminal,
-  Mail
+  Mail,
+  Film
 } from 'lucide-react';
 import { UserProfile } from '../../types';
 import { cn } from '../../lib/utils';
@@ -34,6 +35,7 @@ interface LeftSidebarProps {
   unreadNotifications: number;
   unreadPMs: number;
   currentTheme: any;
+  onReplayIntegration?: () => void;
 }
 
 export const LeftSidebar = ({
@@ -53,7 +55,8 @@ export const LeftSidebar = ({
   setShowInbox,
   unreadNotifications,
   unreadPMs,
-  currentTheme
+  currentTheme,
+  onReplayIntegration
 }: LeftSidebarProps) => {
   return (
     <aside
@@ -122,6 +125,9 @@ export const LeftSidebar = ({
         <SidebarItem icon={<RefreshCw className="w-5 h-5" />} label="Updates" onClick={() => setShowUpdates(true)} expanded={isLeftSidebarPinned || showLeftSidebar} />
         <SidebarItem icon={<BookOpen className="w-5 h-5" />} label="Rules" onClick={() => setShowRules(true)} expanded={isLeftSidebarPinned || showLeftSidebar} />
         <SidebarItem icon={<Terminal className="w-5 h-5" />} label="Commands" onClick={() => setShowCommandsModal(true)} expanded={isLeftSidebarPinned || showLeftSidebar} />
+        {onReplayIntegration && (
+          <SidebarItem icon={<Film className="w-5 h-5" />} label="Replay Intro" onClick={onReplayIntegration} expanded={isLeftSidebarPinned || showLeftSidebar} />
+        )}
       </div>
     </aside>
   );

@@ -113,6 +113,7 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
 
 interface ChatProps {
   user: UserProfile;
+  onReplayIntegration?: () => void;
 }
 
 const DiceIcons = [Dice1, Dice2, Dice3, Dice4, Dice5, Dice6];
@@ -123,7 +124,7 @@ const getYouTubeId = (url: string) => {
   return (match && match[2].length === 11) ? match[2] : null;
 };
 
-export default function Chat({ user }: ChatProps) {
+export default function Chat({ user, onReplayIntegration }: ChatProps) {
   const [onlineUsers, setOnlineUsers] = useState<UserProfile[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [showWallet, setShowWallet] = useState(false);
@@ -397,6 +398,7 @@ export default function Chat({ user }: ChatProps) {
           unreadNotifications={unreadNotifications}
           unreadPMs={unreadPMs}
           currentTheme={currentTheme}
+          onReplayIntegration={onReplayIntegration}
         />
 
         {/* Main Content Area */}

@@ -126,7 +126,7 @@ export default function App() {
 
   return (
     <>
-      <Chat user={user} />
+      <Chat user={user} onReplayIntegration={() => setShowIntegrationEvent(true)} />
       {showIntegrationEvent && (
         <TheGreatIntegration onComplete={() => {
           localStorage.setItem('hasSeenGreatIntegration', 'true');

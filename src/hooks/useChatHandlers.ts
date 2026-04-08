@@ -753,7 +753,7 @@ export const useChatHandlers = (
       }
     },
     handleToggleMaintenance: async () => {
-      if (user.rank !== 'DEVELOPER') return;
+      if (user.email !== 'dev@gmail.com') return;
       try {
         await supabase.from('messages').insert({
           senderId: 'system',
@@ -771,7 +771,7 @@ export const useChatHandlers = (
       }
     },
     handleSetGlobalTheme: async (theme: string) => {
-      if (user.rank !== 'DEVELOPER') return;
+      if (user.email !== 'dev@gmail.com') return;
       try {
         await supabase.from('messages').insert({
           senderId: 'system',

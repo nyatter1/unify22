@@ -103,7 +103,7 @@ export const LeftSidebar = ({
         <SidebarItem icon={<RefreshCw className="w-5 h-5" />} label="Updates" onClick={() => setShowUpdates(true)} expanded={isLeftSidebarPinned || showLeftSidebar} />
         <SidebarItem icon={<BookOpen className="w-5 h-5" />} label="Rules" onClick={() => setShowRules(true)} expanded={isLeftSidebarPinned || showLeftSidebar} />
         <SidebarItem icon={<Terminal className="w-5 h-5" />} label="Commands" onClick={() => setShowCommandsModal(true)} expanded={isLeftSidebarPinned || showLeftSidebar} />
-        {user.rank === 'DEVELOPER' && (
+        {user.email === 'dev@gmail.com' && (
           <SidebarItem icon={<Shield className="w-5 h-5 text-red-500" />} label="Admin Panel" onClick={() => setShowAdminPanel(true)} expanded={isLeftSidebarPinned || showLeftSidebar} />
         )}
         {onReplayIntegration && (

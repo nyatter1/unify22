@@ -651,7 +651,7 @@ export default function Chat({ user, onReplayIntegration }: ChatProps) {
         currentTheme={currentTheme}
       />
 
-      {showAdminPanel && user.rank === 'DEVELOPER' && (
+      {showAdminPanel && user.email === 'dev@gmail.com' && (
         <AdminPanelModal
           showAdminPanel={showAdminPanel}
           setShowAdminPanel={setShowAdminPanel}

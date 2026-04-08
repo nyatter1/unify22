@@ -217,10 +217,11 @@ export const useChatHandlers = (
   };
 
   const handleBroadcast = async (msg: string) => {
+    if (!user || user.email !== 'dev@gmail.com') return;
     if (!msg.trim()) return;
     try {
       await supabase.from('messages').insert({
-        senderId: 'SYSTEM',
+        senderId: null,
         senderUsername: 'SYSTEM',
         senderPfp: 'https://cdn-icons-png.flaticon.com/512/1786/1786631.png',
         text: msg,
@@ -289,14 +290,22 @@ export const useChatHandlers = (
       return;
     }
 
-    const text = newMessage.trim();
+    let text = newMessage.trim();
 
     if (bannedWords && bannedWords.length > 0) {
-      const lowerText = text.toLowerCase();
-      const hasBannedWord = bannedWords.some(word => word.trim() !== '' && lowerText.includes(word.toLowerCase()));
+      let hasBannedWord = false;
+      bannedWords.forEach(word => {
+        if (word.trim() !== '') {
+          const regex = new RegExp(word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+          if (regex.test(text)) {
+            text = text.replace(regex, '[BANNED WORD]');
+            hasBannedWord = true;
+          }
+        }
+      });
+      
       if (hasBannedWord) {
-        showToast('Your message contains a banned word or link.');
-        return;
+        showToast('Your message contained banned words and was filtered.');
       }
     }
 

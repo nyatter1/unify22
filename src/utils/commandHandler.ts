@@ -146,6 +146,27 @@ export const handleCommand = async (
       }
       break;
     }
+    case '/bannedwords': {
+      const isAdmin = user.rank === 'DEVELOPER' || user.rank === 'ADMINISTRATION' || user.rank === 'STAR' || user.rank === 'FOUNDER' || user.rank === 'MODERATOR';
+      if (!isAdmin) {
+        showToast('Only staff can view the banned words list.');
+        return;
+      }
+      
+      const { data: bannedData } = await supabase.from('users').select('bannedWords').eq('uid', user.uid).single();
+      const words = bannedData?.bannedWords || [];
+      const wordList = words.length > 0 ? words.join(', ') : 'No banned words set.';
+      
+      await supabase.from('messages').insert({
+        senderId: null,
+        senderUsername: 'SYSTEM',
+        senderPfp: 'https://cdn-icons-png.flaticon.com/512/1786/1786631.png',
+        text: `🚫 **BANNED WORDS:** ${wordList}`,
+        type: 'system',
+        timestamp: new Date().toISOString(),
+      });
+      break;
+    }
     case '/staff': {
       const staffRanks = ['DEVELOPER', 'ADMINISTRATION', 'STAR', 'FOUNDER', 'MODERATOR'];
       const onlineStaff = allUsers.filter(u => u.isOnline && staffRanks.includes(u.rank || ''));

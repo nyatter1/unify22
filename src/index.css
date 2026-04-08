@@ -861,10 +861,14 @@
     pointer-events: none;
   }
   .effect-disco-fast {
+    background: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet);
+    background-size: 400% 400%;
     animation: disco 0.5s linear infinite;
     pointer-events: none;
+    mix-blend-mode: overlay;
   }
   .effect-laser-fast {
+    background: linear-gradient(to right, transparent, rgba(255,0,0,0.5), transparent);
     animation: laser 0.2s linear infinite;
     pointer-events: none;
   }
@@ -872,8 +876,16 @@
     animation: triggered 0.05s infinite;
     background: rgba(255,0,0,0.4);
     pointer-events: none;
+    mix-blend-mode: overlay;
   }
   .effect-hypnotoad-fast {
+    background: repeating-radial-gradient(
+      circle at center,
+      transparent 0,
+      transparent 10px,
+      rgba(255, 255, 255, 0.1) 10px,
+      rgba(255, 255, 255, 0.1) 20px
+    );
     animation: hypno 0.5s linear infinite;
     pointer-events: none;
   }
@@ -896,32 +908,54 @@
     pointer-events: none;
   }
   .effect-dvd-fast {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='20' viewBox='0 0 40 20'%3E%3Ctext x='0' y='15' fill='white' font-family='sans-serif' font-weight='bold' font-size='14'%3EDVD%3C/text%3E%3C/svg%3E");
+    background-repeat: no-repeat;
     animation: dvd-bounce 4s linear infinite;
     pointer-events: none;
+    opacity: 0.5;
   }
   .effect-jello-fast {
     animation: jello 0.5s infinite;
     pointer-events: none;
   }
   .effect-rainbow-puke-fast {
+    background: linear-gradient(180deg, red, orange, yellow, green, blue, indigo, violet);
+    background-size: 100% 1000%;
     animation: rainbow-puke 0.5s linear infinite;
     pointer-events: none;
+    mix-blend-mode: overlay;
+    opacity: 0.5;
   }
   .effect-brain-empty-fast {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Ctext x='0' y='20' fill='white' font-family='sans-serif' font-weight='bold' font-size='20'%3EZ%3C/text%3E%3C/svg%3E");
+    background-size: 30px 30px;
     animation: float-up-right 1s linear infinite;
     pointer-events: none;
+    opacity: 0.4;
   }
   .effect-sweat-fast {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='%2360a5fa' stroke='%233b82f6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z'%3E%3C/path%3E%3C/svg%3E");
+    background-size: 20px 20px;
+    background-repeat: no-repeat;
     animation: sweat-drop 0.5s ease-in infinite;
     pointer-events: none;
+    opacity: 0.6;
   }
   .effect-sus-fast {
+    background: rgba(255, 0, 0, 0.2);
     animation: sus-flash 0.5s infinite;
     pointer-events: none;
+    mix-blend-mode: overlay;
   }
   .effect-clown-fast {
+    background-image: radial-gradient(circle, #ef4444 10px, transparent 11px),
+                      radial-gradient(circle, #3b82f6 10px, transparent 11px),
+                      radial-gradient(circle, #eab308 10px, transparent 11px);
+    background-size: 60px 60px;
+    background-position: 0 0, 30px 30px, 15px 15px;
     animation: clown-spin 2s linear infinite;
     pointer-events: none;
+    opacity: 0.3;
   }
   .effect-wasted-fast {
     filter: grayscale(100%) contrast(200%) brightness(50%);
@@ -929,8 +963,20 @@
     pointer-events: none;
   }
   .effect-nyan-fast {
+    background: repeating-linear-gradient(
+      to bottom,
+      #ff0000, #ff0000 10px,
+      #ff9900 10px, #ff9900 20px,
+      #ffff00 20px, #ffff00 30px,
+      #33ff00 30px, #33ff00 40px,
+      #0099ff 40px, #0099ff 50px,
+      #6633ff 50px, #6633ff 60px
+    );
+    background-size: 100% 60px;
     animation: nyan-scroll 0.2s linear infinite;
     pointer-events: none;
+    opacity: 0.3;
+    mix-blend-mode: screen;
   }
   .effect-heart-beat {
     animation: pulse 0.6s ease-in-out infinite;

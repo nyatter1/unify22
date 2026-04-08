@@ -21,6 +21,7 @@ interface UserOptionsProps {
   onUnban: (uid: string) => void;
   onChangeRank: (uid: string, rankId: string, isCustom: boolean) => void;
   onViewRatings: (uid: string) => void;
+  onMessage: (uid: string) => void;
 }
 
 export const UserOptions: React.FC<UserOptionsProps> = ({
@@ -37,7 +38,8 @@ export const UserOptions: React.FC<UserOptionsProps> = ({
   onBan,
   onUnban,
   onChangeRank,
-  onViewRatings
+  onViewRatings,
+  onMessage
 }) => {
   const [showRanks, setShowRanks] = useState(false);
   const [customRanks, setCustomRanks] = useState<RankDefinition[]>([]);
@@ -97,9 +99,12 @@ export const UserOptions: React.FC<UserOptionsProps> = ({
           
           <div className="space-y-2">
             <button onClick={() => onViewProfile(targetUser.uid)} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-white/80 transition-all"><Eye className="w-4 h-4" /> View Profile</button>
+            {!isSelf && (
+              <button onClick={() => onMessage(targetUser.uid)} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-white/80 transition-all"><MessageSquare className="w-4 h-4" /> Message</button>
+            )}
             <button onClick={() => onViewRatings(targetUser.uid)} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-white/80 transition-all"><Star className="w-4 h-4" /> {isSelf ? 'My Ratings' : 'View Ratings'}</button>
             {!isSelf && (
-              <button onClick={() => onRateProfile(targetUser.uid)} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-white/80 transition-all"><MessageSquare className="w-4 h-4" /> Rate Profile</button>
+              <button onClick={() => onRateProfile(targetUser.uid)} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-white/80 transition-all"><Star className="w-4 h-4" /> Rate Profile</button>
             )}
             
             {isDev && (

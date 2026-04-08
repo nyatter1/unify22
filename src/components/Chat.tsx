@@ -97,6 +97,7 @@ import { EditProfileModal } from './chat/Modals/EditProfileModal';
 import { NewsModal } from './chat/Modals/NewsModal';
 import { UpdatesModal } from './chat/Modals/UpdatesModal';
 import { RulesModal } from './chat/Modals/RulesModal';
+import { InboxModal } from './chat/Modals/InboxModal';
 
 // Existing Shared Modals
 import { UserOptions } from './UserOptions';
@@ -148,6 +149,8 @@ export default function Chat({ user }: ChatProps) {
   const [showSidebar, setShowSidebar] = useState(false);
   const [sidebarView, setSidebarView] = useState<'default' | 'search' | 'friends' | 'staff'>('default');
   const [showLeftSidebar, setShowLeftSidebar] = useState(false);
+  const [showInbox, setShowInbox] = useState(false);
+  const [initialActiveChat, setInitialActiveChat] = useState<string | null>(null);
   const [isLeftSidebarPinned, setIsLeftSidebarPinned] = useState(false);
   const [showNews, setShowNews] = useState(false);
   const [showUpdates, setShowUpdates] = useState(false);
@@ -218,7 +221,8 @@ export default function Chat({ user }: ChatProps) {
     notifications, setNotifications,
     newsPosts, setNewsPosts,
     appUpdates, setAppUpdates,
-    unreadNotifications, setUnreadNotifications
+    unreadNotifications, setUnreadNotifications,
+    privateMessages
   } = useChatData(user, soundEnabled);
 
   useUserStatus(user, allUsers);
@@ -387,6 +391,7 @@ export default function Chat({ user }: ChatProps) {
           setShowUpdates={setShowUpdates}
           setShowRules={setShowRules}
           setShowCommandsModal={setShowCommandsModal}
+          setShowInbox={setShowInbox}
           unreadNotifications={unreadNotifications}
           currentTheme={currentTheme}
         />
@@ -443,10 +448,22 @@ export default function Chat({ user }: ChatProps) {
           handleOpenNotifications={handleOpenNotifications}
           setShowNews={setShowNews}
           setShowSidebar={setShowSidebar}
+          setShowInbox={setShowInbox}
           unreadNotifications={unreadNotifications}
         />
 
       {/* Customization Modals */}
+      <InboxModal
+        showInbox={showInbox}
+        setShowInbox={setShowInbox}
+        user={user}
+        allUsers={allUsers}
+        privateMessages={privateMessages}
+        currentTheme={currentTheme}
+        getCardStyles={getCardStyles}
+        initialActiveChat={initialActiveChat}
+        setInitialActiveChat={setInitialActiveChat}
+      />
       <CustomizerModal
         showCustomizer={showCustomizer}
         setShowCustomizer={setShowCustomizer}
@@ -511,6 +528,11 @@ export default function Chat({ user }: ChatProps) {
           if (targetUser) {
             setSelectedUserForOptions(targetUser);
           }
+        }}
+        onMessage={(uid) => {
+          setInitialActiveChat(uid);
+          setShowInbox(true);
+          setShowProfileModal(false);
         }}
       />
 
@@ -700,6 +722,11 @@ export default function Chat({ user }: ChatProps) {
               setSelectedUserForRatingsList(targetUser);
               setShowRatingsList(true);
             }
+            setSelectedUserForOptions(null);
+          }}
+          onMessage={(uid) => {
+            setInitialActiveChat(uid);
+            setShowInbox(true);
             setSelectedUserForOptions(null);
           }}
         />

@@ -10,6 +10,36 @@ export const useChatData = (user: UserProfile, soundEnabled: boolean) => {
   const [appUpdates, setAppUpdates] = useState<any[]>([]);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
 
+  const [privateMessages, setPrivateMessages] = useState<Message[]>([]);
+
+  useEffect(() => {
+    const fetchPrivateMessages = async () => {
+      const { data } = await supabase
+        .from('messages')
+        .select('*')
+        .not('recipientId', 'is', null)
+        .or(`senderId.eq.${user.uid},recipientId.eq.${user.uid}`)
+        .order('timestamp', { ascending: false })
+        .limit(100);
+      
+      if (data) {
+        setPrivateMessages(data.reverse() as Message[]);
+      }
+    };
+
+    fetchPrivateMessages();
+
+    const pmSubscription = supabase
+      .channel('chat-pms-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages', filter: `recipientId=eq.${user.uid}` }, fetchPrivateMessages)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages', filter: `senderId=eq.${user.uid}` }, fetchPrivateMessages)
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(pmSubscription);
+    };
+  }, [user.uid]);
+
   useEffect(() => {
     const fetchNotifications = async () => {
       const { data } = await supabase
@@ -86,6 +116,7 @@ export const useChatData = (user: UserProfile, soundEnabled: boolean) => {
       const { data } = await supabase
         .from('messages')
         .select('*')
+        .is('recipientId', null)
         .order('timestamp', { ascending: false })
         .limit(50);
       
@@ -152,6 +183,8 @@ export const useChatData = (user: UserProfile, soundEnabled: boolean) => {
     appUpdates,
     setAppUpdates,
     unreadNotifications,
-    setUnreadNotifications
+    setUnreadNotifications,
+    privateMessages,
+    setPrivateMessages
   };
 };

@@ -9,7 +9,8 @@ import {
   Newspaper, 
   RefreshCw, 
   BookOpen, 
-  Terminal 
+  Terminal,
+  Mail
 } from 'lucide-react';
 import { UserProfile } from '../../types';
 import { cn } from '../../lib/utils';
@@ -29,6 +30,7 @@ interface LeftSidebarProps {
   setShowUpdates: (s: boolean) => void;
   setShowRules: (s: boolean) => void;
   setShowCommandsModal: (s: boolean) => void;
+  setShowInbox: (s: boolean) => void;
   unreadNotifications: number;
   currentTheme: any;
 }
@@ -47,6 +49,7 @@ export const LeftSidebar = ({
   setShowUpdates,
   setShowRules,
   setShowCommandsModal,
+  setShowInbox,
   unreadNotifications,
   currentTheme
 }: LeftSidebarProps) => {
@@ -87,6 +90,12 @@ export const LeftSidebar = ({
       </div>
       <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
         <SidebarItem icon={<Gift className="w-5 h-5" />} label="Daily Reward" onClick={() => setShowDailyReward(true)} expanded={isLeftSidebarPinned || showLeftSidebar} />
+        <SidebarItem
+          icon={<Mail className="w-5 h-5" />}
+          label="Inbox"
+          onClick={() => setShowInbox(true)}
+          expanded={isLeftSidebarPinned || showLeftSidebar}
+        />
         <SidebarItem
           icon={<UserPlus className="w-5 h-5" />}
           label="Friend Requests"

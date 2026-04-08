@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Camera, UserPlus, UserMinus, Edit3, Heart, Shield, Coins, Gem } from 'lucide-react';
+import { X, Camera, UserPlus, UserMinus, Edit3, Heart, Shield, Coins, Gem, MessageSquare } from 'lucide-react';
 import { cn } from '../../../lib/utils';
 import { UserProfile, Theme, Border, ProfileEffect, AppNotification } from '../../../types';
 import { DEFAULT_PFP, DEFAULT_BANNER, BORDERS, PROFILE_EFFECTS, RANKS } from '../../../constants';
@@ -21,6 +21,7 @@ interface ProfileModalProps {
   onPfpClick: () => void;
   onRateProfile: (uid: string) => void;
   onOpenOptions: (uid: string) => void;
+  onMessage: (uid: string) => void;
 }
 
 export const ProfileModal: React.FC<ProfileModalProps> = ({
@@ -39,6 +40,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   onPfpClick,
   onRateProfile,
   onOpenOptions,
+  onMessage,
 }) => {
   const getYouTubeId = (url: string) => {
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
@@ -115,6 +117,13 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
               <div className="absolute top-6 right-6 flex items-center gap-3 z-30">
                 {selectedProfile.uid !== user.uid && (
                   <>
+                    <button 
+                      onClick={() => onMessage(selectedProfile.uid)}
+                      className="p-3 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white/60 hover:text-white hover:bg-black/60 transition-all"
+                      title="Message"
+                    >
+                      <MessageSquare className="w-5 h-5" />
+                    </button>
                     <button 
                       onClick={() => onOpenOptions(selectedProfile.uid)}
                       className="p-3 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white/60 hover:text-white hover:bg-black/60 transition-all"

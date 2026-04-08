@@ -115,6 +115,9 @@ export interface UserProfile {
   isKicked?: boolean;
   profileSong?: string;
   isRigged?: boolean;
+  muteReason?: string;
+  kickReason?: string;
+  banReason?: string;
 }
 
 export interface Message {

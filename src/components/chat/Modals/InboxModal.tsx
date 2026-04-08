@@ -278,24 +278,30 @@ export const InboxModal = ({
                       <div ref={messagesEndRef} />
                     </div>
 
-                    <form onSubmit={handleSendMessage} className="p-4 border-t border-white/10 bg-black/20">
-                      <div className="relative flex items-center">
-                        <input
-                          type="text"
-                          value={newMessage}
-                          onChange={(e) => setNewMessage(e.target.value)}
-                          placeholder="Type a message..."
-                          className="w-full bg-white/5 border border-white/10 rounded-xl pl-4 pr-12 py-3 text-sm text-white focus:outline-none focus:border-blue-500/50 transition-colors"
-                        />
-                        <button
-                          type="submit"
-                          disabled={!newMessage.trim()}
-                          className="absolute right-2 p-2 rounded-lg bg-blue-500 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-600 transition-colors"
-                        >
-                          <Send className="w-4 h-4" />
-                        </button>
+                    {user.isMuted ? (
+                      <div className="p-4 border-t border-white/10 bg-black/20 text-center">
+                        <p className="text-red-400 text-sm font-bold">You are muted and cannot send private messages.</p>
                       </div>
-                    </form>
+                    ) : (
+                      <form onSubmit={handleSendMessage} className="p-4 border-t border-white/10 bg-black/20">
+                        <div className="relative flex items-center">
+                          <input
+                            type="text"
+                            value={newMessage}
+                            onChange={(e) => setNewMessage(e.target.value)}
+                            placeholder="Type a message..."
+                            className="w-full bg-white/5 border border-white/10 rounded-xl pl-4 pr-12 py-3 text-sm text-white focus:outline-none focus:border-blue-500/50 transition-colors"
+                          />
+                          <button
+                            type="submit"
+                            disabled={!newMessage.trim()}
+                            className="absolute right-2 p-2 rounded-lg bg-blue-500 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-600 transition-colors"
+                          >
+                            <Send className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </form>
+                    )}
                   </>
                 )})() : (
                   <div className="flex-1 flex items-center justify-center text-white/40 flex-col gap-4">

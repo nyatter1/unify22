@@ -45,7 +45,10 @@ CREATE TABLE IF NOT EXISTS users (
   "isMuted" BOOLEAN DEFAULT false,
   "isBanned" BOOLEAN DEFAULT false,
   "isKicked" BOOLEAN DEFAULT false,
-  "profileSong" TEXT
+  "profileSong" TEXT,
+  "muteReason" TEXT,
+  "kickReason" TEXT,
+  "banReason" TEXT
 );
 
 -- Messages Table

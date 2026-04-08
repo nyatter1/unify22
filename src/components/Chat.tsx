@@ -232,6 +232,49 @@ export default function Chat({ user, onReplayIntegration }: ChatProps) {
 
   useUserStatus(user, allUsers);
 
+  const [remainingTime, setRemainingTime] = useState<{ mute: number; kick: number; ban: boolean }>({ mute: 0, kick: 0, ban: false });
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const now = new Date().getTime();
+      const muteUntil = user.mutedUntil ? new Date(user.mutedUntil).getTime() : 0;
+      const kickUntil = user.kickedUntil ? new Date(user.kickedUntil).getTime() : 0;
+      
+      const muteLeft = Math.max(0, Math.floor((muteUntil - now) / 1000));
+      const kickLeft = Math.max(0, Math.floor((kickUntil - now) / 1000));
+      
+      setRemainingTime({
+        mute: muteLeft,
+        kick: kickLeft,
+        ban: !!user.isBanned
+      });
+
+      // Auto-refresh if unmuted
+      if (user.isMuted && muteLeft === 0 && muteUntil > 0) {
+        supabase.from('users').update({ isMuted: false, mutedUntil: null, muteReason: null }).eq('uid', user.uid).then(() => {
+          window.location.reload();
+        });
+      }
+      // Auto-refresh if unkicked
+      if (user.isKicked && kickLeft === 0 && kickUntil > 0) {
+        supabase.from('users').update({ isKicked: false, kickedUntil: null, kickReason: null }).eq('uid', user.uid).then(() => {
+          window.location.reload();
+        });
+      }
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [user.mutedUntil, user.kickedUntil, user.isMuted, user.isKicked, user.isBanned]);
+
+  const formatTime = (seconds: number) => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    if (h > 0) return `${h}h ${m}m ${s}s`;
+    if (m > 0) return `${m}m ${s}s`;
+    return `${s}s`;
+  };
+
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 3000);
@@ -370,6 +413,45 @@ export default function Chat({ user, onReplayIntegration }: ChatProps) {
         cursor: 'auto'
       }}
     >
+      {/* Moderation Overlays */}
+      {(remainingTime.ban || (user.isKicked && remainingTime.kick > 0)) && (
+        <div className="fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center p-8 text-center">
+          <ShieldAlert className="w-24 h-24 text-red-500 mb-8 animate-pulse" />
+          <h1 className="text-4xl font-black text-white mb-4 uppercase tracking-tighter">
+            {remainingTime.ban ? 'Permanently Banned' : 'Temporarily Kicked'}
+          </h1>
+          
+          <div className="bg-white/5 border border-white/10 rounded-3xl p-8 max-w-md w-full backdrop-blur-xl">
+            {remainingTime.kick > 0 && !remainingTime.ban && (
+              <div className="mb-6">
+                <p className="text-white/40 uppercase text-xs font-bold tracking-widest mb-2">Time Remaining</p>
+                <p className="text-3xl font-mono text-white">{formatTime(remainingTime.kick)}</p>
+              </div>
+            )}
+            
+            <div>
+              <p className="text-white/40 uppercase text-xs font-bold tracking-widest mb-2">Reason</p>
+              <p className="text-xl text-white italic">
+                {remainingTime.ban ? (user.banReason || 'No reason provided') : (user.kickReason || 'No reason provided')}
+              </p>
+            </div>
+          </div>
+          
+          <p className="mt-8 text-white/40 text-sm">
+            If you believe this is a mistake, please contact the administration.
+          </p>
+        </div>
+      )}
+
+      {/* Mute Notification */}
+      {user.isMuted && remainingTime.mute > 0 && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[100] bg-red-600/90 text-white px-6 py-3 rounded-full font-bold shadow-2xl backdrop-blur-md flex items-center gap-3 animate-bounce">
+          <VolumeX className="w-5 h-5" />
+          <span>You are muted for: {formatTime(remainingTime.mute)}</span>
+          <span className="text-white/60 text-xs font-normal ml-2">Reason: {user.muteReason || 'None'}</span>
+        </div>
+      )}
+
       {/* Theme Overlay */}
       {currentTheme.background.startsWith('http') && <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] pointer-events-none" />}
 
@@ -439,15 +521,17 @@ export default function Chat({ user, onReplayIntegration }: ChatProps) {
             DiceIcons={DiceIcons}
           />
 
-          <ChatInput 
-            newMessage={newMessage}
-            setNewMessage={setNewMessage}
-            handleSendMessage={handleSendMessageWrapper}
-            soundEnabled={soundEnabled}
-            setSoundEnabled={setSoundEnabled}
-            setShowPollModal={setShowPollModal}
-            handleImageUpload={handleImageUpload}
-          />
+          {!user.isMuted && remainingTime.mute <= 0 && (
+            <ChatInput 
+              newMessage={newMessage}
+              setNewMessage={setNewMessage}
+              handleSendMessage={handleSendMessageWrapper}
+              soundEnabled={soundEnabled}
+              setSoundEnabled={setSoundEnabled}
+              setShowPollModal={setShowPollModal}
+              handleImageUpload={handleImageUpload}
+            />
+          )}
         </div>
 
         <UserList 

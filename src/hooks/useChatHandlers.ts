@@ -584,13 +584,13 @@ export const useChatHandlers = (
     const currentIdx = RANK_ORDER.indexOf(user.rank || 'VIP');
     const targetIdx = RANK_ORDER.indexOf(targetUser.rank || 'VIP');
 
-    // Staff cannot act on higher or equal staff
-    // currentIdx >= 10 means MODERATOR or higher
-    if (currentIdx >= 10 && targetIdx >= currentIdx) {
-      showToast('You cannot perform actions on staff of equal or higher rank!');
+    // Basic rule: Cannot perform actions on staff of equal or higher rank
+    if (targetIdx >= currentIdx) {
+      showToast('You cannot perform actions on users of equal or higher rank!');
       return false;
     }
 
+    // MODERATOR (Index 10)
     if (user.rank === 'MODERATOR') {
       if (action !== 'mute') {
         showToast('Moderators can only mute users!');
@@ -599,23 +599,19 @@ export const useChatHandlers = (
       return true;
     }
 
+    // ADMINISTRATION (Index 11)
     if (user.rank === 'ADMINISTRATION') {
-      if (action === 'ban') {
-        showToast('Administrators cannot ban users!');
-        return false;
+      if (action === 'mute' || action === 'kick') {
+        return true;
       }
-      if (action === 'rank' && targetIdx >= currentIdx) {
-        showToast('You can only change ranks of users below your own rank!');
-        return false;
-      }
-      return true;
+      showToast('Administrators can only mute and kick users!');
+      return false;
     }
 
-    if (user.rank === 'FOUNDER' || user.rank === 'DEVELOPER' || user.rank === 'MOTHER_OF_PURITY' || user.rank === 'STAR') {
-      if (action === 'rank' && targetIdx >= currentIdx) {
-        showToast('You can only change ranks of users below your own rank!');
-        return false;
-      }
+    // STAR and higher (Index 12+)
+    if (currentIdx >= 12) {
+      // Stars and higher can perform all actions (mute, kick, ban, rank) 
+      // but only on users below their own rank (already checked above)
       return true;
     }
 
@@ -640,70 +636,61 @@ export const useChatHandlers = (
     handleMute: async (uid: string) => {
       if (!uid) return;
       if (!checkPermission(uid, 'mute')) return;
-      try {
-        const mutedUntil = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 24h
-        await supabase.from('users').update({ mutedUntil, isMuted: true }).eq('uid', uid);
-        showToast('User muted for 24h');
-      } catch (err) {
-        console.error(err);
-        showToast('Failed to mute user');
+      const targetUser = allUsers.find(u => u.uid === uid);
+      if (targetUser) {
+        setSelectedUserForAdmin(targetUser);
+        setAdminAction('mute');
+        setShowAdminModal(true);
       }
     },
     handleUnmute: async (uid: string) => {
       if (!uid) return;
       if (!checkPermission(uid, 'mute')) return;
-      try {
-        await supabase.from('users').update({ mutedUntil: null, isMuted: false }).eq('uid', uid);
-        showToast('User unmuted');
-      } catch (err) {
-        console.error(err);
-        showToast('Failed to unmute user');
+      const targetUser = allUsers.find(u => u.uid === uid);
+      if (targetUser) {
+        setSelectedUserForAdmin(targetUser);
+        setAdminAction('unmute');
+        setShowAdminModal(true);
       }
     },
     handleKick: async (uid: string) => {
       if (!uid) return;
       if (!checkPermission(uid, 'kick')) return;
-      try {
-        const kickedUntil = new Date(Date.now() + 1 * 60 * 60 * 1000).toISOString(); // 1h
-        await supabase.from('users').update({ kickedUntil, isKicked: true }).eq('uid', uid);
-        showToast('User kicked for 1h');
-      } catch (err) {
-        console.error(err);
-        showToast('Failed to kick user');
+      const targetUser = allUsers.find(u => u.uid === uid);
+      if (targetUser) {
+        setSelectedUserForAdmin(targetUser);
+        setAdminAction('kick');
+        setShowAdminModal(true);
       }
     },
     handleUnkick: async (uid: string) => {
       if (!uid) return;
       if (!checkPermission(uid, 'kick')) return;
-      try {
-        await supabase.from('users').update({ kickedUntil: null, isKicked: false }).eq('uid', uid);
-        showToast('User unkicked');
-      } catch (err) {
-        console.error(err);
-        showToast('Failed to unkick user');
+      const targetUser = allUsers.find(u => u.uid === uid);
+      if (targetUser) {
+        setSelectedUserForAdmin(targetUser);
+        setAdminAction('unkick');
+        setShowAdminModal(true);
       }
     },
     handleBan: async (uid: string) => {
       if (!uid) return;
       if (!checkPermission(uid, 'ban')) return;
-      try {
-        const bannedUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(); // 30 days
-        await supabase.from('users').update({ bannedUntil, isBanned: true }).eq('uid', uid);
-        showToast('User banned for 30 days');
-      } catch (err) {
-        console.error(err);
-        showToast('Failed to ban user');
+      const targetUser = allUsers.find(u => u.uid === uid);
+      if (targetUser) {
+        setSelectedUserForAdmin(targetUser);
+        setAdminAction('ban');
+        setShowAdminModal(true);
       }
     },
     handleUnban: async (uid: string) => {
       if (!uid) return;
       if (!checkPermission(uid, 'ban')) return;
-      try {
-        await supabase.from('users').update({ bannedUntil: null, isBanned: false }).eq('uid', uid);
-        showToast('User unbanned');
-      } catch (err) {
-        console.error(err);
-        showToast('Failed to unban user');
+      const targetUser = allUsers.find(u => u.uid === uid);
+      if (targetUser) {
+        setSelectedUserForAdmin(targetUser);
+        setAdminAction('unban');
+        setShowAdminModal(true);
       }
     },
     handleSetRank: async (uid: string, rank: string) => {

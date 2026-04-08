@@ -5,11 +5,13 @@ import Auth from './components/Auth';
 import Onboarding from './components/Onboarding';
 import Chat from './components/Chat';
 import { Loader2, Infinity } from 'lucide-react';
+import { TheGreatIntegration } from './components/TheGreatIntegration';
 
 export default function App() {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [authReady, setAuthReady] = useState(false);
+  const [showIntegrationEvent, setShowIntegrationEvent] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session }, error }) => {
@@ -50,6 +52,9 @@ export default function App() {
       }
       if (data) {
         setUser(data as UserProfile);
+        if (!localStorage.getItem('hasSeenGreatIntegration')) {
+          setShowIntegrationEvent(true);
+        }
       } else {
         setUser(null);
       }
@@ -119,5 +124,15 @@ export default function App() {
     return <Onboarding user={user} onComplete={() => fetchProfile(user.uid)} />;
   }
 
-  return <Chat user={user} />;
+  return (
+    <>
+      <Chat user={user} />
+      {showIntegrationEvent && (
+        <TheGreatIntegration onComplete={() => {
+          localStorage.setItem('hasSeenGreatIntegration', 'true');
+          setShowIntegrationEvent(false);
+        }} />
+      )}
+    </>
+  );
 }

@@ -1045,4 +1045,21 @@
     backdrop-filter: blur(10px);
     pointer-events: none;
   }
+
+  @keyframes glitch-skew {
+    0% { transform: skew(0deg); }
+    20% { transform: skew(-10deg); }
+    40% { transform: skew(10deg); }
+    60% { transform: skew(-5deg); }
+    80% { transform: skew(5deg); }
+    100% { transform: skew(0deg); }
+  }
+
+  .animate-glitch-skew {
+    animation: glitch-skew 0.5s infinite linear alternate-reverse;
+  }
+
+  .font-comic-sans {
+    font-family: "Comic Sans MS", "Comic Sans", cursive;
+  }
 }

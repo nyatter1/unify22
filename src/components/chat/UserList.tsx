@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'motion/react';
 import { Users, Search, UserPlus, Shield, X, Mail, Bell, User } from 'lucide-react';
 import { UserProfile } from '../../types';
 import { RANKS, DEFAULT_BANNER, DEFAULT_PFP } from '../../constants';
@@ -144,12 +145,12 @@ export const UserList = ({
             <select
               value={userSort}
               onChange={(e) => setUserSort(e.target.value as any)}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-white/60 focus:outline-none focus:border-amber-500/50 transition-colors"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-white/60 focus:outline-none focus:border-amber-500/50 transition-colors appearance-none"
             >
-              <option value="lastOnline">Last Online</option>
-              <option value="highestRank">Highest Rank</option>
-              <option value="lastOffline">Last Offline</option>
-              <option value="newest">Newest</option>
+              <option value="lastOnline" className="bg-zinc-900 text-white">Last Online</option>
+              <option value="highestRank" className="bg-zinc-900 text-white">Highest Rank</option>
+              <option value="lastOffline" className="bg-zinc-900 text-white">Last Offline</option>
+              <option value="newest" className="bg-zinc-900 text-white">Newest</option>
             </select>
           </div>
         )}
@@ -161,41 +162,59 @@ export const UserList = ({
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
         {(sidebarView === 'friends' ? allUsers.filter(u => user.friends?.includes(u.uid)) : filteredUsers).map((u) => {
           const { className, style, textClass } = getCardStyles(u);
           return (
-            <div
+            <motion.div
+              whileHover={{ x: 4, scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               key={u.uid}
-              className={cn(className, "cursor-pointer flex items-center gap-3")}
+              className={cn(
+                className, 
+                "cursor-pointer flex items-center gap-4 p-3 rounded-2xl transition-all duration-300 border border-white/5 hover:border-white/20 group relative overflow-hidden"
+              )}
               style={style}
               onClick={() => {
                 handleProfileClick(u.uid);
                 if (window.innerWidth < 1024) setShowSidebar(false);
               }}
             >
-              <div className="relative shrink-0">
+              {/* Hover Glow Effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              
+              <div className="relative shrink-0 z-10">
+                <div className="absolute inset-0 bg-white/20 blur-lg rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
                 <img
-                  src={u.pfp}
-                  className="w-10 h-10 rounded-full border border-white/20 object-cover relative z-10"
+                  src={u.pfp || DEFAULT_PFP}
+                  className="w-12 h-12 rounded-xl border border-white/10 object-cover relative z-10 shadow-lg transition-transform group-hover:rotate-3"
                 />
                 <div className={cn(
-                  "absolute -bottom-0.5 -right-0.5 w-3 h-3 border-2 border-black rounded-full z-20",
+                  "absolute -bottom-1 -right-1 w-4 h-4 border-4 border-zinc-950 rounded-full z-20 shadow-xl",
                   u.isOnline ? "bg-green-500" : "bg-zinc-600"
                 )} />
               </div>
-              <div className="flex-1 min-w-0 flex flex-col justify-center">
-                <p className={cn("text-sm font-serif truncate", textClass)}>{u.username}</p>
-                {u.status && (
-                  <p className="text-[10px] opacity-60 truncate mt-0.5">{u.status}</p>
+              
+              <div className="flex-1 min-w-0 flex flex-col justify-center z-10">
+                <div className="flex items-center gap-2">
+                  <p className={cn("text-sm font-serif italic truncate tracking-tight", textClass)}>{u.username}</p>
+                  {u.rank === 'DEVELOPER' && <Shield className="w-3 h-3 text-red-500 shrink-0" />}
+                </div>
+                {u.status ? (
+                  <p className="text-[10px] text-white/40 truncate mt-0.5 font-medium">{u.status}</p>
+                ) : (
+                  <p className="text-[10px] text-white/20 truncate mt-0.5 italic">No status set</p>
                 )}
               </div>
-              <img
-                src={u.customRank?.icon || RANKS.find(r => r.id === (u.rank || 'VIP'))?.icon || ''}
-                className="w-4 h-4 object-contain shrink-0"
-                alt="rank"
-              />
-            </div>
+              
+              <div className="shrink-0 z-10 opacity-40 group-hover:opacity-100 transition-opacity">
+                <img
+                  src={u.customRank?.icon || RANKS.find(r => r.id === (u.rank || 'VIP'))?.icon || ''}
+                  className="w-5 h-5 object-contain"
+                  alt="rank"
+                />
+              </div>
+            </motion.div>
           );
         })}
       </div>

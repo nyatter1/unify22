@@ -4,7 +4,7 @@ import { UserProfile } from './types';
 import Auth from './components/Auth';
 import Onboarding from './components/Onboarding';
 import Chat from './components/Chat';
-import { Loader2, Infinity } from 'lucide-react';
+import { Loader2, Infinity, AlertCircle } from 'lucide-react';
 import { TheGreatIntegration } from './components/TheGreatIntegration';
 
 export default function App() {
@@ -12,6 +12,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [authReady, setAuthReady] = useState(false);
   const [showIntegrationEvent, setShowIntegrationEvent] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session }, error }) => {
@@ -27,6 +28,7 @@ export default function App() {
       }
     }).catch(err => {
       console.error("Failed to get session:", err);
+      setFetchError(err.message || 'Failed to connect to database');
       setAuthReady(true);
       setLoading(false);
     });
@@ -45,10 +47,12 @@ export default function App() {
   }, []);
 
   const fetchProfile = async (uid: string) => {
+    setFetchError(null);
     try {
       const { data, error } = await supabase.from('users').select('*').eq('uid', uid).maybeSingle();
       if (error) {
         console.error("Error fetching profile:", error);
+        setFetchError(error.message);
       }
       if (data) {
         setUser(data as UserProfile);
@@ -58,8 +62,9 @@ export default function App() {
       } else {
         setUser(null);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to fetch profile:", err);
+      setFetchError(err.message || 'Network error: Failed to fetch profile');
       setUser(null);
     } finally {
       setLoading(false);
@@ -79,6 +84,36 @@ export default function App() {
       supabase.removeChannel(channel);
     };
   }, [user?.uid]);
+
+  if (fetchError) {
+    return (
+      <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center p-8">
+        <div className="max-w-md w-full bg-red-500/5 border border-red-500/20 rounded-[2.5rem] p-10 text-center space-y-6">
+          <div className="w-20 h-20 bg-red-500/20 rounded-3xl flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="w-10 h-10 text-red-500" />
+          </div>
+          <h2 className="text-2xl font-serif italic text-white">Connection Error</h2>
+          <p className="text-sm text-white/40 leading-relaxed">
+            {fetchError === 'Failed to fetch' 
+              ? 'Network error: Could not connect to the database. This might be due to a slow connection or a firewall.' 
+              : fetchError}
+          </p>
+          <button
+            onClick={() => {
+              setLoading(true);
+              supabase.auth.getSession().then(({ data: { session } }) => {
+                if (session?.user) fetchProfile(session.user.id);
+                else window.location.reload();
+              });
+            }}
+            className="w-full py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-bold uppercase tracking-widest hover:bg-white/10 transition-all"
+          >
+            Retry Connection
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (!authReady || loading) {
     return (

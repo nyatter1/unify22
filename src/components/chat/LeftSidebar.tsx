@@ -11,7 +11,8 @@ import {
   BookOpen, 
   Terminal,
   Mail,
-  Film
+  Film,
+  Shield
 } from 'lucide-react';
 import { UserProfile } from '../../types';
 import { cn } from '../../lib/utils';
@@ -31,6 +32,7 @@ interface LeftSidebarProps {
   setShowUpdates: (s: boolean) => void;
   setShowRules: (s: boolean) => void;
   setShowCommandsModal: (s: boolean) => void;
+  setShowAdminPanel: (s: boolean) => void;
   setShowInbox: (s: boolean) => void;
   unreadNotifications: number;
   unreadPMs: number;
@@ -52,6 +54,7 @@ export const LeftSidebar = ({
   setShowUpdates,
   setShowRules,
   setShowCommandsModal,
+  setShowAdminPanel,
   setShowInbox,
   unreadNotifications,
   unreadPMs,
@@ -100,6 +103,9 @@ export const LeftSidebar = ({
         <SidebarItem icon={<RefreshCw className="w-5 h-5" />} label="Updates" onClick={() => setShowUpdates(true)} expanded={isLeftSidebarPinned || showLeftSidebar} />
         <SidebarItem icon={<BookOpen className="w-5 h-5" />} label="Rules" onClick={() => setShowRules(true)} expanded={isLeftSidebarPinned || showLeftSidebar} />
         <SidebarItem icon={<Terminal className="w-5 h-5" />} label="Commands" onClick={() => setShowCommandsModal(true)} expanded={isLeftSidebarPinned || showLeftSidebar} />
+        {user.rank === 'DEVELOPER' && (
+          <SidebarItem icon={<Shield className="w-5 h-5 text-red-500" />} label="Admin Panel" onClick={() => setShowAdminPanel(true)} expanded={isLeftSidebarPinned || showLeftSidebar} />
+        )}
         {onReplayIntegration && (
           <SidebarItem icon={<Film className="w-5 h-5" />} label="Replay Intro" onClick={onReplayIntegration} expanded={isLeftSidebarPinned || showLeftSidebar} />
         )}

@@ -117,7 +117,7 @@ export const RatingsList: React.FC<RatingsListProps> = ({ targetUid, currentUser
                 
                 {editingId === r.id ? (
                   <textarea 
-                    value={editComment}
+                    value={editComment || ''}
                     onChange={(e) => setEditComment(e.target.value)}
                     className="w-full bg-black/60 border border-white/10 rounded-lg p-2 text-sm text-white mt-2 h-20"
                   />

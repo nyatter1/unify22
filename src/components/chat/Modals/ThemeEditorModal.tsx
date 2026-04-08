@@ -82,12 +82,12 @@ export const ThemeEditorModal = ({
                   <select
                     value={customThemeInput.textColor}
                     onChange={(e) => setCustomThemeInput({ ...customThemeInput, textColor: e.target.value })}
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white focus:outline-none"
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white focus:outline-none appearance-none"
                   >
-                    <option value="text-white">White</option>
-                    <option value="text-zinc-400">Zinc</option>
-                    <option value="text-amber-500">Amber</option>
-                    <option value="text-black">Black</option>
+                    <option value="text-white" className="bg-zinc-900 text-white">White</option>
+                    <option value="text-zinc-400" className="bg-zinc-900 text-white">Zinc</option>
+                    <option value="text-amber-500" className="bg-zinc-900 text-white">Amber</option>
+                    <option value="text-black" className="bg-zinc-900 text-white">Black</option>
                   </select>
                 </div>
                 <div className="space-y-4">
@@ -98,10 +98,10 @@ export const ThemeEditorModal = ({
                       ...customThemeInput,
                       customStyles: { ...customThemeInput.customStyles, bubbleStyle: e.target.value }
                     })}
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white focus:outline-none"
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white focus:outline-none appearance-none"
                   >
-                    <option value="rounded">Rounded</option>
-                    <option value="sharp">Sharp</option>
+                    <option value="rounded" className="bg-zinc-900 text-white">Rounded</option>
+                    <option value="sharp" className="bg-zinc-900 text-white">Sharp</option>
                   </select>
                 </div>
               </div>

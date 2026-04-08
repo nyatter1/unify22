@@ -145,10 +145,10 @@ export default function Auth({ onAuthSuccess }: AuthProps) {
                     onChange={(e) => setGender(e.target.value as any)}
                     className="w-full bg-black/40 border border-amber-900/20 rounded-2xl py-4 px-4 text-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-500/30 transition-all appearance-none"
                   >
-                    <option value="" disabled className="bg-black">Gender</option>
-                    <option value="male" className="bg-black">Male</option>
-                    <option value="female" className="bg-black">Female</option>
-                    <option value="other" className="bg-black">Other</option>
+                    <option value="" disabled className="bg-black text-amber-100">Gender</option>
+                    <option value="male" className="bg-black text-amber-100">Male</option>
+                    <option value="female" className="bg-black text-amber-100">Female</option>
+                    <option value="other" className="bg-black text-amber-100">Other</option>
                   </select>
                 </div>
               </motion.div>

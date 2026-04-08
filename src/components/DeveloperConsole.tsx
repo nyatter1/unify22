@@ -445,10 +445,10 @@ export const DeveloperConsole: React.FC<DeveloperConsoleProps> = ({ isOpen, onCl
                               <select 
                                 value={u.rank}
                                 onChange={(e) => handleUpdateUserRank(u.uid, e.target.value as UserRank)}
-                                className="bg-black/40 border border-white/10 rounded-lg px-2 py-1 text-xs text-white focus:outline-none focus:border-red-500/50"
+                                className="bg-black/40 border border-white/10 rounded-lg px-2 py-1 text-xs text-white focus:outline-none focus:border-red-500/50 appearance-none"
                               >
                                 {['DEVELOPER', 'FOUNDER', 'ADMINISTRATION', 'MODERATOR', 'VIP', 'ELITE', 'SUPER_VIP'].map(r => (
-                                  <option key={r} value={r}>{r}</option>
+                                  <option key={r} value={r} className="bg-zinc-900 text-white">{r}</option>
                                 ))}
                               </select>
                             </td>

@@ -16,7 +16,6 @@ interface HeaderProps {
   setShowInbox: (show: boolean) => void;
   setShowFriendRequests: (show: boolean) => void;
   handleOpenNotifications: () => void;
-  setShowCustomizer: (show: boolean) => void;
   setShowEditProfile: (show: boolean) => void;
 }
 
@@ -31,7 +30,6 @@ export const Header = ({
   setShowInbox,
   setShowFriendRequests,
   handleOpenNotifications,
-  setShowCustomizer,
   setShowEditProfile
 }: HeaderProps) => {
   return (

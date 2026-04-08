@@ -115,32 +115,14 @@ export const useChatData = (user: UserProfile, soundEnabled: boolean) => {
     const fetchMessages = async () => {
       const { data } = await supabase
         .from('messages')
-        .select('*')
+        .select('id, senderId, senderUsername, senderPfp, senderRank, text, imageUrl, type, timestamp, pollData, recipientId')
         .is('recipientId', null)
         .order('timestamp', { ascending: false })
         .limit(50);
       
       if (data) {
         const newMsgs = data.reverse() as Message[];
-        
-        setMessages(prev => {
-          // Check if there's a new message that isn't from the current user
-          // We only want to play sound for actual new database messages
-          const prevDbMsgs = prev.filter(m => !m.id.startsWith('local-'));
-          if (prevDbMsgs.length > 0 && newMsgs.length > prevDbMsgs.length) {
-            const lastMsg = newMsgs[newMsgs.length - 1];
-            if (lastMsg.senderId !== user.uid && soundEnabled) {
-              const receiveAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3');
-              receiveAudio.volume = 0.5;
-              receiveAudio.play().catch(() => {});
-            }
-          }
-
-          const localMsgs = prev.filter(m => m.id.startsWith('local-'));
-          const combined = [...newMsgs, ...localMsgs];
-          combined.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
-          return combined;
-        });
+        setMessages(newMsgs);
       }
     };
 
@@ -148,11 +130,34 @@ export const useChatData = (user: UserProfile, soundEnabled: boolean) => {
 
     const messagesSubscription = supabase
       .channel('chat-messages-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, fetchMessages)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: 'recipientId=is.null' }, (payload) => {
+        const newMessage = payload.new as Message;
+        setMessages(prev => {
+          const exists = prev.some(m => m.id === newMessage.id);
+          if (exists) return prev;
+          
+          if (newMessage.senderId !== user.uid && soundEnabled) {
+            const receiveAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3');
+            receiveAudio.volume = 0.5;
+            receiveAudio.play().catch(() => {});
+          }
+
+          const updated = [...prev, newMessage];
+          return updated.slice(-50); // Keep only last 50
+        });
+      })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'messages' }, (payload) => {
+        setMessages(prev => prev.filter(m => m.id !== payload.old.id));
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages' }, (payload) => {
+        setMessages(prev => prev.map(m => m.id === payload.new.id ? { ...m, ...payload.new } : m));
+      })
       .subscribe();
 
     const fetchAllUsers = async () => {
-      const { data } = await supabase.from('users').select('*');
+      const { data } = await supabase
+        .from('users')
+        .select('uid, username, pfp, rank, isOnline, status, lastSeen, friends, friendRequests, xp, level, gold, rubies, theme, cardStyle, customThemes, customCardStyles, customRank, bannedUntil, mutedUntil, kickedUntil');
       if (data) {
         setAllUsers(data as UserProfile[]);
       }

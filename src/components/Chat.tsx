@@ -98,6 +98,7 @@ import { NewsModal } from './chat/Modals/NewsModal';
 import { UpdatesModal } from './chat/Modals/UpdatesModal';
 import { RulesModal } from './chat/Modals/RulesModal';
 import { InboxModal } from './chat/Modals/InboxModal';
+import { AdminPanelModal } from './chat/Modals/AdminPanelModal';
 
 // Existing Shared Modals
 import { UserOptions } from './UserOptions';
@@ -135,6 +136,7 @@ export default function Chat({ user, onReplayIntegration }: ChatProps) {
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [showForceSpeakModal, setShowForceSpeakModal] = useState(false);
   const [showAdminModal, setShowAdminModal] = useState(false);
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [showCommandsModal, setShowCommandsModal] = useState(false);
   const [showPollModal, setShowPollModal] = useState(false);
   const [showStatusEditor, setShowStatusEditor] = useState(false);
@@ -249,6 +251,20 @@ export default function Chat({ user, onReplayIntegration }: ChatProps) {
     handleGiveGold,
     handleGiveRubies,
     handleSendMessage,
+    handleMute,
+    handleUnmute,
+    handleKick,
+    handleUnkick,
+    handleBan,
+    handleUnban,
+    handleSetRank,
+    handleClearChat,
+    handleResetStats,
+    handleForceSpeak,
+    handleUpdateUserField,
+    handleToggleMaintenance,
+    handleSetGlobalTheme,
+    handleDeleteMessage,
     handleFileUpload: handleFileUploadHandler,
     handleRankIconUpload,
     saveCustomRank,
@@ -383,7 +399,7 @@ export default function Chat({ user, onReplayIntegration }: ChatProps) {
         setShowInbox={setShowInbox}
         setShowFriendRequests={setShowFriendRequests}
         handleOpenNotifications={handleOpenNotifications}
-        setShowCustomizer={setShowCustomizer}
+        setShowEditProfile={setShowEditProfile}
       />
 
       <main className="flex-1 flex flex-col lg:flex-row overflow-hidden relative z-10">
@@ -401,6 +417,7 @@ export default function Chat({ user, onReplayIntegration }: ChatProps) {
           setShowUpdates={setShowUpdates}
           setShowRules={setShowRules}
           setShowCommandsModal={setShowCommandsModal}
+          setShowAdminPanel={setShowAdminPanel}
           setShowInbox={setShowInbox}
           unreadNotifications={unreadNotifications}
           unreadPMs={unreadPMs}
@@ -417,6 +434,7 @@ export default function Chat({ user, onReplayIntegration }: ChatProps) {
             currentTheme={currentTheme}
             handleProfileClick={handleProfileClick}
             handleVote={handleVote}
+            handleDeleteMessage={handleDeleteMessage}
             scrollRef={scrollRef}
             DiceIcons={DiceIcons}
           />
@@ -633,14 +651,29 @@ export default function Chat({ user, onReplayIntegration }: ChatProps) {
         currentTheme={currentTheme}
       />
 
-      {/* Daily Reward Modal */}
-      <DailyRewardModal
-        isOpen={showDailyReward}
-        onClose={() => setShowDailyReward(false)}
-        user={user}
-        currentTheme={currentTheme}
-        onShowToast={showToast}
-      />
+      {showAdminPanel && user.rank === 'DEVELOPER' && (
+        <AdminPanelModal
+          showAdminPanel={showAdminPanel}
+          setShowAdminPanel={setShowAdminPanel}
+          allUsers={allUsers}
+          handleBroadcast={handleBroadcast}
+          handleGiveGold={handleGiveGold}
+          handleGiveRubies={handleGiveRubies}
+          onMute={handleMute}
+          onKick={handleKick}
+          onBan={handleBan}
+          onUnmute={handleUnmute}
+          onUnkick={handleUnkick}
+          onUnban={handleUnban}
+          onSetRank={handleSetRank}
+          onClearChat={handleClearChat}
+          onResetStats={handleResetStats}
+          onForceSpeak={handleForceSpeak}
+          onUpdateUserField={handleUpdateUserField}
+          onToggleMaintenance={handleToggleMaintenance}
+          onSetGlobalTheme={handleSetGlobalTheme}
+        />
+      )}
 
 
       {selectedUserForOptions && (

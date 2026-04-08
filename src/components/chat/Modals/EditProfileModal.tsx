@@ -123,18 +123,18 @@ export const EditProfileModal = ({
                       <select 
                         value={user.gender}
                         onChange={e => updateCustomization('gender', e.target.value)}
-                        className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white focus:outline-none focus:border-amber-500/50"
+                        className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white focus:outline-none focus:border-amber-500/50 appearance-none"
                       >
-                        <option value="Male" className="bg-zinc-900">Male</option>
-                        <option value="Female" className="bg-zinc-900">Female</option>
-                        <option value="Other" className="bg-zinc-900">Other</option>
+                        <option value="Male" className="bg-zinc-900 text-white">Male</option>
+                        <option value="Female" className="bg-zinc-900 text-white">Female</option>
+                        <option value="Other" className="bg-zinc-900 text-white">Other</option>
                       </select>
                     </div>
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Bio</label>
                     <textarea 
-                      value={user.bio}
+                      value={user.bio || ''}
                       onChange={e => updateCustomization('bio', e.target.value)}
                       rows={4}
                       className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white focus:outline-none focus:border-amber-500/50 resize-none"

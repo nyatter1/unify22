@@ -1,6 +1,6 @@
 import { supabase } from '../supabase';
 import { UserProfile, Message, Theme, CardStyle } from '../types';
-import { RANKS } from '../constants';
+import { RANKS, AVATARS } from '../constants';
 import { handleCommand, CommandContext } from '../utils/commandHandler';
 
 export const useChatHandlers = (
@@ -555,6 +555,54 @@ export const useChatHandlers = (
     reader.readAsDataURL(file);
   };
 
+  const RANK_ORDER = ['VIP', 'GOOD_GIRL', 'BUNNY', 'SUPER_VIP', 'ELITE', 'MILLIONAIRE', 'SNAKE', 'MANTIS', 'DRAGON', 'TIGER', 'MODERATOR', 'ADMINISTRATION', 'STAR', 'MOTHER_OF_PURITY', 'FOUNDER', 'DEVELOPER'];
+
+  const checkPermission = (targetUid: string, action: 'mute' | 'kick' | 'ban' | 'rank') => {
+    const targetUser = allUsers.find(u => u.uid === targetUid);
+    if (!targetUser) return false;
+
+    const currentIdx = RANK_ORDER.indexOf(user.rank || 'VIP');
+    const targetIdx = RANK_ORDER.indexOf(targetUser.rank || 'VIP');
+
+    // Staff cannot act on higher or equal staff
+    // currentIdx >= 10 means MODERATOR or higher
+    if (currentIdx >= 10 && targetIdx >= currentIdx) {
+      showToast('You cannot perform actions on staff of equal or higher rank!');
+      return false;
+    }
+
+    if (user.rank === 'MODERATOR') {
+      if (action !== 'mute') {
+        showToast('Moderators can only mute users!');
+        return false;
+      }
+      return true;
+    }
+
+    if (user.rank === 'ADMINISTRATION') {
+      if (action === 'ban') {
+        showToast('Administrators cannot ban users!');
+        return false;
+      }
+      if (action === 'rank' && targetIdx >= currentIdx) {
+        showToast('You can only change ranks of users below your own rank!');
+        return false;
+      }
+      return true;
+    }
+
+    if (user.rank === 'FOUNDER' || user.rank === 'DEVELOPER' || user.rank === 'MOTHER_OF_PURITY' || user.rank === 'STAR') {
+      if (action === 'rank' && targetIdx >= currentIdx) {
+        showToast('You can only change ranks of users below your own rank!');
+        return false;
+      }
+      return true;
+    }
+
+    showToast('You do not have permission to perform this action!');
+    return false;
+  };
+
   return {
     sendFriendRequest,
     acceptFriendRequest,
@@ -569,6 +617,186 @@ export const useChatHandlers = (
     handleGiveGold,
     handleGiveRubies,
     handleSendMessage,
+    handleMute: async (uid: string) => {
+      if (!uid) return;
+      if (!checkPermission(uid, 'mute')) return;
+      try {
+        const mutedUntil = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 24h
+        await supabase.from('users').update({ mutedUntil, isMuted: true }).eq('uid', uid);
+        showToast('User muted for 24h');
+      } catch (err) {
+        console.error(err);
+        showToast('Failed to mute user');
+      }
+    },
+    handleUnmute: async (uid: string) => {
+      if (!uid) return;
+      if (!checkPermission(uid, 'mute')) return;
+      try {
+        await supabase.from('users').update({ mutedUntil: null, isMuted: false }).eq('uid', uid);
+        showToast('User unmuted');
+      } catch (err) {
+        console.error(err);
+        showToast('Failed to unmute user');
+      }
+    },
+    handleKick: async (uid: string) => {
+      if (!uid) return;
+      if (!checkPermission(uid, 'kick')) return;
+      try {
+        const kickedUntil = new Date(Date.now() + 1 * 60 * 60 * 1000).toISOString(); // 1h
+        await supabase.from('users').update({ kickedUntil, isKicked: true }).eq('uid', uid);
+        showToast('User kicked for 1h');
+      } catch (err) {
+        console.error(err);
+        showToast('Failed to kick user');
+      }
+    },
+    handleUnkick: async (uid: string) => {
+      if (!uid) return;
+      if (!checkPermission(uid, 'kick')) return;
+      try {
+        await supabase.from('users').update({ kickedUntil: null, isKicked: false }).eq('uid', uid);
+        showToast('User unkicked');
+      } catch (err) {
+        console.error(err);
+        showToast('Failed to unkick user');
+      }
+    },
+    handleBan: async (uid: string) => {
+      if (!uid) return;
+      if (!checkPermission(uid, 'ban')) return;
+      try {
+        const bannedUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(); // 30 days
+        await supabase.from('users').update({ bannedUntil, isBanned: true }).eq('uid', uid);
+        showToast('User banned for 30 days');
+      } catch (err) {
+        console.error(err);
+        showToast('Failed to ban user');
+      }
+    },
+    handleUnban: async (uid: string) => {
+      if (!uid) return;
+      if (!checkPermission(uid, 'ban')) return;
+      try {
+        await supabase.from('users').update({ bannedUntil: null, isBanned: false }).eq('uid', uid);
+        showToast('User unbanned');
+      } catch (err) {
+        console.error(err);
+        showToast('Failed to unban user');
+      }
+    },
+    handleSetRank: async (uid: string, rank: string) => {
+      if (!uid) return;
+      if (!checkPermission(uid, 'rank')) return;
+      try {
+        await supabase.from('users').update({ rank }).eq('uid', uid);
+        showToast(`Set rank to ${rank} for user`);
+      } catch (err) {
+        console.error(err);
+        showToast('Failed to set rank');
+      }
+    },
+    handleClearChat: async () => {
+      try {
+        // Delete messages older than 24 hours to save space
+        const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+        const { error } = await supabase.from('messages').delete().lt('timestamp', yesterday);
+        if (error) throw error;
+        showToast('Pruned messages older than 24h');
+      } catch (err) {
+        console.error(err);
+        showToast('Failed to clear chat');
+      }
+    },
+    handleResetStats: async (uid: string) => {
+      if (!uid) return;
+      if (!checkPermission(uid, 'mute')) return; // Just using 'mute' as a general staff action check
+      try {
+        await supabase.from('users').update({ gold: 0, rubies: 0, xp: 0, level: 1 }).eq('uid', uid);
+        showToast('Reset user stats');
+      } catch (err) {
+        console.error(err);
+        showToast('Failed to reset stats');
+      }
+    },
+    handleForceSpeak: async (uid: string, text: string) => {
+      if (!uid || !text) return;
+      if (!checkPermission(uid, 'mute')) return;
+      const targetUser = allUsers.find(u => u.uid === uid);
+      if (!targetUser) return;
+      try {
+        await supabase.from('messages').insert({
+          senderId: targetUser.uid,
+          senderUsername: targetUser.username,
+          senderPfp: targetUser.pfp,
+          senderRank: targetUser.rank || 'VIP',
+          text: `[FORCE] ${text}`,
+          type: 'text',
+          timestamp: new Date().toISOString(),
+        });
+        showToast('Force spoke for user');
+      } catch (err) {
+        console.error(err);
+        showToast('Failed to force speak');
+      }
+    },
+    handleUpdateUserField: async (uid: string, field: string, value: any) => {
+      if (!uid) return;
+      if (!checkPermission(uid, 'mute')) return;
+      try {
+        await supabase.from('users').update({ [field]: value }).eq('uid', uid);
+        showToast(`Updated ${field} for user`);
+      } catch (err) {
+        console.error(err);
+        showToast(`Failed to update ${field}`);
+      }
+    },
+    handleToggleMaintenance: async () => {
+      if (user.rank !== 'DEVELOPER') return;
+      try {
+        await supabase.from('messages').insert({
+          senderId: 'system',
+          senderUsername: 'SYSTEM',
+          senderPfp: AVATARS[0],
+          senderRank: 'DEVELOPER',
+          text: 'MAINTENANCE_TOGGLE',
+          type: 'system',
+          timestamp: new Date().toISOString(),
+        });
+        showToast('Toggled maintenance mode broadcast');
+      } catch (err) {
+        console.error(err);
+        showToast('Failed to toggle maintenance');
+      }
+    },
+    handleSetGlobalTheme: async (theme: string) => {
+      if (user.rank !== 'DEVELOPER') return;
+      try {
+        await supabase.from('messages').insert({
+          senderId: 'system',
+          senderUsername: 'SYSTEM',
+          senderPfp: AVATARS[0],
+          senderRank: 'DEVELOPER',
+          text: `GLOBAL_THEME:${theme}`,
+          type: 'system',
+          timestamp: new Date().toISOString(),
+        });
+        showToast(`Set global theme to ${theme}`);
+      } catch (err) {
+        console.error(err);
+        showToast('Failed to set global theme');
+      }
+    },
+    handleDeleteMessage: async (msgId: string) => {
+      try {
+        await supabase.from('messages').delete().eq('id', msgId);
+        showToast('Message deleted');
+      } catch (err) {
+        console.error(err);
+        showToast('Failed to delete message');
+      }
+    },
     handleFileUpload: handleFileUploadHandler,
     handleRankIconUpload,
     saveCustomRank,

@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { BarChart2, Shield, Volume2, VolumeX, Send, Coins, Gem, Dices, Bomb, TowerControl as Tower, Gamepad2, Sword, UserCog, Rocket, Ticket, Spade, Circle, ArrowUp } from 'lucide-react';
+import { BarChart2, Shield, Volume2, VolumeX, Send, Coins, Gem, Dices, Bomb, TowerControl as Tower, Gamepad2, Sword, UserCog, Rocket, Ticket, Spade, Circle, ArrowUp, Trash2 } from 'lucide-react';
 import Markdown from 'react-markdown';
 import { Message, UserProfile } from '../../types';
 import { RANKS, BORDERS, DEFAULT_PFP } from '../../constants';
@@ -14,6 +14,7 @@ interface MessageListProps {
   currentTheme: any;
   handleProfileClick: (uid: string) => void;
   handleVote: (messageId: string, optionIndex: number) => void;
+  handleDeleteMessage: (msgId: string) => void;
   scrollRef: React.RefObject<HTMLDivElement>;
   DiceIcons: any[];
 }
@@ -25,6 +26,7 @@ export const MessageList = ({
   currentTheme,
   handleProfileClick,
   handleVote,
+  handleDeleteMessage,
   scrollRef,
   DiceIcons
 }: MessageListProps) => {
@@ -240,11 +242,21 @@ export const MessageList = ({
                     alt="rank"
                   />
                 )}
+                {(user.rank === 'DEVELOPER' || user.rank === 'ADMINISTRATION' || user.rank === 'FOUNDER' || user.rank === 'STAR' || user.rank === 'MODERATOR') && (
+                  <button
+                    onClick={() => handleDeleteMessage(msg.id!)}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-red-500/20 text-red-500"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                )}
               </div>
               <div
                 className={cn(
-                  "px-5 py-3 shadow-2xl relative overflow-hidden transition-all",
-                  isMe ? "rounded-tr-none bg-white text-black font-medium" : "rounded-tl-none bg-black/60 border border-white/10 text-white/80 backdrop-blur-md",
+                  "px-5 py-3 shadow-2xl relative overflow-hidden transition-all duration-300 group-hover:shadow-white/5",
+                  isMe 
+                    ? "rounded-2xl rounded-tr-none bg-white text-black font-medium" 
+                    : "rounded-2xl rounded-tl-none bg-black/40 border border-white/5 text-white/90 backdrop-blur-xl",
                   currentTheme.customStyles?.bubbleStyle === 'sharp' ? "rounded-none" : "rounded-2xl",
                   !isMe && currentTheme.customStyles?.glassEffect && "backdrop-blur-2xl bg-black/20",
                   !isMe && currentTheme.customStyles?.borderStyle && "border-none"
@@ -254,7 +266,7 @@ export const MessageList = ({
                   fontFamily: currentTheme.customStyles?.fontFamily === 'serif' ? 'serif' : currentTheme.customStyles?.fontFamily === 'mono' ? 'monospace' : 'inherit'
                 }}
               >
-                <div className="text-sm leading-relaxed prose prose-invert max-w-none [&_p]:m-0 [&_pre]:bg-black/20 [&_pre]:p-2 [&_pre]:rounded-lg [&_code]:bg-black/20 [&_code]:px-1 [&_code]:rounded">
+                <div className="text-sm leading-relaxed prose prose-invert max-w-none [&_p]:m-0 [&_pre]:bg-black/20 [&_pre]:p-2 [&_pre]:rounded-lg [&_code]:bg-black/20 [&_code]:px-1 [&_code]:rounded relative z-10">
                   {msg.text && <Markdown>{msg.text}</Markdown>}
                   {msg.imageUrl && (
                     <div className="mt-2 rounded-xl overflow-hidden max-w-sm">
@@ -268,6 +280,8 @@ export const MessageList = ({
                     </div>
                   )}
                 </div>
+                {/* Subtle Glow for Me */}
+                {isMe && <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent pointer-events-none" />}
 
                 {/* Reactions */}
                 {msg.reactions && Object.keys(msg.reactions).length > 0 && (

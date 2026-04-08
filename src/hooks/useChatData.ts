@@ -9,8 +9,37 @@ export const useChatData = (user: UserProfile, soundEnabled: boolean) => {
   const [newsPosts, setNewsPosts] = useState<any[]>([]);
   const [appUpdates, setAppUpdates] = useState<any[]>([]);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
-
   const [privateMessages, setPrivateMessages] = useState<Message[]>([]);
+  const [bannedWords, setBannedWords] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchBannedWords = async () => {
+      const { data } = await supabase.from('ranks').select('permissions').eq('id', 'BANNED_WORDS').maybeSingle();
+      if (data) {
+        setBannedWords(data.permissions || []);
+      } else {
+        await supabase.from('ranks').insert({
+          id: 'BANNED_WORDS',
+          name: 'Banned Words',
+          icon: '',
+          color: '',
+          levelRequired: 999,
+          permissions: [],
+          isCustom: true
+        });
+      }
+    };
+    fetchBannedWords();
+
+    const bannedWordsSub = supabase
+      .channel('chat-banned-words')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'ranks', filter: 'id=eq.BANNED_WORDS' }, fetchBannedWords)
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(bannedWordsSub);
+    };
+  }, []);
 
   useEffect(() => {
     const fetchPrivateMessages = async () => {
@@ -130,10 +159,14 @@ export const useChatData = (user: UserProfile, soundEnabled: boolean) => {
 
     const messagesSubscription = supabase
       .channel('chat-messages-changes')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: 'recipientId=is.null' }, (payload) => {
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
+        console.log('New message received via Realtime:', payload.new);
         const newMessage = payload.new as Message;
+        if (newMessage.recipientId) return; // Skip private messages
+        
         setMessages(prev => {
-          const exists = prev.some(m => m.id === newMessage.id);
+          // Use a more robust check for existing messages
+          const exists = prev.some(m => m.id === newMessage.id || (m.text === newMessage.text && m.senderId === newMessage.senderId && Math.abs(new Date(m.timestamp).getTime() - new Date(newMessage.timestamp).getTime()) < 1000));
           if (exists) return prev;
           
           if (newMessage.senderId !== user.uid && soundEnabled) {
@@ -190,6 +223,7 @@ export const useChatData = (user: UserProfile, soundEnabled: boolean) => {
     unreadNotifications,
     setUnreadNotifications,
     privateMessages,
-    setPrivateMessages
+    setPrivateMessages,
+    bannedWords
   };
 };

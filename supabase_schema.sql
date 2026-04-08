@@ -56,6 +56,8 @@ CREATE TABLE IF NOT EXISTS messages (
   "senderPfp" TEXT,
   "senderRank" TEXT,
   text TEXT NOT NULL,
+  "imageUrl" TEXT,
+  "recipientId" UUID REFERENCES users(uid) ON DELETE CASCADE,
   timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   type TEXT DEFAULT 'text',
   reactions JSONB DEFAULT '{}',

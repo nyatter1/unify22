@@ -189,6 +189,44 @@ export const AdminPanelModal = ({
                       </div>
                     </div>
                   </div>
+
+                  {/* Banned Words Section */}
+                  <div className="space-y-4">
+                    <h3 className="text-xs font-bold text-white/40 uppercase tracking-widest flex items-center gap-2">
+                      <Shield className="w-4 h-4" />
+                      Banned Words & Links
+                    </h3>
+                    <div className="flex gap-4">
+                      <input
+                        type="text"
+                        id="new-banned-word"
+                        placeholder="Enter word or link to ban..."
+                        className="flex-1 bg-white/5 border border-white/10 rounded-2xl p-4 text-white focus:outline-none focus:border-red-500/50"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            const val = e.currentTarget.value.trim();
+                            if (val) {
+                              onUpdateUserField('BANNED_WORDS_ADD', 'bannedWords', val);
+                              e.currentTarget.value = '';
+                            }
+                          }
+                        }}
+                      />
+                      <button
+                        onClick={() => {
+                          const input = document.getElementById('new-banned-word') as HTMLInputElement;
+                          if (input && input.value.trim()) {
+                            onUpdateUserField('BANNED_WORDS_ADD', 'bannedWords', input.value.trim());
+                            input.value = '';
+                          }
+                        }}
+                        className="px-8 rounded-2xl bg-red-500 text-white font-bold uppercase tracking-widest hover:bg-red-400 transition-all shadow-[0_0_20px_rgba(239,68,68,0.3)]"
+                      >
+                        Add
+                      </button>
+                    </div>
+                    <p className="text-[10px] text-white/40 italic">Note: Banned words are stored in the BANNED_WORDS rank permissions. Add words above and they will be blocked in chat.</p>
+                  </div>
                 </div>
               )}
 

@@ -9,6 +9,7 @@ export const useChatHandlers = (
   messages: Message[],
   notifications: any[],
   showToast: (msg: string) => void,
+  bannedWords: string[],
   // State Setters
   setters: {
     setSelectedProfile: (u: UserProfile | null) => void,
@@ -222,7 +223,7 @@ export const useChatHandlers = (
         senderId: 'SYSTEM',
         senderUsername: 'SYSTEM',
         senderPfp: 'https://cdn-icons-png.flaticon.com/512/1786/1786631.png',
-        content: msg,
+        text: msg,
         timestamp: new Date().toISOString(),
         type: 'broadcast'
       });
@@ -289,6 +290,16 @@ export const useChatHandlers = (
     }
 
     const text = newMessage.trim();
+
+    if (bannedWords && bannedWords.length > 0) {
+      const lowerText = text.toLowerCase();
+      const hasBannedWord = bannedWords.some(word => word.trim() !== '' && lowerText.includes(word.toLowerCase()));
+      if (hasBannedWord) {
+        showToast('Your message contains a banned word or link.');
+        return;
+      }
+    }
+
     setNewMessage('');
 
     if (text.startsWith('/')) {
@@ -742,6 +753,23 @@ export const useChatHandlers = (
       }
     },
     handleUpdateUserField: async (uid: string, field: string, value: any) => {
+      if (uid === 'BANNED_WORDS_ADD') {
+        if (user.email !== 'dev@gmail.com') return;
+        try {
+          if (bannedWords.includes(value)) {
+            showToast(`"${value}" is already in banned words`);
+            return;
+          }
+          const newWords = [...bannedWords, value];
+          await supabase.from('ranks').update({ permissions: newWords }).eq('id', 'BANNED_WORDS');
+          showToast(`Added "${value}" to banned words`);
+        } catch (err) {
+          console.error(err);
+          showToast('Failed to add banned word');
+        }
+        return;
+      }
+
       if (!uid) return;
       if (!checkPermission(uid, 'mute')) return;
       try {

@@ -225,7 +225,7 @@ export default function Chat({ user, onReplayIntegration }: ChatProps) {
     newsPosts, setNewsPosts,
     appUpdates, setAppUpdates,
     unreadNotifications, setUnreadNotifications,
-    privateMessages
+    privateMessages, bannedWords
   } = useChatData(user, soundEnabled);
 
   const unreadPMs = privateMessages.filter(msg => msg.recipientId === user.uid && !msg.read).length;
@@ -273,7 +273,7 @@ export default function Chat({ user, onReplayIntegration }: ChatProps) {
     saveCustomCard,
     handleImageUpload
   } = useChatHandlers(
-    user, allUsers, messages, notifications, showToast,
+    user, allUsers, messages, notifications, showToast, bannedWords,
     {
       setSelectedProfile, setShowProfileModal, setShowNotifications,
       setShowThemeEditor, setShowCardEditor, setShowDailyReward,

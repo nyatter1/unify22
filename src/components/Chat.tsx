@@ -276,7 +276,8 @@ export default function Chat({ user, onReplayIntegration }: ChatProps) {
     .filter(u => {
       const matchesSearch = u.username.toLowerCase().includes(userSearch.toLowerCase());
       const matchesFriends = !showFriendsOnly || user.friends?.includes(u.uid);
-      return matchesSearch && matchesFriends;
+      const matchesStaff = sidebarView === 'staff' ? ['MODERATOR', 'ADMINISTRATION', 'STAR', 'MOTHER_OF_PURITY', 'FOUNDER', 'DEVELOPER'].includes(u.rank || '') : true;
+      return matchesSearch && matchesFriends && matchesStaff;
     })
     .sort((a, b) => {
       // Current user always first
@@ -377,6 +378,12 @@ export default function Chat({ user, onReplayIntegration }: ChatProps) {
         showFriendsOnly={showFriendsOnly}
         setShowFriendsOnly={setShowFriendsOnly}
         setShowSidebar={setShowSidebar}
+        unreadPMs={unreadPMs}
+        unreadNotifications={unreadNotifications}
+        setShowInbox={setShowInbox}
+        setShowFriendRequests={setShowFriendRequests}
+        handleOpenNotifications={handleOpenNotifications}
+        setShowCustomizer={setShowCustomizer}
       />
 
       <main className="flex-1 flex flex-col lg:flex-row overflow-hidden relative z-10">
@@ -443,6 +450,12 @@ export default function Chat({ user, onReplayIntegration }: ChatProps) {
           getCardStyles={getCardStyles}
           showSidebar={showSidebar}
           currentTheme={currentTheme}
+          unreadPMs={unreadPMs}
+          unreadNotifications={unreadNotifications}
+          setShowInbox={setShowInbox}
+          setShowFriendRequests={setShowFriendRequests}
+          handleOpenNotifications={handleOpenNotifications}
+          setShowCustomizer={setShowCustomizer}
         />
       </main>
 

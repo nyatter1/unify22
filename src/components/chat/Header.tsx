@@ -1,5 +1,5 @@
 import React from 'react';
-import { Coins, Gem, Heart, LogOut } from 'lucide-react';
+import { Coins, Gem, LogOut, Mail, UserPlus, Bell } from 'lucide-react';
 import { UserProfile } from '../../types';
 import { DEFAULT_PFP } from '../../constants';
 import { cn } from '../../lib/utils';
@@ -11,6 +11,13 @@ interface HeaderProps {
   showFriendsOnly: boolean;
   setShowFriendsOnly: (s: boolean) => void;
   setShowSidebar: (s: boolean) => void;
+  unreadPMs: number;
+  unreadNotifications: number;
+  setShowInbox: (show: boolean) => void;
+  setShowFriendRequests: (show: boolean) => void;
+  handleOpenNotifications: () => void;
+  setShowCustomizer: (show: boolean) => void;
+  setShowEditProfile: (show: boolean) => void;
 }
 
 export const Header = ({
@@ -18,7 +25,14 @@ export const Header = ({
   currentTheme,
   showFriendsOnly,
   setShowFriendsOnly,
-  setShowSidebar
+  setShowSidebar,
+  unreadPMs,
+  unreadNotifications,
+  setShowInbox,
+  setShowFriendRequests,
+  handleOpenNotifications,
+  setShowCustomizer,
+  setShowEditProfile
 }: HeaderProps) => {
   return (
     <header
@@ -49,27 +63,28 @@ export const Header = ({
           </div>
         </div>
 
+        {/* Action Icons */}
+        <div className="flex items-center gap-3 sm:gap-4 pl-2 sm:pl-4 border-l border-white/10">
+          <button onClick={() => setShowInbox(true)} className="relative text-white/40 hover:text-white transition-colors">
+            <Mail className="w-5 h-5" />
+            {unreadPMs > 0 && <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border border-black" />}
+          </button>
+          <button onClick={() => setShowFriendRequests(true)} className="relative text-white/40 hover:text-white transition-colors">
+            <UserPlus className="w-5 h-5" />
+            {(user.friendRequests?.length || 0) > 0 && <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border border-black" />}
+          </button>
+          <button onClick={handleOpenNotifications} className="relative text-white/40 hover:text-white transition-colors">
+            <Bell className="w-5 h-5" />
+            {unreadNotifications > 0 && <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border border-black" />}
+          </button>
+        </div>
+
         <div className="flex items-center gap-3 pl-2 sm:pl-4 border-l border-white/10">
-          <div className="text-right hidden md:block">
-            <p className="text-sm font-serif text-white leading-none">{user.username}</p>
-            <div className="flex items-center justify-end gap-1.5 mt-1">
-              <span className="text-[9px] text-white/40 uppercase tracking-widest font-bold">{user.status || user.rank}</span>
+          <button onClick={() => setShowEditProfile(true)} className="relative hover:opacity-80 transition-opacity">
+            <img src={user.pfp || DEFAULT_PFP} className="w-9 h-9 sm:w-11 sm:h-11 rounded-full border-2 border-white/20 object-cover shadow-xl" />
+            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 border-2 border-black rounded-full bg-red-500 flex items-center justify-center">
+              <div className="w-1.5 h-0.5 bg-white rounded-full" />
             </div>
-          </div>
-          <img src={user.pfp || DEFAULT_PFP} className="w-9 h-9 sm:w-11 sm:h-11 rounded-full border-2 border-white/20 object-cover shadow-xl" />
-          <button
-            onClick={() => {
-              setShowSidebar(true);
-              setShowFriendsOnly(!showFriendsOnly);
-            }}
-            className={cn(
-              "p-2 rounded-xl border transition-all flex items-center gap-2",
-              showFriendsOnly
-                ? "bg-amber-500/20 border-amber-500/50 text-amber-500"
-                : "bg-white/5 border-white/10 text-white/40 hover:text-white hover:bg-white/10"
-            )}
-          >
-            <Heart className={cn("w-5 h-5", showFriendsOnly && "fill-current")} />
           </button>
           <button
             onClick={() => supabase.auth.signOut()}

@@ -95,32 +95,7 @@ export const LeftSidebar = ({
       </div>
       <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
         <SidebarItem icon={<Gift className="w-5 h-5" />} label="Daily Reward" onClick={() => setShowDailyReward(true)} expanded={isLeftSidebarPinned || showLeftSidebar} />
-        <SidebarItem
-          icon={
-            <div className="relative">
-              <Mail className={cn("w-5 h-5", unreadPMs > 0 && "text-red-500")} />
-              {unreadPMs > 0 && <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />}
-            </div>
-          }
-          label="Inbox"
-          onClick={() => setShowInbox(true)}
-          expanded={isLeftSidebarPinned || showLeftSidebar}
-        />
-        <SidebarItem
-          icon={<UserPlus className="w-5 h-5" />}
-          label="Friend Requests"
-          onClick={() => setShowFriendRequests(true)}
-          expanded={isLeftSidebarPinned || showLeftSidebar}
-          badge={user.friendRequests?.length || undefined}
-        />
         <SidebarItem icon={<Palette className="w-5 h-5" />} label="Customise" onClick={() => setShowCustomizer(true)} expanded={isLeftSidebarPinned || showLeftSidebar} />
-        <SidebarItem
-          icon={<Bell className="w-5 h-5" />}
-          label="Notifications"
-          onClick={handleOpenNotifications}
-          expanded={isLeftSidebarPinned || showLeftSidebar}
-          badge={unreadNotifications > 0 ? unreadNotifications : undefined}
-        />
         <SidebarItem icon={<Newspaper className="w-5 h-5" />} label="News" onClick={() => setShowNews(true)} expanded={isLeftSidebarPinned || showLeftSidebar} />
         <SidebarItem icon={<RefreshCw className="w-5 h-5" />} label="Updates" onClick={() => setShowUpdates(true)} expanded={isLeftSidebarPinned || showLeftSidebar} />
         <SidebarItem icon={<BookOpen className="w-5 h-5" />} label="Rules" onClick={() => setShowRules(true)} expanded={isLeftSidebarPinned || showLeftSidebar} />

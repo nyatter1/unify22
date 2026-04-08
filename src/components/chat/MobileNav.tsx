@@ -10,6 +10,7 @@ interface MobileNavProps {
   setShowSidebar: (s: boolean) => void;
   setShowInbox: (s: boolean) => void;
   unreadNotifications: number;
+  unreadPMs: number;
 }
 
 export const MobileNav = ({
@@ -19,7 +20,8 @@ export const MobileNav = ({
   setShowNews,
   setShowSidebar,
   setShowInbox,
-  unreadNotifications
+  unreadNotifications,
+  unreadPMs
 }: MobileNavProps) => {
   return (
     <nav className="lg:hidden fixed bottom-0 left-0 right-0 h-20 bg-black/80 backdrop-blur-2xl border-t border-white/10 flex items-center justify-around px-2 z-40">
@@ -27,9 +29,10 @@ export const MobileNav = ({
         <Gift className="w-5 h-5" />
         <span className="text-[9px] font-bold uppercase tracking-widest">Daily</span>
       </button>
-      <button onClick={() => setShowInbox(true)} className="flex flex-col items-center gap-1 text-white/60 hover:text-amber-500 transition-all">
-        <Mail className="w-5 h-5" />
+      <button onClick={() => setShowInbox(true)} className="relative flex flex-col items-center gap-1 text-white/60 hover:text-amber-500 transition-all">
+        <Mail className={`w-5 h-5 ${unreadPMs > 0 ? 'text-red-500' : ''}`} />
         <span className="text-[9px] font-bold uppercase tracking-widest">Inbox</span>
+        {unreadPMs > 0 && <span className="absolute top-0 right-1 w-2 h-2 bg-red-500 rounded-full" />}
       </button>
       <button onClick={() => setShowCustomizer(true)} className="flex flex-col items-center gap-1 text-white/60 hover:text-amber-500 transition-all">
         <Palette className="w-5 h-5" />

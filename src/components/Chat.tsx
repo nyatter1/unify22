@@ -225,6 +225,8 @@ export default function Chat({ user }: ChatProps) {
     privateMessages
   } = useChatData(user, soundEnabled);
 
+  const unreadPMs = privateMessages.filter(msg => msg.recipientId === user.uid && !msg.read).length;
+
   useUserStatus(user, allUsers);
 
   const showToast = (msg: string) => {
@@ -393,6 +395,7 @@ export default function Chat({ user }: ChatProps) {
           setShowCommandsModal={setShowCommandsModal}
           setShowInbox={setShowInbox}
           unreadNotifications={unreadNotifications}
+          unreadPMs={unreadPMs}
           currentTheme={currentTheme}
         />
 
@@ -450,6 +453,7 @@ export default function Chat({ user }: ChatProps) {
           setShowSidebar={setShowSidebar}
           setShowInbox={setShowInbox}
           unreadNotifications={unreadNotifications}
+          unreadPMs={unreadPMs}
         />
 
       {/* Customization Modals */}

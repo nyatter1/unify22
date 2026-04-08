@@ -32,6 +32,7 @@ interface LeftSidebarProps {
   setShowCommandsModal: (s: boolean) => void;
   setShowInbox: (s: boolean) => void;
   unreadNotifications: number;
+  unreadPMs: number;
   currentTheme: any;
 }
 
@@ -51,6 +52,7 @@ export const LeftSidebar = ({
   setShowCommandsModal,
   setShowInbox,
   unreadNotifications,
+  unreadPMs,
   currentTheme
 }: LeftSidebarProps) => {
   return (
@@ -91,7 +93,12 @@ export const LeftSidebar = ({
       <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
         <SidebarItem icon={<Gift className="w-5 h-5" />} label="Daily Reward" onClick={() => setShowDailyReward(true)} expanded={isLeftSidebarPinned || showLeftSidebar} />
         <SidebarItem
-          icon={<Mail className="w-5 h-5" />}
+          icon={
+            <div className="relative">
+              <Mail className={cn("w-5 h-5", unreadPMs > 0 && "text-red-500")} />
+              {unreadPMs > 0 && <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />}
+            </div>
+          }
           label="Inbox"
           onClick={() => setShowInbox(true)}
           expanded={isLeftSidebarPinned || showLeftSidebar}

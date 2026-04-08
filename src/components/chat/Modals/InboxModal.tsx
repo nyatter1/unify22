@@ -38,6 +38,7 @@ export const InboxModal = ({
       if (setInitialActiveChat) setInitialActiveChat(null);
     }
   }, [initialActiveChat, showInbox, setInitialActiveChat]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [newMessage, setNewMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -58,7 +59,27 @@ export const InboxModal = ({
     })).sort((a, b) => new Date(b.lastMessage.timestamp).getTime() - new Date(a.lastMessage.timestamp).getTime());
   }, [privateMessages, user.uid, allUsers]);
 
+  const searchResults = React.useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    const query = searchQuery.toLowerCase();
+    return allUsers.filter(u => u.uid !== user.uid && u.username.toLowerCase().includes(query));
+  }, [searchQuery, allUsers, user.uid]);
+
   const activeConversation = conversations.find(c => c.partnerId === activeChat);
+
+  useEffect(() => {
+    if (showInbox) {
+      const unreadMsgs = privateMessages.filter(m => m.recipientId === user.uid && !m.read);
+      if (unreadMsgs.length > 0) {
+        const updateReadStatus = async () => {
+          for (const msg of unreadMsgs) {
+            await supabase.from('messages').update({ read: true }).eq('id', msg.id);
+          }
+        };
+        updateReadStatus();
+      }
+    }
+  }, [showInbox, privateMessages, user.uid]);
 
   useEffect(() => {
     if (activeChat) {
@@ -137,8 +158,42 @@ export const InboxModal = ({
                 "w-full md:w-1/3 border-r border-white/10 flex flex-col bg-black/20",
                 activeChat ? "hidden md:flex" : "flex"
               )}>
+                <div className="p-3 border-b border-white/10">
+                  <input
+                    type="text"
+                    placeholder="Search users..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder-white/40 focus:outline-none focus:border-amber-500/50 transition-colors"
+                  />
+                </div>
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
-                  {conversations.length === 0 ? (
+                  {searchQuery.trim() ? (
+                    searchResults.length === 0 ? (
+                      <div className="p-8 text-center text-white/40 text-sm">
+                        No users found.
+                      </div>
+                    ) : (
+                      searchResults.map(u => {
+                        const { className, style, textClass } = getCardStyles(u);
+                        return (
+                          <button
+                            key={u.uid}
+                            onClick={() => {
+                              setActiveChat(u.uid);
+                              setSearchQuery('');
+                            }}
+                            className="w-full text-left p-3 rounded-xl transition-all flex items-center gap-3 hover:bg-white/5"
+                          >
+                            <img src={u.pfp || DEFAULT_PFP} className="w-10 h-10 rounded-full object-cover border border-white/10" />
+                            <div className="flex-1 min-w-0">
+                              <span className={cn("text-sm font-bold truncate", textClass)} style={style}>{u.username}</span>
+                            </div>
+                          </button>
+                        );
+                      })
+                    )
+                  ) : conversations.length === 0 ? (
                     <div className="p-8 text-center text-white/40 text-sm">
                       No private messages yet.
                     </div>
@@ -147,6 +202,8 @@ export const InboxModal = ({
                       const partner = conv.partner;
                       const { className, style, textClass } = partner ? getCardStyles(partner) : { className: '', style: {}, textClass: '' };
                       
+                      const unreadCount = conv.messages.filter(m => m.recipientId === user.uid && !m.read).length;
+
                       return (
                         <button
                           key={conv.partnerId}
@@ -164,10 +221,17 @@ export const InboxModal = ({
                                 {new Date(conv.lastMessage.timestamp).toLocaleDateString()}
                               </span>
                             </div>
-                            <p className="text-xs text-white/60 truncate">
-                              {conv.lastMessage.senderId === user.uid ? 'You: ' : ''}
-                              {conv.lastMessage.text}
-                            </p>
+                            <div className="flex justify-between items-center">
+                              <p className={cn("text-xs truncate", unreadCount > 0 ? "text-white font-bold" : "text-white/60")}>
+                                {conv.lastMessage.senderId === user.uid ? 'You: ' : ''}
+                                {conv.lastMessage.text}
+                              </p>
+                              {unreadCount > 0 && (
+                                <span className="ml-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                  {unreadCount}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </button>
                       );
@@ -181,15 +245,19 @@ export const InboxModal = ({
                 "w-full md:w-2/3 flex flex-col bg-black/40",
                 !activeChat ? "hidden md:flex" : "flex"
               )}>
-                {activeChat && activeConversation ? (
+                {activeChat ? (() => {
+                  const partner = activeConversation?.partner || allUsers.find(u => u.uid === activeChat);
+                  const messages = activeConversation?.messages || [];
+                  
+                  return (
                   <>
                     <div className="p-4 border-b border-white/10 flex items-center gap-3 bg-black/20">
-                      <img src={activeConversation.partner?.pfp || DEFAULT_PFP} className="w-8 h-8 rounded-full object-cover" />
-                      <span className="font-bold text-white">{activeConversation.partner?.username || 'Unknown User'}</span>
+                      <img src={partner?.pfp || DEFAULT_PFP} className="w-8 h-8 rounded-full object-cover" />
+                      <span className="font-bold text-white">{partner?.username || 'Unknown User'}</span>
                     </div>
                     
                     <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
-                      {activeConversation.messages.map(msg => {
+                      {messages.map(msg => {
                         const isMe = msg.senderId === user.uid;
                         return (
                           <div key={msg.id} className={cn("flex flex-col", isMe ? "items-end" : "items-start")}>
@@ -229,7 +297,7 @@ export const InboxModal = ({
                       </div>
                     </form>
                   </>
-                ) : (
+                )})() : (
                   <div className="flex-1 flex items-center justify-center text-white/40 flex-col gap-4">
                     <Mail className="w-12 h-12 opacity-20" />
                     <p>Select a conversation to start messaging</p>

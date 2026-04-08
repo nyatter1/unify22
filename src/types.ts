@@ -124,6 +124,7 @@ export interface Message {
   senderPfp: string;
   senderRank?: string;
   recipientId?: string;
+  read?: boolean;
   text: string;
   imageUrl?: string;
   timestamp: any;
